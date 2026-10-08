@@ -27,7 +27,7 @@ const COLUMNAS: { titulo: string; enlaces: [string, string][] }[] = [
             ['Carpetas y seguimiento', '/plataforma/carpetas'],
             ['Jurimetría y precedentes', '/plataforma/consulta#precedentes'],
             ['Agente de amparo', '/agente'],
-            ['Taller de sentencias', '/redaccionsentencias'],
+            ['Taller de sentencias', '/tcc-beta'],
             ['Normativa', '/normativa'],
         ],
     },

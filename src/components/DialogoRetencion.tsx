@@ -303,8 +303,8 @@ export default function DialogoRetencion({
                                         ) : (
                                             <>Si este mes no lo va a usar, no tiene por qué pagarlo:{' '}
                                             <strong className="text-charcoal-900">pausamos un mes sin cargo</strong> y su
-                                            cuenta queda intacta. La plataforma cambia rápido — esta semana entró la
-                                            biblioteca doctrinal y la app móvil está a semanas de publicarse.</>
+                                            cuenta queda intacta. La plataforma cambia rápido, y al reanudarse
+                                            tendrá todo lo que haya entrado en ese mes.</>
                                         )}
                                     </p>
                                     {motivo === 'precio' && (
@@ -326,10 +326,10 @@ export default function DialogoRetencion({
                                         Eso es exactamente lo que queremos saber
                                     </h3>
                                     <p className="text-sm text-charcoal-600 mb-3 leading-relaxed">
-                                        Se lo decimos sin rodeos: esta semana corregimos dos fallas que
-                                        reportaron usuarios — citas de tesis que no correspondían al criterio, y
-                                        un botón de cancelación que confirmaba mal. Se detectaron porque alguien
-                                        se tomó la molestia de decirlo.
+                                        Se lo decimos sin rodeos: las fallas que reportan los usuarios se corrigen.
+                                        Así se arreglaron, por ejemplo, citas de tesis que no correspondían al
+                                        criterio y un botón de cancelación que confirmaba mal: se detectaron
+                                        porque alguien se tomó la molestia de decirlo.
                                     </p>
                                     <p className="text-sm text-charcoal-600 mb-3 leading-relaxed">
                                         Si lo suyo fue otra cosa, cuéntenoslo.{' '}

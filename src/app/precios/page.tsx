@@ -201,7 +201,7 @@ export default function PreciosPage() {
                                     "IA Jurídica Avanzada (análisis complejo y deducción)",
                                     "Análisis de documentos (auditoría y mejoras)",
                                     <>Lee documentos de hasta <span className="font-semibold text-white">100 hojas</span></>,
-                                    <>Precedentes Judiciales por Circuito <span className="text-white/45">· 6 circuitos activos</span></>,
+                                    <>Precedentes Judiciales por Circuito <span className="text-white/45">· 7 circuitos activos</span></>,
                                     "Redacción Pro — motor de razonamiento profundo",
                                     "Registra tu cédula para conectar clientes",
                                     "Filtros por entidad federativa y marco federal",
@@ -229,7 +229,7 @@ export default function PreciosPage() {
                                     <><span className="font-semibold text-white">60 flujos de trabajo/mes</span> <span className="text-white/45">· escritos completos paso a paso</span></>,
                                     <span className="font-semibold text-white">IA Jurídica de Élite (máxima precisión argumentativa)</span>,
                                     "Análisis de documentos y auditoría",
-                                    <>Precedentes Judiciales por Circuito <span className="text-white/45">· 6 circuitos activos</span></>,
+                                    <>Precedentes Judiciales por Circuito <span className="text-white/45">· 7 circuitos activos</span></>,
                                     <><span className="font-semibold text-white">Redacción Platinum</span> <span className="text-white/45">· el motor más potente, escritos más extensos</span></>,
                                     "Registra tu cédula para conectar clientes",
                                     "Consulta con el equipo legal de Iurexia",
@@ -499,8 +499,8 @@ export default function PreciosPage() {
                                     <ComparisonRow
                                         feature="Precedentes Judiciales por Circuito"
                                         free="—" basico="—"
-                                        pro={<span className="inline-flex items-center gap-1 text-accent-gold font-semibold">✓ <span className="text-[9px]">6 circuitos</span></span>}
-                                        platinum={<span className="inline-flex items-center gap-1 text-accent-gold font-semibold">✓ <span className="text-[9px]">6 circuitos</span></span>}
+                                        pro={<span className="inline-flex items-center gap-1 text-accent-gold font-semibold">✓ <span className="text-[9px]">7 circuitos</span></span>}
+                                        platinum={<span className="inline-flex items-center gap-1 text-accent-gold font-semibold">✓ <span className="text-[9px]">7 circuitos</span></span>}
                                         goldFeature={true}
                                     />
                                     <ComparisonRow feature="Sugerencias con fundamento" free="—" basico="—" pro="✓" platinum="✓" goldFeature={true} />
@@ -518,18 +518,23 @@ export default function PreciosPage() {
                                         platinum="✓"
                                         goldFeature={true}
                                     />
+                                    {/* El redactor ya no está «en desarrollo» ni es de
+                                        Platinum: es del plan Ultra Secretarios, que esta
+                                        misma página vende arriba, y cualquier cuenta tiene
+                                        UN proyecto de prueba de por vida (API,
+                                        `_can_access_redactor_tcc`, 13-sep-2026). */}
                                     <ComparisonRow
                                         feature={
-                                            <span className="flex items-center gap-1.5 font-semibold text-piedra-500">
-                                                Redactor de Sentencias TCC
-                                                <span className="text-[9px] border border-piedra-300 text-piedra-600 px-1.5 py-0.5 rounded font-bold">EN DESARROLLO</span>
+                                            <span className="flex flex-col gap-0.5">
+                                                <span className="font-semibold">Proyectos de sentencia · Redactor PJF</span>
+                                                <span className="text-[11px] font-normal text-piedra-500">40 al mes en el plan Ultra Secretarios</span>
                                             </span>
                                         }
-                                        free="—"
-                                        basico="—"
-                                        pro="—"
-                                        platinum={<span className="text-piedra-500 text-xs font-normal">Próximamente</span>}
-                                        goldFeature={false}
+                                        free="1 de prueba"
+                                        basico="1 de prueba"
+                                        pro="1 de prueba"
+                                        platinum="1 de prueba"
+                                        goldFeature={true}
                                         isLast={true}
                                     />
                                 </tbody>
@@ -552,7 +557,7 @@ export default function PreciosPage() {
 
                     <div className="space-y-4">
                         {[
-                            { question: '¿Qué son los Precedentes Judiciales y en qué planes están disponibles?', answer: 'Precedentes es una función de búsqueda semántica directa sobre sentencias reales de Tribunales Colegiados de Circuito. Actualmente cubre más de 141,000 sentencias de 6 circuitos (1° Ciudad de México, 2° Estado de México, 3° Jalisco, 4° Nuevo León, 16° Guanajuato y 22° Querétaro). El corpus crece continuamente: cada mes se ingresan nuevas sentencias y se incorporan más circuitos. Está disponible en los planes Pro y Platinum.' },
+                            { question: '¿Qué son los Precedentes Judiciales y en qué planes están disponibles?', answer: 'Precedentes es una función de búsqueda semántica directa sobre sentencias reales de Tribunales Colegiados de Circuito. Actualmente cubre más de 141,000 sentencias de 7 circuitos (1° Ciudad de México, 2° Estado de México, 3° Jalisco, 4° Nuevo León, 6° Puebla, 16° Guanajuato y 22° Querétaro). El corpus crece continuamente: cada mes se ingresan nuevas sentencias y se incorporan más circuitos. Está disponible en los planes Pro y Platinum.' },
                             { question: '¿Qué es el esfuerzo de redacción y qué incluye cada plan?', answer: 'Para redactar no hay que cambiar de modo: basta pedirlo —«Redacta una demanda de…»— y Iurexia entrega el escrito completo, con el mismo acervo y las mismas fuentes que una consulta. El esfuerzo, que se elige en el desplegable junto a «Fuentes», decide con qué fuerza se escribe: Básico, en todos los planes, entrega un escrito completo y bien estructurado; Pro, desde el plan Pro, razona a fondo cada argumento antes de escribir; Platinum, exclusivo del plan Platinum, usa el motor más potente de Iurexia: escritos más extensos, argumentos principales y subsidiarios y la refutación anticipada de lo que opondrá la contraparte.' },
                             { question: '¿Qué es Jurimetría y en qué plan está disponible?', answer: 'Jurimetría es la herramienta más avanzada de Iurexia: predice el sentido probable de un asunto (Concede / Niega / Sobresee) analizando los precedentes del corpus completo. En modo básico basta describir el asunto; en modo Secretario puedes adjuntar el acto reclamado y los agravios como PDF y la IA analiza argumento por argumento, señalando cuáles son probablemente inoperantes, infundados o fundados — con base en sentencias reales, no en suposiciones. Está disponible exclusivamente en el plan Platinum.' },
                             { question: '¿Qué incluye una consulta?', answer: 'Una consulta es cada pregunta o solicitud que haces a Iurexia. Incluye la búsqueda en la base documental, el análisis con IA y la respuesta fundamentada. El análisis de documentos también cuenta como consultas según la complejidad del archivo.' },

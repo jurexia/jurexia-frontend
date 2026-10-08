@@ -1167,13 +1167,17 @@ ${draftRequest.descripcion}`;
                         <div className="mx-auto mb-4 w-11 h-11 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
                             <Lock className="w-5 h-5 text-[#c9a962]" />
                         </div>
+                        {/* Sólo lo abre el botón Jurimetría. Decía que Platinum
+                            incluía el «Redactor TCC Beta», pero el redactor es del
+                            plan Ultra Secretarios desde el 13-sep-2026, y la
+                            Jurimetría la tienen Platinum y Ultra (`canAccessJurimetria`). */}
                         {showUpgradeModal === 'platinum' ? (
                             <>
                                 <p className="text-[10px] font-bold tracking-[0.18em] text-[#c9a962] uppercase mb-2">
-                                    Función exclusiva Platinum
+                                    Jurimetría · Plan Platinum
                                 </p>
                                 <p className="text-white/80 text-sm leading-relaxed mb-6">
-                                    Esta función está disponible en el plan <span className="text-white font-semibold">Platinum</span> de Iurexia — incluye Jurimetría predictiva y Redactor TCC Beta con IA de razonamiento profundo.
+                                    La Jurimetría predice el sentido probable de un asunto a partir de los precedentes del circuito. Está en el plan <span className="text-white font-semibold">Platinum</span> de Iurexia y en Ultra Secretarios.
                                 </p>
                             </>
                         ) : (
