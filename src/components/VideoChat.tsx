@@ -1,57 +1,42 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { Volume2, VolumeX } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Play } from 'lucide-react';
 
 /* La pieza de la plataforma, entre el vídeo de portada y la franja de
-   despachos. Al modo de harvey.ai: arranca sola, en bucle y SIN sonido; el
-   sonido —voz, efectos y música— sólo entra cuando la persona lo pide con un
-   clic, y ese clic la reinicia desde el principio para que la oiga entera.
-   Con «menos movimiento» activado se queda en el póster.
+   despachos.
 
-   3-oct-2026: era la v43 (1:52), grabada con el chat de antes —la barra de
-   Genios, el selector Auto·Civil·Penal, Buscar/Redactar—. Ahora es la v61,
-   «La plataforma» (1:59, 1280×720 para la web), que enseña el chat de hoy:
-   Fuentes, Esfuerzo, las herramientas, los flujos de trabajo y la carpeta.
+   8-oct-2026 (David): «que sólo se reproduzca si le ponen play». Ya no arranca
+   sola ni en bucle: se queda en el póster con el botón de reproducir, y al
+   pulsarlo suena desde el principio, con los controles del navegador para
+   pausar o adelantar (el mismo trato que el tutorial de /tutorial). Tampoco
+   descarga el vídeo hasta que alguien lo pide (preload="none").
+
+   El mismo día cambió la voz: la v61 «La plataforma» (1:59, 1280×720) se
+   regrabó con la voz de los videos educativos del canal en Eleven v4
+   (video-nodos/voz61e.py), cada frase ajustada a la duración de la anterior
+   para no tocar la imagen. Archivo nuevo, nombre nuevo: así ningún navegador
+   sirve la versión vieja de su caché.
+
    La v43 sigue en /video/iurexia-chat.mp4 porque el GIF de los correos la
-   anuncia. */
-/* 3-oct-2026: el mismo reproductor sirve a /plataforma con «Una semana con
-   Iurexia» (la v61 rehecha en Blender, 2:08). Sin propiedades es la pieza de
-   la portada, como siempre. */
+   anuncia. /plataforma usa este mismo reproductor con «Una semana con
+   Iurexia» (2:08). */
 export default function VideoChat({
     id = 'video-chat',
-    src = '/video/iurexia-plataforma.mp4',
+    src = '/video/iurexia-plataforma-v4.mp4',
     poster = '/video/iurexia-plataforma-poster.webp',
     rotulo = 'La plataforma, en dos minutos',
-}: { id?: string; src?: string; poster?: string; rotulo?: string } = {}) {
+    duracion = '1:59',
+}: { id?: string; src?: string; poster?: string; rotulo?: string; duracion?: string } = {}) {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [conSonido, setConSonido] = useState(false);
+    const [empezado, setEmpezado] = useState(false);
 
-    useEffect(() => {
+    const reproducir = () => {
         const v = videoRef.current;
         if (!v) return;
-        const menosMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)');
-        const aplicar = () => {
-            if (menosMovimiento.matches) v.pause();
-            else v.play().catch(() => { /* si el navegador lo niega, queda el póster */ });
-        };
-        aplicar();
-        menosMovimiento.addEventListener('change', aplicar);
-        return () => menosMovimiento.removeEventListener('change', aplicar);
-    }, []);
-
-    const alternar = () => {
-        const v = videoRef.current;
-        if (!v) return;
-        if (conSonido) {
-            v.muted = true;
-            setConSonido(false);
-            return;
-        }
         v.muted = false;
         v.currentTime = 0;
         v.play().catch(() => null);
-        setConSonido(true);
     };
 
     return (
@@ -62,36 +47,35 @@ export default function VideoChat({
                 <p className="mb-5 text-center text-[12px] font-medium uppercase tracking-[0.16em] text-piedra-600">
                     {rotulo}
                 </p>
-                <div
-                    className="group relative cursor-pointer overflow-hidden rounded-xl bg-charcoal-900 shadow-[0_24px_60px_-20px_rgba(20,18,16,0.45)]"
-                    onClick={alternar}
-                    role="button"
-                    tabIndex={0}
-                    aria-pressed={conSonido}
-                    aria-label={conSonido ? 'Silenciar el vídeo' : 'Escuchar el vídeo'}
-                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); alternar(); } }}
-                >
+                <div className="group relative overflow-hidden rounded-xl bg-charcoal-900 shadow-[0_24px_60px_-20px_rgba(20,18,16,0.45)]">
                     <video
                         ref={videoRef}
                         className="block aspect-video h-auto w-full"
-                        autoPlay
-                        loop
-                        muted
+                        controls={empezado}
                         playsInline
-                        preload="metadata"
+                        preload="none"
                         poster={poster}
+                        aria-label={`${rotulo}, ${duracion}`}
+                        onPlay={() => setEmpezado(true)}
                     >
                         <source src={src} type="video/mp4" />
                     </video>
 
-                    {/* la invitación a escuchar: discreta, abajo a la derecha */}
-                    <span
-                        className="pointer-events-none absolute bottom-4 right-4 inline-flex items-center gap-2 rounded-full bg-charcoal-900/75 px-4 py-2 text-[13px] font-medium text-white backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-100 sm:bottom-5 sm:right-5"
-                    >
-                        {conSonido
-                            ? <><Volume2 className="h-4 w-4 text-accent-gold" /> Con sonido · clic para silenciar</>
-                            : <><VolumeX className="h-4 w-4 text-accent-gold" /> Clic para escuchar</>}
-                    </span>
+                    {!empezado && (
+                        <button
+                            type="button"
+                            onClick={reproducir}
+                            className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-t from-charcoal-950/60 via-charcoal-950/15 to-transparent text-white outline-none focus-visible:ring-4 focus-visible:ring-accent-gold/60"
+                            aria-label={`Reproducir con sonido: ${rotulo}`}
+                        >
+                            <span className="flex h-20 w-20 items-center justify-center rounded-full bg-accent-gold text-charcoal-950 shadow-[0_12px_40px_-8px_rgba(201,169,98,0.65)] ring-8 ring-white/15 transition-transform duration-300 group-hover:scale-105 sm:h-24 sm:w-24">
+                                <Play className="ml-1 h-8 w-8 fill-current sm:h-9 sm:w-9" aria-hidden />
+                            </span>
+                            <span className="rounded-full bg-charcoal-950/70 px-4 py-1.5 text-[13px] font-medium tracking-wide backdrop-blur-sm">
+                                Ver la plataforma · {duracion}
+                            </span>
+                        </button>
+                    )}
                 </div>
             </div>
         </section>

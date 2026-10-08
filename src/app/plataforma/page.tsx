@@ -91,6 +91,7 @@ export default function PlataformaPage() {
                     src="/video/iurexia-una-semana.mp4"
                     poster="/video/iurexia-una-semana-poster.webp"
                     rotulo="Una semana con Iurexia, en dos minutos"
+                    duracion="2:08"
                 />
             </div>
 
