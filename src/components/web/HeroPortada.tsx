@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import { abrirSesionBasica, PREGUNTA_PORTADA } from '@/lib/gratis';
-import { Antetitulo, Titulo } from '@/components/web/sistema';
+import { Titulo } from '@/components/web/sistema';
 
 /* ═══ EL GANCHO DE LA PORTADA (8-oct-2026) ═══
    David: «¿qué gancho sería el perfecto para atraer a usuarios a leer desde la
@@ -21,15 +21,16 @@ import { Antetitulo, Titulo } from '@/components/web/sistema';
      mandaba justo ahí, a /registro.
 
    Así que el gancho son tres piezas, y cada una dice una sola cosa:
-   1. La frase «Tú firmas. Iurexia fundamenta.»: es el cierre del anuncio v78
-      que corre en Meta, y quien llega del anuncio encuentra la misma promesa.
-      «Fundamentar» es el oficio del abogado mexicano (art. 16 constitucional)
-      y deja la responsabilidad donde la ponen los tribunales: en quien firma.
+   1. La frase, que dictó David al revisarlo en local: «Perfecciona tu ejercicio
+      legal con Iurexia» y, en pequeño, qué es y qué hace. (La primera propuesta
+      fue «Tú firmas. Iurexia fundamenta.», el cierre del anuncio v78.)
    2. La consulta, aquí mismo y sin registro: la pregunta se guarda, se abre la
-      visita básica y el chat la manda sola (`PREGUNTA_PORTADA`).
+      visita básica y el chat la manda sola (`PREGUNTA_PORTADA`). Allí el panel
+      de la versión básica empuja a la cuenta gratuita (PanelBasico).
    3. La prueba: una consulta real grabada en producción —los pasos, la hoja,
       «8 citas · 8 verificadas» y el PDF de la Gaceta con su registro digital—,
-      sobre un pórtico de la casa. Nada dibujado: así es. */
+      sobre un pórtico de la casa. Nada dibujado: así es.
+   Detrás de todo, el vídeo de los abogados, que David quiso conservar. */
 
 const EJEMPLOS = [
     {
@@ -101,38 +102,34 @@ export default function HeroPortada() {
     return (
         <>
             <section className="relative isolate bg-tinta text-cream-100">
-                {/* ── La obra: el pórtico, en la mitad de abajo, detrás de la película ── */}
                 <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+                    {/* ── Abajo, detrás de la película: el pórtico ── */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                         src="/web/arte/portico.webp"
                         alt=""
                         width={2376}
                         height={1008}
+                        loading="lazy"
                         decoding="async"
-                        className="absolute inset-x-0 bottom-0 h-[62%] w-full object-cover object-[50%_70%] opacity-90 sm:h-[68%]"
+                        className="absolute inset-x-0 bottom-0 h-[52%] w-full object-cover object-[50%_70%] opacity-90"
                     />
                     <div
-                        className="absolute inset-0"
-                        style={{
-                            background:
-                                'linear-gradient(180deg, #0f0e0d 0%, #0f0e0d 34%, rgba(15,14,13,0.62) 52%, rgba(15,14,13,0.38) 74%, rgba(15,14,13,0.55) 100%)',
-                        }}
+                        className="absolute inset-x-0 bottom-0 h-[52%]"
+                        style={{ background: 'linear-gradient(180deg, #0f0e0d 0%, rgba(15,14,13,0.45) 40%, rgba(15,14,13,0.5) 100%)' }}
                     />
+                    {/* ── Arriba, detrás del titular: el vídeo de los abogados ── */}
+                    <FondoAbogados />
                 </div>
 
                 <div className="mx-auto max-w-7xl px-4 pt-28 sm:px-6 sm:pt-32 lg:px-8 lg:pt-[7.5rem]">
                     <div className="max-w-3xl aparecer">
-                        <Antetitulo oscuro>Inteligencia artificial para el derecho mexicano</Antetitulo>
-                        <Titulo como="h1" escala="portada" oscuro className="mt-4">
-                            Tú firmas.
-                            <br />
-                            Iurexia fundamenta.
+                        <Titulo como="h1" escala="portada" oscuro>
+                            Perfecciona tu ejercicio legal con Iurexia
                         </Titulo>
-                        <p className="mt-5 max-w-2xl text-[1.0625rem] leading-relaxed text-white/65 sm:text-lg">
-                            Consulta, redacta y da seguimiento con la legislación federal y la de las 32 entidades,
-                            la jurisprudencia y los precedentes. Cada artículo y cada tesis que cita abre su
-                            documento oficial.
+                        <p className="mt-5 max-w-xl text-[1.0625rem] leading-relaxed text-white/70 sm:text-lg">
+                            Inteligencia artificial diseñada para el sistema jurídico mexicano. Fundamenta,
+                            redacta y analiza escritos con fuentes verificadas.
                         </p>
 
                         {/* ── La consulta, aquí mismo ── */}
@@ -245,6 +242,49 @@ function Pelicula() {
             >
                 <source src={p.src} type="video/mp4" />
             </video>
+        </div>
+    );
+}
+
+/* El vídeo de los abogados (el hero anterior), ahora de fondo: silenciado, en
+   bucle y decorativo. Los velos son los mismos que lo hacían legible: el lateral
+   sostiene el titular, el de arriba la barra, y abajo se funde con la tinta donde
+   empieza la película. Con «menos movimiento», el póster quieto. */
+function FondoAbogados() {
+    const video = useRef<HTMLVideoElement>(null);
+
+    useEffect(() => {
+        const v = video.current;
+        if (!v) return;
+        const menos = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const aplicar = () => {
+            if (menos.matches) v.pause();
+            else v.play().catch(() => { /* queda el póster */ });
+        };
+        aplicar();
+        menos.addEventListener('change', aplicar);
+        return () => menos.removeEventListener('change', aplicar);
+    }, []);
+
+    return (
+        <div className="absolute inset-x-0 top-0 h-[880px] sm:h-[820px] lg:h-[800px]">
+            <video
+                ref={video}
+                className="absolute inset-0 h-full w-full object-cover"
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="metadata"
+                poster="/hero/hero-poster.webp"
+                tabIndex={-1}
+            >
+                <source src="/hero/hero.mp4" type="video/mp4" />
+            </video>
+            <div className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-tinta via-tinta/75 to-tinta/10 lg:w-11/12" />
+            <div className="absolute inset-0 bg-tinta/50 sm:hidden" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-[45%] bg-gradient-to-t from-tinta via-tinta/80 to-transparent" />
         </div>
     );
 }

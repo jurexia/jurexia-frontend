@@ -1835,6 +1835,7 @@ export default function ChatPage() {
                                     onStop={stopGeneration}
                                     isLoading={isLoading || basicoCargando}
                                     basico={modoBasico}
+                                    sinCuenta={sinCuenta}
                                     placeholder={modoBasico
                                         ? 'Pregunta y te doy los criterios aplicables…'
                                         : carpetaActivaId
@@ -2025,6 +2026,7 @@ export default function ChatPage() {
                             onStop={stopGeneration}
                             isLoading={isLoading || basicoCargando}
                             basico={modoBasico}
+                            sinCuenta={sinCuenta}
                             estado={selectedEstado}
                             activeGenios={activeGenios}
                             setActiveGenios={handleToggleGenios}

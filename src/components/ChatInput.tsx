@@ -52,6 +52,9 @@ interface ChatInputProps {
      *  está perdiendo, que es lo único que convierte una prueba en una
      *  suscripción. Ver `@/lib/gratis`. */
     basico?: boolean;
+    /** Modo básico SIN cuenta (la visita de prueba): lo que se enseña no son los
+     *  planes sino lo que abre la cuenta gratuita, y el candado lleva a crearla. */
+    sinCuenta?: boolean;
 }
 
 export default function ChatInput({
@@ -72,6 +75,7 @@ export default function ChatInput({
     onAbrirConstructor,
     constructorAbierto = false,
     basico = false,
+    sinCuenta = false,
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
     const [isListening, setIsListening] = useState(false);
@@ -293,7 +297,7 @@ export default function ChatInput({
     /* En básico, cualquier herramienta lleva al mismo sitio: los planes. No se
        esconde el botón —verlo es el punto—, pero no hace su trabajo. */
     const tocoCandado = () => {
-        if (typeof window !== 'undefined') window.location.href = '/precios';
+        if (typeof window !== 'undefined') window.location.href = sinCuenta ? '/registro' : '/precios';
     };
 
     const handleSubmit = () => {
@@ -709,7 +713,37 @@ ${draftRequest.descripcion}`;
                         buscar dónde se cierra lo que se acaba de abrir. Plegado
                         lleva además el resumen de lo elegido —fuero, materia,
                         modo—, que si no queda invisible. */}
-                    {basico && (
+                    {/* LA VISITA DE PRUEBA (8-oct-2026). David: «empuja a que en la
+                        versión de prueba creen una cuenta gratis para desbloquear la
+                        plataforma de trabajo». Sin cuenta, la fila no habla de planes:
+                        dice lo que abre la cuenta gratuita (verificado contra el
+                        mapa del soporte) y lleva a crearla. */}
+                    {basico && sinCuenta && (
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-gray-100 pt-2">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                                Gratis con tu cuenta
+                            </span>
+                            {['Ley de tu estado', 'Documento y Word', 'PDF de la tesis', 'Carpetas', 'Sálvame'].map((h) => (
+                                <button
+                                    key={h}
+                                    type="button"
+                                    onClick={tocoCandado}
+                                    title={`${h}: se abre al crear tu cuenta gratuita`}
+                                    className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-[10.5px] font-medium text-gray-500 transition-colors hover:border-[#c9a962]/60 hover:text-charcoal-700"
+                                >
+                                    <Lock className="h-2.5 w-2.5" />
+                                    {h}
+                                </button>
+                            ))}
+                            <a
+                                href="/registro"
+                                className="relieve relieve-oro ml-auto !h-7 !px-3 !text-[11.5px]"
+                            >
+                                Crear cuenta gratis
+                            </a>
+                        </div>
+                    )}
+                    {basico && !sinCuenta && (
                         <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-gray-100 pt-2">
                             <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
                                 Con un plan
