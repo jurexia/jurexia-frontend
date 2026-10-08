@@ -8,9 +8,12 @@ import { destinoTrasEntrar, recordarDestino } from '@/lib/destino-tras-entrar';
 import { EntrarConCodigo } from '@/components/EntradaConCodigo';
 import BotonProbar from '@/components/BotonProbar';
 import LemaOpenAI from '@/components/LemaOpenAI';
+import AvisoNavegadorIntegrado, { useNavegadorIntegrado } from '@/components/AvisoNavegadorIntegrado';
 
 export default function LoginPage() {
     const router = useRouter();
+    // Dentro de Instagram/Facebook, Google no deja iniciar sesión (7-oct-2026).
+    const integrado = useNavegadorIntegrado();
     // Si llegó desde Precios por tocar un plan, ahí es donde debe volver.
     // Se lee del `window` y no con useSearchParams, que obligaría a envolver
     // la página en <Suspense> — la misma razón que ya está anotada en
@@ -207,6 +210,10 @@ export default function LoginPage() {
                                 Inicia sesión para continuar
                             </p>
 
+                            {integrado && <AvisoNavegadorIntegrado info={integrado} />}
+
+                            {!integrado && (
+                            <>
                             {/* Google Login Button */}
                             <button
                                 onClick={handleGoogleLogin}
@@ -220,6 +227,8 @@ export default function LoginPage() {
                                 </svg>
                                 <span className="font-medium">Continuar con Google</span>
                             </button>
+                            </>
+                            )}
 
                             {/* Apple Login Button */}
                             <button

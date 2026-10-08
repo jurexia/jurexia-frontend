@@ -9,9 +9,12 @@ import { destinoTrasEntrar } from '@/lib/destino-tras-entrar';
 import { entrarConCodigo, pedirCodigo } from '@/lib/entrada-con-codigo';
 import { OfertaContrasena, PasoCodigo } from '@/components/EntradaConCodigo';
 import LemaOpenAI from '@/components/LemaOpenAI';
+import AvisoNavegadorIntegrado, { useNavegadorIntegrado } from '@/components/AvisoNavegadorIntegrado';
 
 export default function RegistroPage() {
     const router = useRouter();
+    // Dentro de Instagram/Facebook, Google no deja iniciar sesión (7-oct-2026).
+    const integrado = useNavegadorIntegrado();
 
     // Se lee una sola vez al montar: en el servidor no hay `window`, y
     // useSearchParams obligaría a envolver la página en <Suspense>.
@@ -30,6 +33,8 @@ export default function RegistroPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showEmailForm, setShowEmailForm] = useState(false);
+    // Sin Google a mano, el correo con código pasa a ser el camino principal.
+    useEffect(() => { if (integrado) setShowEmailForm(true); }, [integrado]);
 
     // Registro con email (17-sep-2026): nombre y correo → código de seis
     // dígitos → dentro. Si el correo ya tenía cuenta, entra a la suya en vez
@@ -185,6 +190,10 @@ export default function RegistroPage() {
                                 </div>
                             </div>
 
+                            {integrado && <AvisoNavegadorIntegrado info={integrado} />}
+
+                            {!integrado && (
+                            <>
                             {/* ★ Google Login — PRIMARY ACTION ★ */}
                             <button
                                 onClick={handleGoogleLogin}
@@ -198,6 +207,8 @@ export default function RegistroPage() {
                                 </svg>
                                 <span className="font-medium">Continuar con Google</span>
                             </button>
+                            </>
+                            )}
 
                             {/* ★ Apple Login ★ */}
                             <button
