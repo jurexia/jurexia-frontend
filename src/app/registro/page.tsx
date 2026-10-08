@@ -10,6 +10,7 @@ import { entrarConCodigo, pedirCodigo } from '@/lib/entrada-con-codigo';
 import { OfertaContrasena, PasoCodigo } from '@/components/EntradaConCodigo';
 import LemaOpenAI from '@/components/LemaOpenAI';
 import AvisoNavegadorIntegrado, { useNavegadorIntegrado } from '@/components/AvisoNavegadorIntegrado';
+import { medirAltaIurexia } from '@/components/MetaPixel';
 
 export default function RegistroPage() {
     const router = useRouter();
@@ -109,6 +110,11 @@ export default function RegistroPage() {
                 'currency': 'MXN'
             });
         }
+
+        // Meta (6-oct-2026): CompleteRegistration en el navegador y por la API
+        // de Conversiones, con el origen del anuncio. Sólo cuentas nuevas, sin
+        // esperar: medir no retrasa a quien se registra.
+        if (r.nueva) void medirAltaIurexia({ nueva: true });
 
         setDentro({ nueva: r.nueva });
         return true;

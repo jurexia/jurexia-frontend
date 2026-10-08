@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { recogerDestino } from '@/lib/destino-tras-entrar';
+import { medirAltaIurexia } from '@/components/MetaPixel';
 
 export default function AuthCallbackPage() {
     const router = useRouter();
@@ -25,6 +26,10 @@ export default function AuthCallbackPage() {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (event, session) => {
                 if (event === 'SIGNED_IN' && session) {
+                    // Alta con Google/Apple (6-oct-2026): si la cuenta se creó
+                    // hace minutos, se mide para Meta. Sin esperar; ver
+                    // `medirAlta` en @/lib/origen-alta.
+                    void medirAltaIurexia({ sesion: session, conversionGoogle: true });
                     router.push(recogerDestino());
                     subscription.unsubscribe();
                 }
