@@ -22,14 +22,15 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender
 
 /* ═══ EL HISTORIAL QUE ACOMPAÑA AL DOCUMENTO ════════════════════════════ */
 
-/* EL TOPE DE UN CAMPO DE FORMULARIO. `historial` viaja como campo de texto en
-   el multipart de `/analyze-document`, y Starlette (FastAPI 0.141 / Starlette
-   1.3 en el API) rechaza cualquier campo que no sea archivo por encima de
-   1 MiB —«Field exceeded maximum size of 1024KB»— antes de que el endpoint lo
-   vea: el análisis entero fallaría justo en las conversaciones largas, que son
-   para las que se manda. Si el API sube ese tope o lo recibe como archivo,
-   esto se puede retirar. Se deja margen para el nombre del campo. */
-const LIMITE_HISTORIAL_BYTES = 1_000_000
+/* EL HISTORIAL VIAJA COMO ARCHIVO (7-oct-2026). Como campo de texto del
+   multipart, Starlette (FastAPI 0.141 / Starlette 1.3 en el API) rechaza
+   cualquier campo que no sea archivo por encima de 1 MiB —«Field exceeded
+   maximum size of 1024KB»— antes de que el endpoint lo vea, y una
+   conversación como la de la abogada lo rebasa. Por eso va en
+   `historial_archivo` (ver `handleDocumentSubmit`), que no tiene ese tope.
+   Lo de aquí es sólo un techo de seguridad para la subida: el recorte por
+   plan lo hace el API, y es el que dispara MEMORIA_LLENA. */
+const LIMITE_HISTORIAL_BYTES = 8 * 1024 * 1024
 
 /** Lo pesado que el API tira de todos modos al limpiar el historial: el mapa
  *  de citas, las fuentes adelantadas, los precedentes y el razonamiento. El
@@ -52,34 +53,36 @@ function turnosDe(mensajes: Message[]): Turno[] {
 }
 
 /**
- * El campo `historial` de `/analyze-document`: los mensajes que YA estaban en
- * la conversación, en orden y tal como están en pantalla (el API limpia los
- * marcadores). Null si no hay conversación previa.
+ * El historial de `/analyze-document` (el JSON de `historial_archivo`): los
+ * mensajes que YA estaban en la conversación, en orden y tal como están en
+ * pantalla, sin la carga de los marcadores —que el API quitaría de todos
+ * modos y que en una conversación larga es la mayor parte del peso—. Null si
+ * no hay conversación previa.
  *
- * Sólo si no cabe en el campo (ver `LIMITE_HISTORIAL_BYTES`) se aligera:
- * primero se quita la carga de los marcadores, y si aún no cabe, salen los
- * mensajes más antiguos —los que el API abreviaría primero—. Mejor eso que un
- * análisis que no llega.
+ * Sólo si aun así pasa de `LIMITE_HISTORIAL_BYTES` salen los mensajes más
+ * antiguos, los que el API abreviaría primero.
  */
 export function historialParaAnalisis(mensajes: Message[]): string | null {
     const turnos = turnosDe(mensajes)
+        .map((t) => ({ role: t.role, content: sinCargaDeMarcadores(t.content) }))
+        .filter((t) => t.content.trim())
     if (!turnos.length) return null
     const cod = new TextEncoder()
     const json = JSON.stringify(turnos)
-    if (cod.encode(json).length <= LIMITE_HISTORIAL_BYTES) return json
+    const bytes = cod.encode(json).length
+    if (bytes <= LIMITE_HISTORIAL_BYTES) return json
 
-    const ligeros = turnos.map((t) => ({ role: t.role, content: sinCargaDeMarcadores(t.content) }))
     let total = 2   // los corchetes
-    let desde = ligeros.length
+    let desde = turnos.length
     while (desde > 0) {
-        const peso = cod.encode(JSON.stringify(ligeros[desde - 1])).length + (desde < ligeros.length ? 1 : 0)
+        const peso = cod.encode(JSON.stringify(turnos[desde - 1])).length + (desde < turnos.length ? 1 : 0)
         if (total + peso > LIMITE_HISTORIAL_BYTES) break
         total += peso
         desde--
     }
-    const quedan = ligeros.slice(desde)
-    console.warn(`[analyze-document] historial de ${cod.encode(json).length} bytes: `
-        + `sin marcadores y sin los ${desde} mensaje(s) más antiguos para caber en el formulario.`)
+    console.warn(`[analyze-document] historial de ${bytes} bytes: `
+        + `sin los ${desde} mensaje(s) más antiguos para no pasar de ${LIMITE_HISTORIAL_BYTES}.`)
+    const quedan = turnos.slice(desde)
     return quedan.length ? JSON.stringify(quedan) : null
 }
 

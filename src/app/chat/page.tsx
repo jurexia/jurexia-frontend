@@ -854,7 +854,7 @@ export default function ChatPage() {
            trabajó una conversación larga y cada adjunto la contradecía: este
            camino mandaba el archivo y la instrucción, nunca lo hablado. Se toma
            lo que hay en pantalla ANTES de añadir este mensaje, que es lo que el
-           API espera en `historial`. */
+           API espera como historial (`historial_archivo`, más abajo). */
         const previos = messagesRef.current;
 
         // Add user message to chat
@@ -913,8 +913,13 @@ export default function ChatPage() {
         }
         // El selector «Fuentes» vale también con documento adjunto.
         formData.append('fuentes', fuentesElegidas().join(','));
+        /* Como ARCHIVO, no como campo de texto: Starlette corta los campos de
+           texto en 1 MiB y una conversación larga lo pasa. El API sigue
+           aceptando `historial` como texto, pero si llegan los dos usa éste. */
         const historial = historialParaAnalisis(previos);
-        if (historial) formData.append('historial', historial);
+        if (historial) {
+            formData.append('historial_archivo', new Blob([historial], { type: 'application/json' }), 'historial.json');
+        }
 
         // El análisis de un documento adjunto también nace en el panel.
         if (!constructorAbiertoRef.current) setDocumentoAbierto(true);
