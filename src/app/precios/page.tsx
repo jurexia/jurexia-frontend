@@ -8,7 +8,7 @@ import { redirectToCheckout } from '@/lib/stripe-client';
 import Navbar from '@/components/Navbar';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 import { PLANS } from '@/lib/stripe';
-import { RejillaCubos, CircuitoNeuronal } from '@/components/FondosDePlan';
+import { ObraClara, ObraOscura } from '@/components/FondosDePlan';
 import Image from 'next/image';
 import PieDePagina from '@/components/PieDePagina';
 
@@ -196,12 +196,12 @@ export default function PreciosPage() {
                                 description={isAnnual ? 'Un solo pago, todo el año cubierto' : 'Para el litigante que trabaja solo'}
                                 savingsBadge={isAnnual ? 'Ahorras $298 MXN' : undefined}
                                 features={[
-                                    <span className="font-semibold text-white">140 consultas/mes</span>,
-                                    <><span className="font-semibold text-white">30 flujos de trabajo/mes</span> <span className="text-white/45">· escritos completos paso a paso</span></>,
+                                    <span className="font-semibold text-charcoal-900">140 consultas/mes</span>,
+                                    <><span className="font-semibold text-charcoal-900">30 flujos de trabajo/mes</span> <span className="text-piedra-500">· escritos completos paso a paso</span></>,
                                     "IA Jurídica Avanzada (análisis complejo y deducción)",
                                     "Análisis de documentos (auditoría y mejoras)",
-                                    <>Lee documentos de hasta <span className="font-semibold text-white">100 hojas</span></>,
-                                    <>Precedentes Judiciales por Circuito <span className="text-white/45">· 7 circuitos activos</span></>,
+                                    <>Lee documentos de hasta <span className="font-semibold text-charcoal-900">100 hojas</span></>,
+                                    <>Precedentes Judiciales por Circuito <span className="text-piedra-500">· 7 circuitos activos</span></>,
                                     "Redacción Pro — motor de razonamiento profundo",
                                     "Registra tu cédula para conectar clientes",
                                     "Filtros por entidad federativa y marco federal",
@@ -210,7 +210,7 @@ export default function PreciosPage() {
                                 buttonText={isAnnual ? 'Elegir Pro Anual' : 'Elegir Plan Pro'}
                                 priceId={isAnnual ? PLANS.pro_annual.priceId || undefined : PLANS.pro_monthly.priceId || undefined}
                                 highlighted={false}
-                                fondo="cubos"
+                                fondo="corte"
                                 badge="MÁS ELEGIDO"
                             />
                         </AnimateOnScroll>
@@ -243,7 +243,7 @@ export default function PreciosPage() {
                                 buttonText={isAnnual ? 'Elegir Platinum Anual' : 'Elegir Platinum'}
                                 priceId={isAnnual ? PLANS.platinum_annual.priceId || undefined : PLANS.platinum_monthly.priceId || undefined}
                                 highlighted={true}
-                                fondo="circuitos"
+                                fondo="themis"
                                 badge="RECOMENDADO"
                             />
                         </AnimateOnScroll>
@@ -281,7 +281,17 @@ export default function PreciosPage() {
             <section className="py-10 px-4">
                 <div className="max-w-4xl mx-auto space-y-4">
                     <AnimateOnScroll delay={0.05}>
-                        <div className="relative overflow-hidden rounded-2xl border border-accent-gold/25 bg-gradient-to-br from-[#171614] to-[#0f0e0d] p-8 shadow-[0_1px_2px_rgba(0,0,0,0.4),0_24px_60px_-24px_rgba(0,0,0,0.75)]">
+                        <div className="relative isolate overflow-hidden rounded-2xl border border-accent-gold/25 bg-gradient-to-br from-[#171614] to-[#0f0e0d] p-8 shadow-[0_1px_2px_rgba(0,0,0,0.4),0_24px_60px_-24px_rgba(0,0,0,0.75)]">
+                            {/* LA BIBLIOTECA EN NEGRO (7-oct-2026): la obra de la
+                                casa detrás de la cabecera del plan, y fundida hacia
+                                abajo para que la prueba del taller quede sobre negro
+                                limpio. */}
+                            <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[520px]"
+                                 style={{ WebkitMaskImage: 'linear-gradient(180deg, #000 0%, #000 45%, transparent 100%)', maskImage: 'linear-gradient(180deg, #000 0%, #000 45%, transparent 100%)' }}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src="/web/arte/biblioteca.webp" alt="" loading="lazy" decoding="async" className="h-full w-full object-cover object-[70%_40%]" />
+                                <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(15,14,13,0.94) 0%, rgba(15,14,13,0.82) 45%, rgba(15,14,13,0.55) 100%)' }} />
+                            </div>
                             {/* EL MISMO HALO QUE EL TALLER: un resplandor dorado muy
                                 diluido arriba, que levanta la tarjeta del fondo sin
                                 ensuciar el borde. No es un degradado de color: es el
@@ -757,10 +767,10 @@ function PricingCard({
     highlighted?: boolean;
     isBasic?: boolean;
     badge?: string;
-    /** Textura de fondo. Sólo la llevan los dos planes que la página vende:
-        cubos isométricos en Pro, circuito y red neuronal en Platinum. Las dos
-        oscurecen la tarjeta, así que también deciden el color de la tinta. */
-    fondo?: 'cubos' | 'circuitos';
+    /** La obra de fondo (ver FondosDePlan). Sólo la llevan los dos planes que
+        la página vende: el palacio de justicia, claro, en Pro; Themis, en
+        negro, en Platinum. La de Themis oscurece la tarjeta y decide la tinta. */
+    fondo?: 'corte' | 'themis';
     savingsBadge?: string;
     /** Precio por consulta. Se calcula del precio y el cupo; va bajo el precio
         porque es el dato con el que de verdad se comparan dos planes. */
@@ -772,7 +782,7 @@ function PricingCard({
         el aviso: la llamada a la acción principal no llevaba a ninguna parte. */
     upgradePriceId?: string;
 }) {
-    const oscura = highlighted || fondo !== undefined;
+    const oscura = highlighted || fondo === 'themis';
     const [loading, setLoading] = useState(false);
     const [showWarning, setShowWarning] = useState(false);
     const { user } = useAuth();
@@ -824,40 +834,38 @@ function PricingCard({
        también. Ahora el negro, el anillo dorado y el relieve son de Platinum, y
        Pro pasa a tarjeta blanca con su distintivo honesto —«MÁS ELEGIDO», que
        es cierto: 177 de 219 suscriptores de pago están en Pro—. */
-    /* `oscura` es lo único que decide el color de la tinta. Platinum ya lo
-       era; Pro lo es desde que el gris de los cubos le entró de fondo. El
-       destacado sigue siendo uno solo y sigue siendo Platinum: el anillo
-       dorado, el relieve y el botón en oro no se comparten.
+    /* `oscura` es lo único que decide el color de la tinta. Platinum lo es;
+       Pro vuelve a ser clara desde que su fondo es el palacio de justicia a
+       lápiz (7-oct-2026). El destacado sigue siendo uno solo y sigue siendo
+       Platinum: el anillo dorado y el relieve no se comparten.
 
        `isolate` no es adorno: crea el contexto de apilamiento sin el que el
        fondo —que va en z negativo— se metería detrás de la propia tarjeta y
        no se vería. */
     const cardStyles = highlighted
         ? 'isolate bg-charcoal-900 text-white ring-1 ring-accent-gold/35 shadow-[0_30px_80px_-32px_rgba(0,0,0,0.6)] relative z-10 lg:-mt-5 lg:-mb-5'
-        : fondo
-            ? 'isolate bg-charcoal-900 text-white ring-1 ring-white/10 shadow-[0_24px_60px_-34px_rgba(0,0,0,0.55)]'
+        : fondo === 'corte'
+            ? 'isolate bg-[#f8f3eb] border border-black/[0.07] shadow-[0_24px_60px_-38px_rgba(0,0,0,0.35)] hover:shadow-lg'
             : 'bg-white border border-black/[0.06] hover:shadow-lg';
 
-    /* Sobre el gris de Pro el distintivo negro se perdía. En blanco se lee, y
-       sigue sin disputarle el oro a Platinum. */
+    /* El distintivo de Pro, en tinta sobre su tarjeta clara; el oro sigue
+       siendo sólo de Platinum. */
     const badgeStyles = highlighted
         ? 'bg-accent-gold text-charcoal-900'
-        : fondo
-            ? 'bg-white text-charcoal-900'
-            : 'bg-charcoal-900 text-white';
+        : 'bg-charcoal-900 text-white';
 
     const buttonBaseStyles = `flex h-12 w-full items-center justify-center rounded-lg px-6 text-[0.9375rem] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed`;
     /* Los dos botones del sistema (3-oct-2026): crema sobre las tarjetas
        oscuras y tinta sobre las claras. La destacada ya se distingue por su
        fondo y su sello; el oro queda para el sello, no para el botón. */
-    const buttonColorStyles = highlighted || fondo
+    const buttonColorStyles = oscura
         ? 'bg-cream-100 text-tinta hover:bg-white'
         : 'bg-tinta text-cream-100 hover:bg-charcoal-800';
 
     return (
         <div className={`relative rounded-3xl p-8 pt-10 transition-all duration-300 flex flex-col h-full ${cardStyles}`}>
-            {fondo === 'cubos' && <RejillaCubos />}
-            {fondo === 'circuitos' && <CircuitoNeuronal />}
+            {fondo === 'corte' && <ObraClara arte="/web/arte/fachada.webp" />}
+            {fondo === 'themis' && <ObraOscura arte="/web/arte/themis.webp" />}
 
             {badge && (
                 <div className={`absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide shadow-sm ${badgeStyles}`}>
@@ -907,7 +915,7 @@ function PricingCard({
                 trece viñetas iguales, «600 hojas» y «jurimetría» se leen como
                 una más; aquí son el motivo de la tarjeta. */}
             {exclusives && exclusives.length > 0 && (
-                <div className="mb-6 rounded-xl border border-accent-gold/30 bg-accent-gold/[0.07] p-4">
+                <div className="mb-6 rounded-xl border border-accent-gold/30 bg-[#0f0e0d]/60 p-4 backdrop-blur-[2px]">
                     <p className="text-[10px] font-bold tracking-widest text-accent-gold mb-3">
                         SOLO EN PLATINUM
                     </p>
