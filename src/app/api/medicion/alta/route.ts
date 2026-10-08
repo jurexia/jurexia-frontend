@@ -32,7 +32,7 @@ import { VENTANA_ALTA_MS } from '@/lib/origen-alta';
 export const dynamic = 'force-dynamic';
 
 const SITIO = 'https://www.iurexia.com';
-const CAMPOS_TEXTO = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid', 'landing_path', 'referrer'] as const;
+const CAMPOS_TEXTO = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid', 'gclid', 'landing_path', 'referrer'] as const;
 
 function texto(v: unknown, largo = 200): string | null {
     if (typeof v !== 'string') return null;
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
         user_agent: agente,
         consiente_marketing: marketing,
     };
-    for (const c of CAMPOS_TEXTO) fila[c] = texto(origen[c], c === 'fbclid' ? 500 : 200);
+    for (const c of CAMPOS_TEXTO) fila[c] = texto(origen[c], c === 'fbclid' || c === 'gclid' ? 500 : 200);
 
     const admin = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,

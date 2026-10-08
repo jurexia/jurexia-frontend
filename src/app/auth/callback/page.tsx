@@ -29,7 +29,7 @@ export default function AuthCallbackPage() {
                     // Alta con Google/Apple (6-oct-2026): si la cuenta se creó
                     // hace minutos, se mide para Meta. Sin esperar; ver
                     // `medirAlta` en @/lib/origen-alta.
-                    void medirAltaIurexia({ sesion: session });
+                    void medirAltaIurexia({ sesion: session, conversionGoogle: true });
                     router.push(recogerDestino());
                     subscription.unsubscribe();
                 }

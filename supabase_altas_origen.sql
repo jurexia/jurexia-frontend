@@ -21,6 +21,7 @@ create table if not exists public.altas_origen (
     utm_content          text,
     utm_term             text,
     fbclid               text,
+    gclid                text,
     fbc                  text,
     fbp                  text,
     landing_path         text,
@@ -43,3 +44,6 @@ comment on table public.altas_origen is
     'Primer contacto (utm/fbclid) de cada alta y, con permiso de Marketing, fbc/fbp/user_agent para la API de Conversiones de Meta. Sólo service role.';
 comment on column public.altas_origen.consiente_marketing is
     'Permiso de Marketing en el aviso de cookies al registrarse. Sin él no se manda nada a Meta.';
+
+-- 7-oct-2026: identificador de clic de Google Ads. La tabla ya existía sin él.
+alter table public.altas_origen add column if not exists gclid text;

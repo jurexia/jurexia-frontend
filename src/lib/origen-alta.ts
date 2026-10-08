@@ -59,6 +59,8 @@ export interface OrigenAlta {
     utm_content?: string;
     utm_term?: string;
     fbclid?: string;
+    /** Identificador de clic de Google Ads, para atribuir altas y compras a la campaña. */
+    gclid?: string;
     /** `fb.1.<ms>.<fbclid>` calculado al aterrizar, con la hora del clic. */
     fbc?: string;
     landing_path?: string;
@@ -113,8 +115,12 @@ export function fusionarOrigen(
     // recortado si viniera monstruoso.
     const fbclidCrudo = q.get('fbclid');
     const fbclid = fbclidCrudo && fbclidCrudo.trim() ? fbclidCrudo.trim().slice(0, 500) : undefined;
+    // Google Ads (7-oct-2026): el gclid también se guarda tal cual, para poder
+    // atribuir altas y compras a una campaña de Búsqueda.
+    const gclidCrudo = q.get('gclid');
+    const gclid = gclidCrudo && gclidCrudo.trim() ? gclidCrudo.trim().slice(0, 500) : undefined;
 
-    if (!hayUtm && !fbclid) return previo;
+    if (!hayUtm && !fbclid && !gclid) return previo;
 
     const inicioPrevio = previo ? Date.parse(previo.primer_contacto) : NaN;
     const vigente = previo !== null
@@ -132,14 +138,21 @@ export function fusionarOrigen(
             nuevo.fbclid = fbclid;
             nuevo.fbc = formatoFbc(fbclid, ahoraMs);
         }
+        if (gclid) nuevo.gclid = gclid;
         return nuevo;
     }
 
-    // Primer contacto vigente: se conserva; sólo un fbclid NUEVO lo actualiza.
+    // Primer contacto vigente: se conserva; sólo un clic NUEVO (fbclid o gclid)
+    // actualiza el identificador del clic, porque las plataformas atribuyen
+    // por el clic más reciente.
+    let fusion: OrigenAlta = previo!;
     if (fbclid && fbclid !== previo!.fbclid) {
-        return { ...previo!, fbclid, fbc: formatoFbc(fbclid, ahoraMs) };
+        fusion = { ...fusion, fbclid, fbc: formatoFbc(fbclid, ahoraMs) };
     }
-    return previo;
+    if (gclid && gclid !== previo!.gclid) {
+        fusion = { ...fusion, gclid };
+    }
+    return fusion;
 }
 
 /** ¿La cuenta se creó hace poco? `createdAt` es la hora de Supabase. */
@@ -285,6 +298,26 @@ export function dispararPendientes(): void {
 
 // ─── El alta ────────────────────────────────────────────────────────────────
 
+/** Etiquetas de conversión «Registro» de Google Ads (las mismas de /registro). */
+const ETIQUETAS_GOOGLE = ['AW-18019843576/jCevCMPy4Z4cEPj7w5BD', 'AW-18019843576/TidqCP3ZhaMaEMj0xOQo'];
+
+/**
+ * Conversión de registro en Google Ads para quien volvió de Google o Apple.
+ * Hasta el 7-oct-2026 sólo la disparaba el registro por correo: el 91 % de las
+ * altas (Google 82 %, Apple 9 %) no le llegaba a Google Ads. `gtag` sólo existe
+ * si la persona aceptó las analíticas.
+ */
+export function convertirEnGoogle(): void {
+    if (!hayNavegador()) return;
+    try {
+        const gtag = (window as any).gtag;
+        if (typeof gtag !== 'function') return;
+        for (const send_to of ETIQUETAS_GOOGLE) {
+            gtag('event', 'conversion', { send_to, value: 1.0, currency: 'MXN' });
+        }
+    } catch { /* medir nunca rompe el alta */ }
+}
+
 export interface SesionParaAlta {
     access_token: string;
     user: { id: string; created_at?: string | null };
@@ -307,6 +340,8 @@ export async function medirAlta(opciones: {
     sesion: SesionParaAlta;
     marketing: boolean;
     nueva?: boolean;
+    /** Sólo al volver de Google/Apple: el registro por correo ya dispara la suya. */
+    conversionGoogle?: boolean;
 }): Promise<void> {
     if (!hayNavegador()) return;
     try {
@@ -320,6 +355,8 @@ export async function medirAlta(opciones: {
             if (window.localStorage.getItem(LLAVE_MEDIDA + id)) return;
             window.localStorage.setItem(LLAVE_MEDIDA + id, new Date().toISOString());
         } catch { /* sin almacenamiento: se mide igual; Meta deduplica */ }
+
+        if (opciones.conversionGoogle) convertirEnGoogle();
 
         if (marketing) {
             asegurarCookieFbc();

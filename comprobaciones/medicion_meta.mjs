@@ -63,6 +63,14 @@ comprueba(o3?.fbclid === 'IwAR_Dos' && o3?.fbc === `fb.1.${T3}.IwAR_Dos` && o3?.
 const T4 = T0 + 31 * 86400e3;
 const o4 = O.fusionarOrigen(o1, '?utm_source=google&utm_campaign=otra', T4, '/precios', '');
 comprueba(o4?.utm_source === 'google' && o4?.fbclid === undefined && o4?.primer_contacto === new Date(T4).toISOString(), 'pasados 30 días: nuevo primer contacto');
+const g1 = O.fusionarOrigen(null, '?utm_source=google&utm_medium=cpc&utm_campaign=busqueda&gclid=Cj0KG_Uno', T0, '/registro', '');
+comprueba(g1?.gclid === 'Cj0KG_Uno' && g1?.fbclid === undefined && g1?.fbc === undefined && g1?.utm_source === 'google', 'gclid: se guarda tal cual, sin fbc');
+comprueba(O.fusionarOrigen(null, '?gclid=Solo', T0, '/', '')?.gclid === 'Solo', 'un gclid solo, sin utm, ya es un primer contacto');
+const g2 = O.fusionarOrigen(g1, '?gclid=Cj0KG_Dos', T0 + 3 * 86400e3, '/', '');
+comprueba(g2?.gclid === 'Cj0KG_Dos' && g2?.utm_campaign === 'busqueda' && g2?.primer_contacto === g1.primer_contacto, 'gclid nuevo: actualiza el clic y conserva el primer contacto');
+comprueba(O.fusionarOrigen(g1, '?gclid=Cj0KG_Uno', T0 + 1000, '/', '') === g1, 'el mismo gclid: no toca nada');
+const gm = O.fusionarOrigen(o1, '?gclid=Cruzado', T3, '/', '');
+comprueba(gm?.gclid === 'Cruzado' && gm?.fbclid === 'IwAR_Uno' && gm?.fbc === o1.fbc, 'un gclid no pisa el fbclid ni el fbc del primer contacto');
 comprueba(O.dominioCookie('www.iurexia.com') === '.iurexia.com' && O.dominioCookie('iurexia.com') === '.iurexia.com'
     && O.dominioCookie('localhost') === undefined && O.dominioCookie('jurexia-x.vercel.app') === undefined, 'dominio de la cookie');
 comprueba(O.esAltaReciente(new Date(T0 - 5 * 60e3).toISOString(), T0) && !O.esAltaReciente(new Date(T0 - 2 * 3600e3).toISOString(), T0)
@@ -223,6 +231,23 @@ const tarde = [];
 nav.win.fbq = (...a) => tarde.push(a);
 O.dispararPendientes();
 comprueba(tarde.length === 1 && tarde[0][3]?.eventID === 'reg_u-nuevo' && nav.win.sessionStorage.getItem('iurexia:meta-pendientes') === null, 'en cuanto hay fbq, sale el pendiente');
+
+// Conversión de Google Ads al volver de Google/Apple (sólo si hay gtag, o sea, con analíticas)
+nav = navegador();
+const gtagLlamadas = [];
+nav.win.gtag = (...a) => gtagLlamadas.push(a);
+enviados.length = 0;
+await O.medirAlta({ sesion: { access_token: 't', user: { id: 'u-g1', created_at: new Date().toISOString() } }, marketing: false, conversionGoogle: true });
+comprueba(gtagLlamadas.length === 2 && gtagLlamadas.every(a => a[0] === 'event' && a[1] === 'conversion' && a[2].send_to.startsWith('AW-18019843576/') && a[2].currency === 'MXN'), 'alta con Google/Apple: dos conversiones de Google Ads', String(gtagLlamadas.length));
+await O.medirAlta({ sesion: { access_token: 't', user: { id: 'u-g1', created_at: new Date().toISOString() } }, marketing: false, conversionGoogle: true });
+comprueba(gtagLlamadas.length === 2, 'segunda vez para el mismo usuario: Google no cuenta doble');
+await O.medirAlta({ sesion: { access_token: 't', user: { id: 'u-viejo2', created_at: '2025-01-01T00:00:00Z' } }, marketing: false, conversionGoogle: true });
+comprueba(gtagLlamadas.length === 2, 'cuenta vieja que vuelve: no es alta, no convierte');
+await O.medirAlta({ sesion: { access_token: 't', user: { id: 'u-g2', created_at: new Date().toISOString() } }, marketing: false, nueva: true });
+comprueba(gtagLlamadas.length === 2, 'registro por correo (sin conversionGoogle): no duplica la conversión que ya dispara /registro');
+nav = navegador();
+await O.medirAlta({ sesion: { access_token: 't', user: { id: 'u-g3', created_at: new Date().toISOString() } }, marketing: false, conversionGoogle: true });
+comprueba(true, 'sin gtag (sin permiso de analíticas): no lanza');
 
 nav = navegador({ search: '?fbclid=IwAR_SinPermiso' });
 O.capturarOrigen();

@@ -128,7 +128,7 @@ export default function MetaPixel() {
  * y el retorno de Google/Apple (`sesion` del SIGNED_IN; decide `created_at`).
  * Nunca lanza.
  */
-export async function medirAltaIurexia(opciones: { sesion?: SesionParaAlta | null; nueva?: boolean } = {}) {
+export async function medirAltaIurexia(opciones: { sesion?: SesionParaAlta | null; nueva?: boolean; conversionGoogle?: boolean } = {}) {
     try {
         let sesion = opciones.sesion ?? null;
         if (!sesion) {
@@ -136,6 +136,6 @@ export async function medirAltaIurexia(opciones: { sesion?: SesionParaAlta | nul
             sesion = data.session;
         }
         if (!sesion) return;
-        await medirAlta({ sesion, nueva: opciones.nueva, marketing: consentimiento().marketing });
+        await medirAlta({ sesion, nueva: opciones.nueva, conversionGoogle: opciones.conversionGoogle, marketing: consentimiento().marketing });
     } catch { /* medir nunca rompe el alta */ }
 }
