@@ -43,17 +43,16 @@ import {
     PLANES_QUE_CUENTAN, PLAN_REGALO, planDelPremio,
     codigoReferido, peldanoAlcanzado, siguientePeldano, vencimientoEnDias,
 } from './correo/referidos';
+import { PLAN_CONFIG } from './supabase-admin';
 
-/** Cuota mensual de cada plan. Espejo de PLAN_CONFIG en supabase-admin. */
-const LIMITE: Record<string, number> = {
-    gratuito: 5,
-    basico_monthly: 70,
-    pro_monthly: 140,
-    pro_annual: 140,
-    platinum_monthly: 560,
-    platinum_annual: 560,
-    ultra_secretarios: 140,
-};
+/** Cuota mensual de cada plan, leída de PLAN_CONFIG y no copiada. La copia que
+ *  había aquí se quedó con 140 para Ultra —las de Pro; son 560— y sin el Básico
+ *  anual: al vencer un premio, un cliente Ultra volvía a su plan con la cuarta
+ *  parte de sus consultas. (supabase-admin importa este módulo sólo de forma
+ *  diferida, dentro de una función, así que no hay ciclo al cargar.) */
+const LIMITE: Record<string, number> = Object.fromEntries(
+    Object.entries(PLAN_CONFIG).map(([plan, c]) => [plan, c.queriesLimit]),
+);
 
 /** Jerarquía para no degradar nunca a nadie por culpa de un premio. */
 const RANGO: Record<string, number> = {
