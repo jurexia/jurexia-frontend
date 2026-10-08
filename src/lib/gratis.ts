@@ -24,6 +24,10 @@
 const BASE = process.env.NEXT_PUBLIC_API_URL || '';
 const LLAVE = 'iurexia-basico-testigo';
 
+/** La consulta que se escribió en la portada antes de entrar (sessionStorage):
+ *  el chat la manda sola al abrir y la borra. */
+export const PREGUNTA_PORTADA = 'iurexia-pregunta-portada';
+
 export interface FuenteBasica {
     n: number;
     tipo: 'tesis' | 'bloque' | string;

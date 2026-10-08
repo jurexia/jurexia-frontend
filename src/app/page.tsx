@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react';
 import Navbar from '@/components/Navbar';
-import HeroVideo from '@/components/HeroVideo';
+import HeroPortada from '@/components/web/HeroPortada';
 import AnuncioOpenAI from '@/components/AnuncioOpenAI';
 import VideoChat from '@/components/VideoChat';
 import DespachosVitrina from '@/components/DespachosVitrina';
@@ -22,7 +22,8 @@ import { claseWeb } from '@/lib/fuentes-web';
 
    De 15 secciones a 11, y cada una dice una sola cosa, en el orden en que la
    pregunta quien llega a evaluarnos:
-   1. qué es (el vídeo de la bandera, que se queda como David lo dejó);
+   1. qué es, con el gancho (8-oct-2026: «Tú firmas. Iurexia fundamenta.», la
+      consulta sin registro y una consulta real grabada; ver HeroPortada);
    2. con qué tecnología (la franja de OpenAI);
    3. cómo se ve (la plataforma en dos minutos) y quién lo usa (los logotipos
       de los despachos: no se quitan);
@@ -99,8 +100,9 @@ export default function HomePage() {
             />
             <Navbar sobreOscuro />
 
-            {/* 1. El vídeo de la bandera: no se toca (David, 3-oct-2026). */}
-            <HeroVideo />
+            {/* 1. El gancho (8-oct-2026). Sustituye al vídeo de ambiente: David pidió
+                «algo más profesional… que supere el gancho de harvey». */}
+            <HeroPortada />
 
             {/* 2. «Iurexia, now powered by OpenAI». (Entre el vídeo y esta franja
                 hubo una captura del chat encimada al vídeo; David no le vio

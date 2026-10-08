@@ -20,7 +20,7 @@ import FeedbackWidget from '@/components/FeedbackWidget';
 import { useChat } from '@/hooks/useChat';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useAuthOBasico } from '@/lib/useAuth';
-import { hayTestigoBasico, preguntarBasico, markdownDeBasico, BLOQUEADO_POR_OMISION } from '@/lib/gratis';
+import { hayTestigoBasico, preguntarBasico, markdownDeBasico, BLOQUEADO_POR_OMISION, PREGUNTA_PORTADA } from '@/lib/gratis';
 import PanelBasico from '@/components/PanelBasico';
 import dynamic from 'next/dynamic';
 import type { InsercionDocumento } from '@/components/documento/ConstructorDemanda';
@@ -837,6 +837,25 @@ export default function ChatPage() {
         lastSentUserMsgRef.current = null;
     }, [user, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed,
         modoBasico, enviarBasico, profile?.subscription_type, vincularNueva]);
+
+    /* LA PREGUNTA QUE TRAEN DE LA PORTADA (8-oct-2026). La portada deja
+       escribir la consulta antes de entrar (`PREGUNTA_PORTADA`, en
+       sessionStorage); aquí sale sola, UNA vez, en cuanto el chat sabe quién
+       pregunta. Con cuenta se espera además a la entidad del perfil: con la
+       función todavía sin ella, se abría el selector de estado aunque el
+       perfil ya la tuviera. */
+    const preguntaPortadaHecha = useRef(false);
+    useEffect(() => {
+        if (preguntaPortadaHecha.current || authLoading || hayTestigo === null) return;
+        if (!modoBasico && (!user || !profile || (profile.estado && !selectedEstado))) return;
+        preguntaPortadaHecha.current = true;
+        let texto = '';
+        try {
+            texto = (window.sessionStorage.getItem(PREGUNTA_PORTADA) || '').trim();
+            window.sessionStorage.removeItem(PREGUNTA_PORTADA);
+        } catch { /* sin almacenamiento no hay pregunta guardada */ }
+        if (texto) void handleSendMessage(texto);
+    }, [authLoading, hayTestigo, modoBasico, user, profile, selectedEstado, handleSendMessage]);
 
     // Document analysis via Gemini Flash (streaming from /analyze-document)
     const handleDocumentSubmit = useCallback(async (file: File, prompt: string, displayMessage: string) => {

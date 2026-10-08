@@ -180,6 +180,10 @@ function menuActivo(menu: Menu, pathname: string | null) {
 export default function Navbar({ sobreOscuro = false, plataforma = false }: { sobreOscuro?: boolean; plataforma?: boolean }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [anclada, setAnclada] = useState(!sobreOscuro);
+    /* Sobre el hero oscuro, en cuanto se baja un poco: el texto del hero pasaba
+       por detrás de la barra transparente y se leían las dos cosas encimadas
+       (8-oct-2026). Desde entonces lleva un velo de tinta hasta que se ancla. */
+    const [despegada, setDespegada] = useState(false);
     /* El menú desplegable abierto en escritorio, y en el móvil la sección
        desplegada del acordeón. */
     const [abierto, setAbierto] = useState<IdMenu | null>(null);
@@ -211,6 +215,7 @@ export default function Navbar({ sobreOscuro = false, plataforma = false }: { so
         const alScrollear = () => {
             const umbral = sobreOscuro ? window.innerHeight * 0.7 : 8;
             setAnclada(window.scrollY > umbral);
+            setDespegada(window.scrollY > 8);
         };
         alScrollear();
         window.addEventListener('scroll', alScrollear, { passive: true });
@@ -292,7 +297,9 @@ export default function Navbar({ sobreOscuro = false, plataforma = false }: { so
     };
 
     const fondoBarra = enClaro
-        ? 'bg-transparent border-transparent'
+        ? despegada
+            ? 'bg-tinta/80 backdrop-blur-xl border-b border-white/[0.06]'
+            : 'bg-transparent border-transparent'
         : anclada || conPanel
             ? 'bg-cream-200/90 backdrop-blur-xl border-b border-charcoal-900/[0.07] shadow-[0_1px_3px_rgba(26,26,26,0.04)]'
             : 'bg-cream-300/70 backdrop-blur-md border-b border-transparent';
