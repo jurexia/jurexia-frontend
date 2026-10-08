@@ -104,6 +104,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     // cuando el sello se pinta (terminada la respuesta).
     const htmlRazonamiento = useMemo(() => (thinkingContent ? formatMarkdown(thinkingContent) : ''), [thinkingContent]);
     const conSello = !isStreaming && !basico;
+    const tesisDePrueba = basico ? (message.content.match(/^\*\*\[\d+\]/gm)?.length ?? 0) : 0;
     const lecturaDelSello = useMemo(() => (conSello ? {
         registros: registrosDeLaRespuesta(processedContent),
         rubros: rubrosPorRegistro(processedContent),
@@ -1002,6 +1003,9 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                         <p className="mt-0.5 text-xs text-charcoal-500">
                                             {processedContent.trim() ? processedContent.trim().split(/\s+/).length.toLocaleString('es-MX') : 0} palabras
                                             {docIdMap.size > 0 ? ` · ${docIdMap.size} ${docIdMap.size === 1 ? 'cita' : 'citas'}` : ''}
+                                            {/* La versión de prueba (8-oct-2026) no trae fichas: sus
+                                                criterios van en la lista «Criterios citados» del pie. */}
+                                            {basico && tesisDePrueba > 0 ? ` · ${tesisDePrueba} tesis del Semanario` : ''}
                                             {/* Verificadas = citas del texto con ficha (del mapa o de
                                                 `/cita`) que el servidor no marcó: ver `resumenDeCitas`. */}
                                             {cuentaCitas.verificadas > 0

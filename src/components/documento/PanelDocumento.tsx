@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDownToLine, Check, ChevronLeft, FileText, Loader2, Printer, X } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowDownToLine, ArrowRight, Check, ChevronLeft, FileText, Loader2, Lock, Printer, X } from 'lucide-react';
 import { Hoja, type HojaAPI } from './Hoja';
 import { aWord, imprimir, type Papel } from '@/lib/documento/exportarDocx';
 import {
@@ -68,9 +69,37 @@ interface Props {
     versiones: VersionDocumento[];
     onCerrar: () => void;
     onCita?: (fuente: FuenteCita) => void;
+    /** LA VERSIÓN DE PRUEBA EN LA HOJA (8-oct-2026). David: «vamos a darles
+     *  acceso a la consulta ordinaria, con la plataforma con cuenta registrada,
+     *  pero limitada a como está… sin poder editar». La respuesta básica se
+     *  escribe aquí como la de cualquier cuenta, con sus criterios al pie, y la
+     *  hoja se ve entera —la barra de Word incluida— pero no se edita, no se
+     *  descarga ni se imprime: «esto les mostrará cómo trabajarían». Sin cuenta
+     *  el aviso lleva a registrarse; con la cuenta gratuita agotada, a los planes. */
+    bloqueo?: 'sin-cuenta' | 'agotado' | null;
 }
 
-export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, paso, versiones, onCerrar, onCita }: Props) {
+/* El aviso, con las palabras de David (8-oct-2026). Cada promesa está comprobada
+   para una cuenta gratuita: redacción con esfuerzo Básico y el formulario de
+   escritos, documentos adjuntos de hasta 20 hojas, carpetas y el seguimiento
+   (PJF y el Boletín Judicial de la Ciudad de México, `lib/seguimiento/cdmx.ts`),
+   que no se limita por plan. */
+const AVISO_BLOQUEO = {
+    'sin-cuenta': {
+        texto: 'Regístrate para poder editar y construir textos jurídicos completos, fundados y motivados, con razonamiento jurídico profesional y fuentes verificadas. Además, analiza y edita documentos. Todo en tu espacio de trabajo con carpetas inteligentes y seguimiento de expedientes del Poder Judicial de la Federación y órganos jurisdiccionales de la Ciudad de México.',
+        boton: 'Crear mi cuenta gratis',
+        href: '/registro',
+        nota: 'Sin tarjeta y sin costo.',
+    },
+    agotado: {
+        texto: 'Tus consultas del mes se agotaron y esta respuesta es de la versión básica. Con un plan vuelves a editar y construir textos jurídicos completos, fundados y motivados, con razonamiento jurídico profesional y fuentes verificadas, y a analizar y editar documentos en tu espacio de trabajo.',
+        boton: 'Ver los planes',
+        href: '/precios',
+        nota: 'Desde $79 al mes.',
+    },
+} as const;
+
+export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, paso, versiones, onCerrar, onCita, bloqueo = null }: Props) {
     const hoja = useRef<HojaAPI | null>(null);
     const raizRef = useRef<HTMLDivElement | null>(null);
     const [nombre, setNombre] = useState('');
@@ -127,7 +156,19 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
         () => [...bloques.map((b) => b.markdown), ...(vivoVisible !== null ? [vivoVisible] : [])],
         [bloques, vivoVisible],
     );
-    const { segmentos, orden } = useMemo(() => htmlDeDossier(partes), [partes]);
+    const { segmentos: segmentosCrudos, orden } = useMemo(() => htmlDeDossier(partes), [partes]);
+    /* La lista «Criterios citados» de la prueba trae el enlace al Semanario en
+       markdown, y el conversor de la hoja no convierte enlaces: salía el texto
+       crudo «[Consultar…](https://…)». Sólo ahí se vuelve enlace, y sólo hacia
+       el Semanario (sjf2.scjn.gob.mx), que es lo que manda `markdownDeBasico`. */
+    const segmentos = useMemo(
+        () => (bloqueo
+            ? segmentosCrudos.map((h) => h.replace(
+                /\[([^\]<]{1,80})\]\((https:\/\/sjf2\.scjn\.gob\.mx\/[^\s)"'<]+)\)/g,
+                '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'))
+            : segmentosCrudos),
+        [bloqueo, segmentosCrudos],
+    );
     /* EL MAPA DEL SERVIDOR CUENTA SÓLO LO CITADO (26-sep-2026): `orden` son
        los identificadores que el texto cita, ya abiertos los grupos. Las
        demás entradas de `sources` —precedentes inyectados, alias de
@@ -144,6 +185,13 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
     const meta = useMemo(() => conFichas(metaDelServidor, fichas), [metaDelServidor, fichas]);
     const cuentaCitas = useMemo(() => resumenDeCitas(orden, meta, estadoFichas), [orden, meta, estadoFichas]);
     const palabras = useMemo(() => palabrasDe(partes.join(' ')), [partes]);
+    /* En la versión de prueba las citas no son fichas [Doc ID] sino la lista
+       «Criterios citados» del pie, con su registro: se cuentan ésas. */
+    const tesisDePrueba = useMemo(
+        () => (bloqueo ? partes.reduce((n, p) => n + (p.match(/^\*\*\[\d+\]/gm)?.length ?? 0), 0) : 0),
+        [bloqueo, partes],
+    );
+    const avisoBloqueo = bloqueo ? AVISO_BLOQUEO[bloqueo] : null;
     const enVivo = vivo !== null;
     const htmlBase = useMemo(() => segmentos.slice(0, bloques.length).join('<hr>'), [segmentos, bloques.length]);
     const htmlVivo = enVivo ? (segmentos[bloques.length] ?? '') : null;
@@ -252,6 +300,14 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
 
     /* LAS FICHAS [N] ABREN EL VISOR, en la vista previa y en la hoja editable. */
     function clicEnHoja(e: React.MouseEvent<HTMLDivElement>) {
+        /* En la prueba la hoja no es editable y un enlace («Consultar en el
+           Semanario Judicial») sacaría de la plataforma: se abre aparte. */
+        const enlace = bloqueo ? (e.target as HTMLElement).closest<HTMLAnchorElement>('a[href]') : null;
+        if (enlace && /^https?:/i.test(enlace.href)) {
+            e.preventDefault();
+            window.open(enlace.href, '_blank', 'noopener,noreferrer');
+            return;
+        }
         const ficha = (e.target as HTMLElement).closest<HTMLElement>('.citation-badge');
         if (!ficha?.dataset.docId || !onCita) return;
         e.preventDefault();
@@ -323,12 +379,13 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                     <FileText className="hidden h-4 w-4 shrink-0 text-accent-brown md:inline" />
                     <input
                         value={nombre}
+                        readOnly={!!bloqueo}
                         onChange={(e) => setNombre(e.target.value)}
                         placeholder={titulo || 'Documento de Iurexia'}
                         aria-label="Nombre del documento"
                         className="w-full min-w-0 max-w-[420px] truncate rounded-md bg-transparent px-2 py-1 text-center text-[15px] font-medium text-charcoal-900 placeholder:text-charcoal-900/60 focus:bg-white focus:outline-none focus:ring-1 focus:ring-charcoal-900/15"
                     />
-                    {versiones.length > 0 && (
+                    {versiones.length > 0 && !bloqueo && (
                         <select
                             value={versionElegida}
                             onChange={(e) => e.target.value && elegirVersion(e.target.value)}
@@ -348,18 +405,55 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                         <option value="carta">Carta</option>
                         <option value="oficio">Oficio</option>
                     </select>
-                    <button type="button" onClick={mandarAImprimir} title="Imprimir o guardar como PDF" disabled={enVivo}
-                        className="grid h-9 w-9 place-items-center rounded-lg border border-charcoal-900/15 bg-white text-charcoal-900 transition-colors hover:border-charcoal-900/35 disabled:opacity-40">
-                        <Printer className="h-4 w-4" />
-                    </button>
-                    {/* Azul porque así lo pidió David para «Word» (15-sep-2026). */}
-                    <button type="button" onClick={descargarWord} disabled={exportando || enVivo} title="Descargar en Word, con las citas como notas al pie"
-                        className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-blue-600 px-2.5 text-[12.5px] font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-40 sm:px-3">
-                        {exportando ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowDownToLine className="h-4 w-4" />}
-                        <span className="hidden sm:inline">Word</span>
-                    </button>
+                    {avisoBloqueo ? (
+                        /* En la prueba se ven, con candado, y llevan al registro. */
+                        <>
+                            <Link href={avisoBloqueo.href} title={`${avisoBloqueo.boton} para imprimir o guardar como PDF`}
+                                className="relative grid h-9 w-9 place-items-center rounded-lg border border-charcoal-900/15 bg-white text-charcoal-900/45 transition-colors hover:border-charcoal-900/35">
+                                <Printer className="h-4 w-4" />
+                                <Lock className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-cream-100 p-[1px] text-accent-brown" />
+                            </Link>
+                            <Link href={avisoBloqueo.href} title={`${avisoBloqueo.boton} para descargar en Word`}
+                                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-blue-600/45 px-2.5 text-[12.5px] font-semibold text-white transition-colors hover:bg-blue-600/60 sm:px-3">
+                                <Lock className="h-3.5 w-3.5" />
+                                <span className="hidden sm:inline">Word</span>
+                            </Link>
+                        </>
+                    ) : (
+                        <>
+                            <button type="button" onClick={mandarAImprimir} title="Imprimir o guardar como PDF" disabled={enVivo}
+                                className="grid h-9 w-9 place-items-center rounded-lg border border-charcoal-900/15 bg-white text-charcoal-900 transition-colors hover:border-charcoal-900/35 disabled:opacity-40">
+                                <Printer className="h-4 w-4" />
+                            </button>
+                            {/* Azul porque así lo pidió David para «Word» (15-sep-2026). */}
+                            <button type="button" onClick={descargarWord} disabled={exportando || enVivo} title="Descargar en Word, con las citas como notas al pie"
+                                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-blue-600 px-2.5 text-[12.5px] font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-40 sm:px-3">
+                                {exportando ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowDownToLine className="h-4 w-4" />}
+                                <span className="hidden sm:inline">Word</span>
+                            </button>
+                        </>
+                    )}
                 </div>
             </header>
+
+            {/* ── EL AVISO DE LA PRUEBA: encima de la hoja, siempre a la vista ── */}
+            {avisoBloqueo && (
+                <div className="shrink-0 border-b border-accent-gold/35 bg-[#1b1a18] px-4 py-3 text-cream-100 sm:px-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                        <div className="flex min-w-0 flex-1 items-start gap-2.5">
+                            <Lock className="mt-0.5 h-4 w-4 shrink-0 text-accent-gold" />
+                            <p className="text-[12.5px] leading-relaxed text-white/80">{avisoBloqueo.texto}</p>
+                        </div>
+                        <div className="flex shrink-0 flex-col items-start gap-1 sm:items-end">
+                            <Link href={avisoBloqueo.href} className="relieve relieve-oro !h-9 !px-4 !text-[13px] !font-semibold">
+                                {avisoBloqueo.boton}
+                                <ArrowRight className="h-3.5 w-3.5" />
+                            </Link>
+                            <span className="text-[11px] text-white/45">{avisoBloqueo.nota}</span>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ── LA HOJA: una por conversación; lo nuevo se anexa ────────── */}
             <section className="flex min-h-0 flex-1 flex-col" aria-label="Hoja del documento" onClick={clicEnHoja}>
@@ -368,6 +462,7 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                     ref={hoja}
                     htmlInicial={htmlBase}
                     onCambio={() => { /* vive en el DOM de la hoja */ }}
+                    bloqueada={!!bloqueo}
                     vistaPrevia={htmlVivo}
                     anexando={bloques.length > 0}
                 />
@@ -382,6 +477,8 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                     <><Loader2 className="h-3.5 w-3.5 animate-spin text-accent-brown" /><span>{paso}</span></>
                 ) : enVivo ? (
                     <><Loader2 className="h-3.5 w-3.5 animate-spin text-accent-brown" /><span>Escribiendo en el documento…</span></>
+                ) : partes.length && bloqueo ? (
+                    <><Lock className="h-3.5 w-3.5 text-accent-brown" /><span>Versión de prueba · sólo lectura</span></>
                 ) : partes.length ? (
                     <><Check className="h-3.5 w-3.5 text-accent-gold" /><span>Listo para editar</span></>
                 ) : (
@@ -390,12 +487,18 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                 <span className="ml-auto tabular-nums">
                     {palabras ? `${palabras.toLocaleString('es-MX')} palabras` : ''}
                 </span>
+                {bloqueo ? (
+                    <span className="tabular-nums">
+                        {tesisDePrueba > 0 ? `${tesisDePrueba} ${tesisDePrueba === 1 ? 'tesis citada' : 'tesis citadas'}` : ''}
+                    </span>
+                ) : (
                 <span className="tabular-nums">
                     {orden.length} {orden.length === 1 ? 'cita' : 'citas'}
                     {/* Las citas del texto con ficha, no las entradas del mapa: con
                         el mapa entero salía «33 citas · 60 verificadas». */}
                     {cuentaCitas.verificadas > 0 ? ` · ${cuentaCitas.verificadas} ${cuentaCitas.verificadas === 1 ? 'verificada' : 'verificadas'}` : ''}
                 </span>
+                )}
             </footer>
 
             <div role="status" aria-live="polite" className={`pointer-events-none fixed bottom-14 z-50 flex justify-center px-4 ${disp.lateral ? 'right-0' : 'inset-x-0'}`} style={disp.lateral ? { width: disp.ancho } : undefined}>

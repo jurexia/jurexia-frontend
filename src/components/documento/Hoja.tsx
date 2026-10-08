@@ -46,6 +46,9 @@ interface HojaProps {
     htmlInicial: string;
     onCambio: (html: string) => void;
     soloLectura?: boolean;
+    /** La versión de prueba (8-oct-2026): la barra de Word se ve —para que se
+     *  sepa cómo se trabajaría— pero no responde, y la hoja no se edita. */
+    bloqueada?: boolean;
     /** Contenido que se está escribiendo (streaming): se enseña encima, sin editar. */
     vistaPrevia?: string | null;
     /** La vista previa se escribe DEBAJO de lo que ya hay, sin esconderlo:
@@ -53,7 +56,7 @@ interface HojaProps {
     anexando?: boolean;
 }
 
-export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, onCambio, soloLectura, vistaPrevia, anexando = false }, ref) {
+export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, onCambio, soloLectura, bloqueada = false, vistaPrevia, anexando = false }, ref) {
     const hoja = useRef<HTMLDivElement | null>(null);
     /* EL OBJETO, NO SÓLO LA CADENA, SE FIJA UNA VEZ. El App Router de Next 14
        trae el React «canary», que compara `dangerouslySetInnerHTML` por
@@ -218,7 +221,8 @@ export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, 
                 <div
                     role="group"
                     aria-label="Formato del documento"
-                    className="sticky top-0 z-10 flex flex-nowrap items-center gap-x-0.5 overflow-x-auto border-b border-charcoal-900/10 bg-cream-100/95 px-2 py-1.5 backdrop-blur [scrollbar-width:none] sm:flex-wrap sm:justify-center sm:gap-y-1 sm:overflow-visible sm:px-4 [&::-webkit-scrollbar]:hidden [&>*]:shrink-0"
+                    aria-disabled={bloqueada || undefined}
+                    className={`${bloqueada ? 'pointer-events-none select-none opacity-40 ' : ''}sticky top-0 z-10 flex flex-nowrap items-center gap-x-0.5 overflow-x-auto border-b border-charcoal-900/10 bg-cream-100/95 px-2 py-1.5 backdrop-blur [scrollbar-width:none] sm:flex-wrap sm:justify-center sm:gap-y-1 sm:overflow-visible sm:px-4 [&::-webkit-scrollbar]:hidden [&>*]:shrink-0`}
                 >
                     <Eleccion rotulo="Estilo" ancho="w-[6.75rem]"
                         opciones={[
@@ -278,7 +282,7 @@ export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, 
                     <div
                         ref={hoja}
                         data-hoja="1"
-                        contentEditable={!soloLectura}
+                        contentEditable={!soloLectura && !bloqueada}
                         suppressContentEditableWarning
                         suppressHydrationWarning
                         role="textbox"

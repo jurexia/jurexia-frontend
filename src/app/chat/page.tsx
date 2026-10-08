@@ -685,6 +685,11 @@ export default function ChatPage() {
         corriendoBasico.current = true;
         setMessages((prev) => [...prev, { role: 'user' as const, content: texto }]);
         setBasicoCargando(true);
+        /* LA PRUEBA TRABAJA EN EL DOCUMENTO (8-oct-2026). David: «darles acceso
+           a la consulta ordinaria, con la plataforma con cuenta registrada,
+           pero limitada». La respuesta básica se escribe en la hoja, como la de
+           cualquier cuenta, y la hoja no se edita (`bloqueo` del panel). */
+        if (!constructorAbiertoRef.current) setDocumentoAbierto(true);
         try {
             const r = await preguntarBasico(texto, isAuthenticated ? (user?.email || undefined) : undefined);
             setBloqueado(r.bloqueado);
@@ -1938,7 +1943,7 @@ export default function ChatPage() {
                                 const bienvenida = esBienvenidaDeContinuacion(index);
                                 return (
                                     <div key={index} className={message.role === 'user' && index > 0 ? 'pt-4' : undefined}>
-                                        <ChatMessage message={message} enDocumento={!modoBasico && !bienvenida && message.role === 'assistant'} basico={modoBasico || bienvenida} onVerDocumento={verDocumento} onDesarrollar={modoBasico || bienvenida ? undefined : desarrollarDesdeFundamento} isStreaming={(isLoading || isDocumentAnalyzing || analisisEnVuelo) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento}
+                                        <ChatMessage message={message} enDocumento={!bienvenida && message.role === 'assistant'} basico={modoBasico || bienvenida} onVerDocumento={verDocumento} onDesarrollar={modoBasico || bienvenida ? undefined : desarrollarDesdeFundamento} isStreaming={(isLoading || isDocumentAnalyzing || analisisEnVuelo) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento}
                                             avisoMemoria={index === indiceAvisoMemoria} onContinuarEnNueva={continuarEnConversacionNueva} />
                                     </div>
                                 );
@@ -2169,10 +2174,12 @@ export default function ChatPage() {
                 titulo={tituloDocumento}
                 bloques={bloquesDocumento}
                 vivo={vivoDocumento}
-                paso={(isDocumentAnalyzing || analisisEnVuelo) ? pasoDocumento : ''}
+                paso={(isDocumentAnalyzing || analisisEnVuelo) ? pasoDocumento
+                    : basicoCargando ? 'Buscando los criterios en el Semanario Judicial…' : ''}
                 versiones={versiones}
                 onCerrar={() => setDocumentoAbierto(false)}
                 onCita={handleCitationClick}
+                bloqueo={sinCuenta ? 'sin-cuenta' : gratuitoAgotado ? 'agotado' : null}
             />
             <PdfViewerPanel isOpen={activePdfSource !== null} onClose={() => setActivePdfSource(null)} source={activePdfSource} />
 

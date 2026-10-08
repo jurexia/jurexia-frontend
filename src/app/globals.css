@@ -1700,6 +1700,9 @@ h6 {
    generando: invitaba a escribir en el único momento en que no hay nada que
    escribir, y encima tapaba el hecho de que el trabajo ya estaba en marcha. */
 .hoja-escrito:empty::before { content: 'Aquí se genera tu respuesta. Al terminar podrás editarla y exportarla en formato .docx (Word) o imprimirla.'; color: #9a958a; font-style: italic; }
+/* La versión de prueba no edita ni exporta (8-oct-2026): no se le promete. */
+.hoja-escrito a[target="_blank"] { color: #8a6a2f; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.hoja-escrito[contenteditable="false"]:empty::before { content: 'Aquí se escribe tu respuesta, con los criterios citados al pie y su registro digital.'; }
 
 /* ══════════════════════════════════════════════════════════════════
    LA RESPUESTA DEL CHAT (17-sep-2026)
