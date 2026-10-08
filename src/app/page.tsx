@@ -93,7 +93,7 @@ export default function HomePage() {
                         operatingSystem: 'Web',
                         applicationCategory: 'BusinessApplication',
                         offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' },
-                        description: 'La inteligencia artificial más precisa para el sistema jurídico mexicano. Investigación legal, redacción de escritos y análisis de sentencias con fuentes verificadas.',
+                        description: 'IA jurídica para el derecho mexicano. Investigación legal, redacción de escritos y análisis de sentencias, con las citas enlazadas a su fuente.',
                     }),
                 }}
             />

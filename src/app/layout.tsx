@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     // recibe dos señales contrarias sobre cuál es la página buena.
     metadataBase: new URL('https://www.iurexia.com'),
     title: 'Iurexia - Inteligencia Artificial para el Derecho Mexicano',
-    description: 'La IA jurídica más precisa para México. Investigación legal, análisis de documentos y conexión con abogados verificados. Especializada en legislación mexicana.',
+    description: 'IA jurídica para el derecho mexicano. Investigación legal, análisis de documentos y redacción de escritos, con las citas enlazadas a su fuente. 5 consultas gratis al mes, sin tarjeta.',
     keywords: ['iurexia', 'inteligencia artificial derecho mexicano', 'ia juridica mexico', 'asistente legal inteligencia artificial', 'abogado virtual mexico', 'jurisprudencia mexico', 'legal tech mexico', 'analisis documentos legales', 'codigo civil mexico', 'derecho mexicano ia', 'busqueda juridica mexico'],
     authors: [{ name: 'Iurexia' }],
     robots: {
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     },
     openGraph: {
         title: 'Iurexia - IA Jurídica para México',
-        description: 'Investigación legal, análisis de documentos y conexión con abogados verificados. La inteligencia artificial más precisa para el sistema jurídico mexicano.',
+        description: 'Investigación legal, análisis de documentos y redacción de escritos con IA, sobre legislación federal, estatal y jurisprudencia de México. 5 consultas gratis al mes, sin tarjeta.',
         url: 'https://www.iurexia.com',
         siteName: 'Iurexia',
         locale: 'es_MX',
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     twitter: {
         card: 'summary_large_image',
         title: 'Iurexia - IA Jurídica para México',
-        description: 'La inteligencia artificial más precisa para el sistema jurídico mexicano',
+        description: 'IA jurídica para el derecho mexicano, con las citas enlazadas a su fuente',
         images: ['/og-image.png'],
     },
     icons: {
@@ -101,7 +101,7 @@ export default function RootLayout({
                             "name": "Iurexia",
                             "url": "https://www.iurexia.com",
                             "logo": "https://www.iurexia.com/icon.png",
-                            "description": "La IA jurídica más precisa para México. Investigación legal, análisis de documentos y conexión con abogados verificados.",
+                            "description": "IA jurídica para el derecho mexicano. Investigación legal, análisis de documentos y redacción de escritos, con las citas enlazadas a su fuente.",
                             "sameAs": [
                                 "https://www.iurexia.com"
                             ]
