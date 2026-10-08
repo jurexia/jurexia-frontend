@@ -2422,3 +2422,315 @@ html.con-barra-trabajo .solo-publico {
     display: none;
   }
 }
+
+
+/* ═══ LA BARRA DE TRABAJO, CON RELIEVE (7-oct-2026) ════════════════════════
+   David: «actualizar esos botones del chat a algo que corresponda ya con la
+   calidad de la interface. Nada iconos, botones con relieve». Es el mismo
+   lenguaje del taller en negro —bisel claro arriba, sombra abajo, y la pieza
+   se hunde al pulsarla—, pasado al crema de la plataforma:
+     · papel  — el botón de diario (Normativa, la entidad, «Más»);
+     · tinta  — las dos herramientas de trabajo largo (Mi trabajo, Redactor PJF);
+     · oro    — Lo último, lo que se lee cada día;
+     · rojo   — Sálvame, el módulo de urgencia.
+   Lo que es estado y no se pulsa —el contador de consultas— va HUNDIDO en la
+   barra, para que no se confunda con un botón. La herramienta en la que se
+   está (`aria-current="page"`) se queda pulsada. Sin iconos: el nombre basta.
+   Va en @layer components para que `hidden` y `md:inline-flex` de Tailwind
+   sigan mandando sobre el display del botón. */
+@layer components {
+.relieve {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    height: 2rem;
+    padding: 0 0.8rem;
+    flex-shrink: 0;
+    white-space: nowrap;
+    border-radius: 0.5rem;
+    border: 1px solid transparent;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0.005em;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .08s ease, box-shadow .12s ease, background-image .15s ease, border-color .15s ease, color .15s ease;
+}
+.relieve:focus-visible { outline: 2px solid rgba(201,169,98,0.7); outline-offset: 2px; }
+.relieve:active, .relieve[aria-current="page"], .relieve[aria-expanded="true"] { transform: translateY(1px); }
+
+/* Papel */
+.relieve-papel {
+    color: #1a1a1a;
+    background-color: #f7f6f2;
+    background-image: linear-gradient(180deg, #ffffff 0%, #f8f7f3 55%, #efede7 100%);
+    border-color: rgba(26,26,26,0.13);
+    border-bottom-color: rgba(26,26,26,0.24);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.95),
+        inset 0 -1px 0 rgba(26,26,26,0.035),
+        0 1px 0 rgba(26,26,26,0.05),
+        0 2px 4px -1px rgba(26,26,26,0.10);
+}
+.relieve-papel:hover {
+    background-image: linear-gradient(180deg, #ffffff 0%, #fbfaf7 55%, #f3f1ec 100%);
+    border-color: rgba(26,26,26,0.20);
+    border-bottom-color: rgba(26,26,26,0.30);
+    box-shadow:
+        inset 0 1px 0 #fff,
+        inset 0 -1px 0 rgba(26,26,26,0.035),
+        0 1px 0 rgba(26,26,26,0.06),
+        0 4px 9px -3px rgba(26,26,26,0.16);
+}
+.relieve-papel:active, .relieve-papel[aria-current="page"], .relieve-papel[aria-expanded="true"] {
+    background-image: linear-gradient(180deg, #e9e7e1 0%, #f1efea 100%);
+    border-color: rgba(26,26,26,0.18);
+    box-shadow: inset 0 1px 3px rgba(26,26,26,0.18), inset 0 -1px 0 rgba(255,255,255,0.6);
+}
+
+/* Tinta */
+.relieve-tinta {
+    color: #fff;
+    background-color: #1a1a1a;
+    background-image: linear-gradient(180deg, #3b3b3d 0%, #252527 48%, #151516 100%);
+    border-color: #0c0c0d;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.17),
+        inset 0 -1px 0 rgba(0,0,0,0.55),
+        0 1px 0 rgba(0,0,0,0.12),
+        0 2px 5px -1px rgba(0,0,0,0.38);
+}
+.relieve-tinta:hover {
+    background-image: linear-gradient(180deg, #464648 0%, #2c2c2e 48%, #19191a 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.20),
+        inset 0 -1px 0 rgba(0,0,0,0.55),
+        0 1px 0 rgba(0,0,0,0.12),
+        0 5px 11px -3px rgba(0,0,0,0.42);
+}
+.relieve-tinta:active, .relieve-tinta[aria-current="page"] {
+    background-image: linear-gradient(180deg, #111112 0%, #1d1d1f 100%);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.65), inset 0 -1px 0 rgba(255,255,255,0.05);
+}
+
+/* Oro */
+.relieve-oro {
+    color: #2b2418;
+    background-color: #f3e8cc;
+    background-image: linear-gradient(180deg, #fefaf0 0%, #f6edd6 52%, #ecdfbb 100%);
+    border-color: rgba(176,143,76,0.45);
+    border-bottom-color: rgba(139,115,85,0.62);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.9),
+        inset 0 -1px 0 rgba(139,115,85,0.10),
+        0 1px 0 rgba(139,115,85,0.12),
+        0 2px 5px -1px rgba(139,115,85,0.28);
+}
+.relieve-oro:hover {
+    background-image: linear-gradient(180deg, #fffcf4 0%, #f8f0dc 52%, #efe3c3 100%);
+    border-color: rgba(176,143,76,0.62);
+    box-shadow:
+        inset 0 1px 0 #fff,
+        inset 0 -1px 0 rgba(139,115,85,0.10),
+        0 1px 0 rgba(139,115,85,0.14),
+        0 4px 10px -3px rgba(139,115,85,0.34);
+}
+.relieve-oro:active, .relieve-oro[aria-current="page"] {
+    background-image: linear-gradient(180deg, #e6d6ad 0%, #efe3c4 100%);
+    box-shadow: inset 0 1px 3px rgba(110,88,50,0.28), inset 0 -1px 0 rgba(255,255,255,0.5);
+}
+
+/* Rojo: Sálvame */
+.relieve-rojo {
+    color: #b91c1c;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background-color: #fdecec;
+    background-image: linear-gradient(180deg, #fffafa 0%, #fdeeee 52%, #f8dfdf 100%);
+    border-color: rgba(185,28,28,0.26);
+    border-bottom-color: rgba(185,28,28,0.42);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.92),
+        inset 0 -1px 0 rgba(185,28,28,0.06),
+        0 1px 0 rgba(185,28,28,0.08),
+        0 2px 5px -1px rgba(185,28,28,0.20);
+}
+.relieve-rojo:hover {
+    background-image: linear-gradient(180deg, #ffffff 0%, #fef2f2 52%, #fae4e4 100%);
+    border-color: rgba(185,28,28,0.38);
+    box-shadow:
+        inset 0 1px 0 #fff,
+        inset 0 -1px 0 rgba(185,28,28,0.06),
+        0 1px 0 rgba(185,28,28,0.10),
+        0 4px 10px -3px rgba(185,28,28,0.26);
+}
+.relieve-rojo:active {
+    background-image: linear-gradient(180deg, #f5d6d6 0%, #fbe7e7 100%);
+    box-shadow: inset 0 1px 3px rgba(127,20,20,0.25), inset 0 -1px 0 rgba(255,255,255,0.5);
+}
+
+/* La marca del plan que falta, dentro del botón y en letra, no en candado. */
+.relieve-plan {
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #c9a962;
+}
+
+/* Lo que no se pulsa: hundido en la barra. */
+.hundido {
+    display: inline-flex;
+    align-items: center;
+    height: 2rem;
+    flex-shrink: 0;
+    border-radius: 0.5rem;
+    background-color: rgba(26,26,26,0.045);
+    box-shadow: inset 0 1px 2px rgba(26,26,26,0.14), inset 0 0 0 1px rgba(26,26,26,0.05), 0 1px 0 rgba(255,255,255,0.7);
+}
+
+/* El menú «Más»: una lámina con el mismo relieve, sin iconos. */
+.lamina-relieve {
+    background: linear-gradient(180deg, #ffffff 0%, #faf9f6 100%);
+    border: 1px solid rgba(26,26,26,0.12);
+    box-shadow: inset 0 1px 0 #fff, 0 12px 28px -10px rgba(26,26,26,0.28), 0 2px 6px -2px rgba(26,26,26,0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .relieve { transition: none; }
+    .relieve:active, .relieve[aria-current="page"], .relieve[aria-expanded="true"] { transform: none; }
+}
+
+/* El botón de soporte: una pieza de tinta con letra de oro que se agarra y se
+   lleva a cualquier sitio (ver FeedbackWidget). */
+.soporte-boton {
+    display: inline-flex;
+    align-items: center;
+    height: 2.5rem;
+    padding: 0 1.1rem;
+    border-radius: 9999px;
+    border: 1px solid #0c0c0d;
+    color: #e6cf98;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    cursor: grab;
+    background-color: #1a1a1a;
+    background-image: linear-gradient(180deg, #3b3b3d 0%, #232325 48%, #141415 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.17),
+        inset 0 -1px 0 rgba(0,0,0,0.55),
+        0 0 0 1px rgba(201,169,98,0.28),
+        0 6px 16px -6px rgba(0,0,0,0.45),
+        0 2px 4px -1px rgba(0,0,0,0.25);
+    transition: transform .08s ease, box-shadow .12s ease, background-image .15s ease;
+}
+.soporte-boton:hover {
+    background-image: linear-gradient(180deg, #464648 0%, #2c2c2e 48%, #19191a 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.20),
+        inset 0 -1px 0 rgba(0,0,0,0.55),
+        0 0 0 1px rgba(201,169,98,0.45),
+        0 10px 22px -8px rgba(0,0,0,0.5),
+        0 2px 4px -1px rgba(0,0,0,0.25);
+}
+.soporte-boton:active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.65), 0 0 0 1px rgba(201,169,98,0.35); }
+.soporte-boton[data-arrastrando] {
+    cursor: grabbing;
+    transform: scale(1.04);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.20),
+        0 0 0 1px rgba(201,169,98,0.55),
+        0 18px 34px -10px rgba(0,0,0,0.55);
+}
+.soporte-boton:focus-visible { outline: 2px solid rgba(201,169,98,0.75); outline-offset: 3px; }
+
+/* Los controles del panel de soporte, en letra y con relieve oscuro. */
+.soporte-control {
+    display: inline-flex;
+    align-items: center;
+    height: 1.75rem;
+    padding: 0 0.65rem;
+    border-radius: 0.45rem;
+    border: 1px solid rgba(255,255,255,0.10);
+    color: rgba(255,255,255,0.78);
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-image: linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 1px 0 rgba(0,0,0,0.6);
+    transition: transform .08s ease, color .15s ease, border-color .15s ease;
+}
+.soporte-control:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+.soporte-control:active { transform: translateY(1px); box-shadow: inset 0 2px 3px rgba(0,0,0,0.6); }
+.soporte-enviar {
+    flex-shrink: 0;
+    height: 2rem;
+    padding: 0 0.85rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(139,115,85,0.9);
+    color: #1a1a1a;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    background-image: linear-gradient(180deg, #e3c98a 0%, #c9a962 55%, #a88a4f 100%);
+    box-shadow: inset 0 1px 0 rgba(255,244,214,0.7), inset 0 -1px 0 rgba(90,70,35,0.35), 0 1px 0 rgba(0,0,0,0.5);
+    transition: transform .08s ease, opacity .15s ease;
+}
+.soporte-enviar:active { transform: translateY(1px); box-shadow: inset 0 2px 3px rgba(90,70,35,0.45); }
+.soporte-enviar:disabled { opacity: 0.35; box-shadow: none; }
+}
+
+/* ── Qué cabe en la barra de trabajo ──
+   Sin iconos no hay botones «sólo icono» a los que encogerse, así que la
+   barra recoge en «Más» lo que no le cabe. Lo decide el ANCHO DE LA BARRA
+   —con la lateral abierta o cerrada, con el constructor acoplado o en el
+   teléfono—, no el de la pantalla. Fuera de @layer para mandar sobre
+   `.relieve`. Medidas tomadas de los botones reales (7-oct-2026):
+   las cuatro herramientas suman ~440 px (~380 en el tramo medio, con menos
+   relleno y sin la marca «Ultra», que sigue en el título del botón); Sálvame,
+   la entidad y la cuenta, ~250; el contador, ~110. A 1024 px con la lateral
+   abierta la barra mide ~736: caben las cuatro herramientas. */
+.barra-trabajo { container-type: inline-size; container-name: barra; }
+.barra-trabajo .bt-mas,
+.barra-trabajo .bt-menu-ultimo,
+.barra-trabajo .bt-menu-entidad,
+.barra-trabajo .bt-cuenta,
+.barra-trabajo .bt-basica { display: none; }
+.barra-trabajo .bt-estado { max-width: 96px; }
+@container barra (max-width: 819px) {
+    .barra-trabajo .relieve { padding-left: 0.65rem; padding-right: 0.65rem; }
+    .barra-trabajo .bt-ancha .relieve-plan { display: none; }
+}
+@container barra (max-width: 699px) {
+    .barra-trabajo .bt-ancha { display: none; }
+    .barra-trabajo .bt-mas { display: block; }
+}
+@container barra (max-width: 559px) {
+    .barra-trabajo .bt-ultimo { display: none; }
+    .barra-trabajo .bt-menu-ultimo { display: flex; }
+}
+/* Teléfono: el chat deja 56 px al botón de la lateral; la entidad pasa a «Más». */
+@container barra (max-width: 439px) {
+    .barra-trabajo .bt-entidad { display: none; }
+    .barra-trabajo .bt-menu-entidad { display: flex; }
+    .barra-trabajo .relieve { padding-left: 0.6rem; padding-right: 0.6rem; }
+}
+@container barra (max-width: 359px) {
+    .barra-trabajo .relieve { padding-left: 0.5rem; padding-right: 0.5rem; }
+    .barra-trabajo .relieve-rojo { letter-spacing: 0.02em; }
+}
+@container barra (min-width: 880px) {
+    .barra-trabajo .bt-cuenta { display: flex; }
+}
+@container barra (min-width: 960px) {
+    .barra-trabajo .bt-basica { display: inline-flex; }
+}

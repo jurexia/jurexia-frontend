@@ -4,7 +4,7 @@ import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
 import { Message, fuentesWebActivas, fijarFuentesVerificadas } from '@/lib/api';
 import { fuentesElegidas } from '@/lib/fuentes';
 import { esfuerzoParaEnviar, marcadorDeEsfuerzo } from '@/lib/esfuerzo';
-import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield, Gavel, Newspaper, MoreHorizontal, PlayCircle, Loader2 as Loader2Icon } from 'lucide-react';
+import { Trash2, Scale, Building2, Settings, ChevronDown, Crown, ShieldCheck, ArrowRight, Zap, Shield, Gavel, PlayCircle, Loader2 as Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
 import ChatInput from '@/components/ChatInput';
 import ChatMessage from '@/components/ChatMessage';
@@ -1516,8 +1516,6 @@ export default function ChatPage() {
         try { localStorage.setItem(`iurexia-documento-${activeConversationId}`, JSON.stringify(versiones)); } catch { /* sin almacenamiento */ }
     }, [versiones, activeConversationId]);
 
-    const panelAbierto = constructorAbierto || documentoAbierto;
-
     /* SEGUIR LA RESPUESTA MIENTRAS SE ESCRIBE. El desplazamiento sólo ocurría
        al AÑADIR un mensaje; durante los 20-60 s de una respuesta larga la
        vista se quedaba arriba y el abogado bajaba a mano. Se sigue sólo si ya
@@ -1569,7 +1567,7 @@ export default function ChatPage() {
                     (3-ago-2026): todo control mide h-8, radio único, sin
                     píldoras ni degradados. Sálvame conserva su rojo por ser el
                     módulo de urgencia; el resto vive en la paleta de la casa. */}
-                <header className="fixed top-0 left-0 right-0 md:left-[var(--sidebar-w,18rem)] lg:right-[var(--constructor-w,0px)] z-30 bg-cream-300/80 backdrop-blur-md border-b border-black/5 h-14">
+                <header className="barra-trabajo fixed top-0 left-0 right-0 md:left-[var(--sidebar-w,18rem)] lg:right-[var(--constructor-w,0px)] z-30 bg-cream-300/80 backdrop-blur-md border-b border-black/5 h-14">
                     {/* Dos grupos, no una fila apelotonada a la derecha
                         (3-sep-2026). A la izquierda las cuatro herramientas de
                         trabajo, con el mismo peso entre ellas; a la derecha el
@@ -1583,22 +1581,33 @@ export default function ChatPage() {
                         trabajo largo con su propia pantalla—. */}
                     {/* CON EL CONSTRUCTOR ACOPLADO la columna del chat baja a
                         420-650 px y la barra se pisaba («Normativa» debajo de
-                        «Sálvame»). La barra mide la ventana, no la columna: con
-                        el constructor abierto Mi trabajo, Lo último y Sálvame
-                        quedan en icono (con su nombre en el title), Normativa y
-                        Redactor PJF pasan al menú «Más», y el contador se retira. */}
-                    <div className="h-full flex items-center justify-between gap-2 px-3 sm:px-4 min-w-0">
+                        «Sálvame»). Desde el 7-oct-2026 la barra se mide a sí
+                        misma (container queries en `.barra-trabajo`): a esos
+                        anchos Normativa y Redactor PJF pasan a «Más» y el
+                        contador se retira, sin regla aparte para el panel. */}
+                    {/* En el teléfono, sitio a la izquierda para el botón que abre la
+                        lateral (fijo en left-3 top-3): antes tapaba «Mi trabajo». */}
+                    <div className="h-full flex items-center justify-between gap-2 pl-14 pr-3 sm:pr-4 md:pl-4 min-w-0">
 
                         {/* ── Herramientas ── */}
+                        {/* CON RELIEVE Y SIN ICONOS (7-oct-2026). David: «nada
+                            iconos, botones con relieve». Cada botón es una pieza
+                            (ver `.relieve` en globals.css) y dice su nombre. Sin
+                            icono no hay versión «sólo icono»: lo que no cabe en el
+                            teléfono o junto al constructor se recoge en «Más», y
+                            «Mi trabajo» y «Sálvame» se ven siempre. Qué cabe lo
+                            decide el ANCHO DE LA BARRA, no el de la pantalla
+                            (`.barra-trabajo` en globals.css): así funciona igual
+                            con la lateral abierta o cerrada y con el constructor
+                            acoplado, que antes pedía su propia regla. */}
                         <div className="flex items-center gap-1.5 min-w-0">
                             <Link
                                 href="/carpetas"
                                 data-guide="mi-trabajo"
-                                title="Mi trabajo"
-                                className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg bg-charcoal-900 px-2.5 sm:px-3 text-[0.8125rem] font-medium text-white transition-colors hover:bg-charcoal-800"
+                                title="Mi trabajo — sus carpetas y lo que ha guardado"
+                                className="relieve relieve-tinta px-2.5 sm:px-3"
                             >
-                                <FileText className="w-3.5 h-3.5 text-accent-gold" />
-                                <span className={panelAbierto ? 'hidden' : 'hidden sm:inline'}>Mi trabajo</span>
+                                Mi trabajo
                             </Link>
 
                             {/* Lo último: comunicados de la Corte, tesis de la
@@ -1607,18 +1616,16 @@ export default function ChatPage() {
                                 href="/ultimo"
                                 data-guide="lo-ultimo"
                                 title="Lo último — Corte, tesis de la semana, Diario Oficial e IA"
-                                className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-accent-gold/40 bg-accent-gold/10 px-2.5 sm:px-3 text-[0.8125rem] font-medium text-charcoal-900 transition-colors hover:bg-accent-gold/20"
+                                className="relieve relieve-oro bt-ultimo"
                             >
-                                <Newspaper className="w-3.5 h-3.5 text-accent-gold" />
-                                <span className={panelAbierto ? 'hidden' : 'hidden sm:inline'}>Lo último</span>
+                                Lo último
                             </Link>
 
                             <Link
                                 href="/normativa"
-                                title="Normativa"
-                                className={`${panelAbierto ? 'hidden' : 'hidden md:inline-flex'} h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:border-charcoal-900/25 hover:bg-charcoal-900/[0.03]`}
+                                title="Normativa — el acervo de leyes"
+                                className="relieve relieve-papel bt-ancha"
                             >
-                                <BookOpen className="w-3.5 h-3.5" />
                                 Normativa
                             </Link>
 
@@ -1631,36 +1638,50 @@ export default function ChatPage() {
                                 title={canAccessSecretarioPJF
                                     ? 'Redactor PJF — crea un proyecto de sentencia'
                                     : 'Redactor PJF — del plan Ultra Secretarios'}
-                                /* Negro, como «Mi trabajo» (David, 16-sep-2026). Con candado
-                                   o sin él, el mismo botón: el candado ya dice que falta el plan. */
-                                className={`${panelAbierto ? 'hidden' : 'hidden md:inline-flex'} h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg bg-charcoal-900 px-3 text-[0.8125rem] font-medium text-white transition-colors hover:bg-charcoal-800`}
+                                /* Negro, como «Mi trabajo» (David, 16-sep-2026). Sin acceso,
+                                   el plan que falta va escrito dentro del botón. */
+                                className="relieve relieve-tinta bt-ancha"
                             >
-                                <Gavel className="w-3.5 h-3.5 text-accent-gold" />
                                 Redactor PJF
-                                {!canAccessSecretarioPJF && <Lock className="w-2.5 h-2.5 opacity-60" />}
+                                {!canAccessSecretarioPJF && <span className="relieve-plan">Ultra</span>}
                             </button>
 
                             {/* Lo que no cabe en móvil, ni junto al constructor */}
-                            <div className={panelAbierto ? 'relative' : 'relative md:hidden'}>
+                            <div className="bt-mas relative">
                                 <button
                                     onClick={() => setMenuMas(v => !v)}
                                     aria-label="Más herramientas"
                                     aria-expanded={menuMas}
-                                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-charcoal-900/10 text-charcoal-600 transition-colors hover:bg-charcoal-900/[0.04]"
+                                    className="relieve relieve-papel px-2.5"
                                 >
-                                    <MoreHorizontal className="w-4 h-4" />
+                                    Más
                                 </button>
 
                                 {menuMas && (
                                     <>
                                         <div className="fixed inset-0 z-40" onClick={() => setMenuMas(false)} />
-                                        <div className="absolute left-0 top-9 z-50 w-52 overflow-hidden rounded-xl border border-charcoal-900/10 bg-white shadow-lg">
+                                        <div className="lamina-relieve absolute left-0 top-10 z-50 w-56 overflow-hidden rounded-xl p-1.5">
+                                            <Link
+                                                href="/ultimo"
+                                                onClick={() => setMenuMas(false)}
+                                                className="bt-menu-ultimo rounded-lg px-3 py-2.5 text-[0.8125rem] font-medium text-charcoal-900 transition-colors hover:bg-charcoal-900/[0.045]"
+                                            >
+                                                Lo último
+                                            </Link>
+                                            {/* En el teléfono la entidad vive aquí: con el botón
+                                                de la lateral, el avatar y Sálvame no cabe en la barra. */}
+                                            <button
+                                                onClick={() => { setMenuMas(false); setShowConfigModal(true); }}
+                                                className="bt-menu-entidad w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-[0.8125rem] font-medium text-charcoal-900 transition-colors hover:bg-charcoal-900/[0.045]"
+                                            >
+                                                Entidad
+                                                <span className="max-w-[110px] truncate text-charcoal-900/60">{selectedEstado ? selectedEstadoLabel : 'Todas'}</span>
+                                            </button>
                                             <Link
                                                 href="/normativa"
                                                 onClick={() => setMenuMas(false)}
-                                                className="flex items-center gap-2.5 px-3.5 py-3 text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:bg-charcoal-900/[0.04]"
+                                                className="flex rounded-lg px-3 py-2.5 text-[0.8125rem] font-medium text-charcoal-900 transition-colors hover:bg-charcoal-900/[0.045]"
                                             >
-                                                <BookOpen className="w-4 h-4 text-charcoal-400" />
                                                 Normativa
                                             </Link>
                                             <button
@@ -1669,11 +1690,10 @@ export default function ChatPage() {
                                                     if (canAccessSecretarioPJF) router.push('/tcc-beta');
                                                     else setShowPlatinumSentencia(true);
                                                 }}
-                                                className="flex w-full items-center gap-2.5 border-t border-charcoal-900/[0.06] px-3.5 py-3 text-left text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:bg-charcoal-900/[0.04]"
+                                                className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-[0.8125rem] font-medium text-charcoal-900 transition-colors hover:bg-charcoal-900/[0.045]"
                                             >
-                                                <Gavel className={`w-4 h-4 ${canAccessSecretarioPJF ? 'text-accent-gold' : 'text-charcoal-400'}`} />
                                                 Redactor PJF
-                                                {!canAccessSecretarioPJF && <Lock className="ml-auto w-3 h-3 text-charcoal-400" />}
+                                                {!canAccessSecretarioPJF && <span className="relieve-plan">Ultra</span>}
                                             </button>
                                         </div>
                                     </>
@@ -1686,19 +1706,18 @@ export default function ChatPage() {
                             <Link
                                 href="/salvame"
                                 title="Sálvame — ayuda urgente"
-                                className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-red-700/25 bg-red-50/60 px-2.5 text-[0.75rem] font-semibold uppercase tracking-[0.05em] text-red-700 transition-colors hover:bg-red-50"
+                                className="relieve relieve-rojo px-2.5 sm:px-3"
                             >
-                                <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                                <span className={panelAbierto ? 'hidden' : 'hidden lg:inline'}>Sálvame</span>
+                                Sálvame
                             </Link>
 
                             <button
                                 data-guide="jurisdiccion"
                                 onClick={() => setShowConfigModal(true)}
-                                className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-charcoal-900/10 px-2.5 sm:px-3 text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:border-charcoal-900/25 hover:bg-charcoal-900/[0.03]"
+                                title="La entidad cuyas leyes estatales se consultan — clic para cambiarla"
+                                className="relieve relieve-papel bt-entidad px-2.5 sm:px-3"
                             >
-                                <MapPin className="w-3.5 h-3.5 text-accent-gold" />
-                                <span className="max-w-[90px] truncate">{selectedEstado ? selectedEstadoLabel : 'Todas'}</span>
+                                <span className="bt-estado truncate">{selectedEstado ? selectedEstadoLabel : 'Todas'}</span>
                             </button>
 
                             {sinCuenta ? (
@@ -1708,18 +1727,18 @@ export default function ChatPage() {
                                 <Link
                                     href="/registro"
                                     title="Crea tu cuenta para el motor completo"
-                                    className={`${panelAbierto ? 'hidden' : 'hidden lg:inline-flex'} h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-accent-gold/40 bg-accent-gold/10 px-2.5 text-[11.5px] font-semibold text-charcoal-900 transition-colors hover:bg-accent-gold/20`}
+                                    className="relieve relieve-oro bt-basica px-2.5 text-[11.5px] font-semibold"
                                 >
-                                    <Lock className="h-3 w-3 text-accent-brown" />
                                     Versión básica · Crear cuenta
                                 </Link>
                             ) : (
+                            /* El contador no se pulsa: va hundido, no en relieve. */
                             <div
-                                className={`${panelAbierto ? 'hidden' : 'hidden lg:flex'} h-8 shrink-0 items-center gap-2 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] transition-all duration-300 ${counterPulse ? 'ring-2 ring-accent-gold/40' : ''}`}
+                                className={`hundido bt-cuenta gap-2 px-3 text-[0.8125rem] transition-all duration-300 ${counterPulse ? 'ring-2 ring-accent-gold/40' : ''}`}
                                 title={`Consultas usadas este mes: ${queriesUsed} de ${queriesLimit}`}
                             >
                                 <span className={`font-semibold tabular-nums ${queriesRemaining <= 1 ? 'text-red-700' : 'text-charcoal-900'}`}>
-                                    {queriesUsed}<span className="font-normal text-charcoal-500">/{queriesLimit}</span>
+                                    {queriesUsed}<span className="font-normal text-charcoal-900/50">/{queriesLimit}</span>
                                 </span>
                                 <span className="h-1 w-10 overflow-hidden rounded-full bg-charcoal-900/10">
                                     <span
