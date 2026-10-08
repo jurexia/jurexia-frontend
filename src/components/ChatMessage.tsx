@@ -65,7 +65,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     const contentRef = useRef<HTMLDivElement>(null);
 
     // Extract unique document IDs, thinking content, and create numbered references
-    const { processedContent, docIdMap, thinkingContent, citationMeta: metaDelServidor, isSynthesizing, precedentesMeta, memoriaLlena } = useMemo(() => {
+    const { processedContent, docIdMap, thinkingContent, citationMeta: metaDelServidor, precedentesMeta, memoriaLlena } = useMemo(() => {
         if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as MetaDelServidor | null, isSynthesizing: false, precedentesMeta: null as PrecedenteMeta[] | null, memoriaLlena: null as MemoriaLlena | null };
         return procesarRespuesta(message.content || '');
     }, [message.content, isUser]);
@@ -973,13 +973,6 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                     dangerouslySetInnerHTML={{ __html: htmlRazonamiento }}
                                 />
                             </details>
-                        )}
-                        {/* Synthesis indicator (while DeepSeek is working) */}
-                        {isSynthesizing && isStreaming && (
-                            <div className="mx-5 sm:mx-6 mt-3 mb-1 px-3 py-2 text-xs font-medium text-charcoal-700 bg-cream-100 rounded-lg border border-cream-400/60 flex items-center gap-2 animate-pulse">
-                                <Loader2 className="w-3.5 h-3.5 animate-spin text-accent-brown" />
-                                <span>Los Genios están deliberando. Sintetizando respuesta final...</span>
-                            </div>
                         )}
                         {/* Sin texto todavía: que se vea que se está escribiendo. */}
                         {isStreaming && !enDocumento && !processedContent.trim() && (
