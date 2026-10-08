@@ -266,7 +266,11 @@ export const CUOTA_MB: Record<string, number> = {
     pro_annual: 500,
     platinum_monthly: 2048,
     platinum_annual: 2048,
-    ultra_secretarios: 2048,
+    // Ultra NO es Platinum aquí: David le fijó «su almacenamiento de 20 GB» el
+    // 13-sep-2026, y /precios, /secretarios y la ficha del plan en Stripe
+    // venden 20 GB. Tenía los 2 GB de Platinum copiados. La app móvil
+    // (iurexia-mobile/src/lib/expedientes.ts) conserva 2048 hasta su próxima versión.
+    ultra_secretarios: 20480,
 }
 
 export function cuotaDe(plan: string | null | undefined): number {
