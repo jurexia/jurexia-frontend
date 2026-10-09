@@ -896,9 +896,19 @@ export default function ChatPage() {
         setAnalisisEnVuelo(true);
 
         // Ensure conversation exists — track convId for post-streaming save
+        /* SIN CONVERSACIÓN, EL ANÁLISIS SALE IGUAL (8-oct-2026). Si Supabase
+           falla aquí, `createConversation` lanza —su `getUser` está fuera del
+           try— y esta función moría antes del fetch: el mensaje en pantalla y
+           «analizando» para siempre, sin que el documento saliera nunca. Así
+           le pasó a una abogada durante cuarenta minutos (ver
+           `@/lib/candado-sesion`). Ahora el documento se analiza aunque la
+           conversación no se haya podido crear; sólo no se guarda. */
         let docConvId = activeConversationId;
         if (!docConvId) {
-            const newConv = await createConversation(selectedEstado || undefined);
+            const newConv = await createConversation(selectedEstado || undefined).catch((errConv) => {
+                console.error('[analyze-document] No se pudo crear la conversación:', errConv);
+                return null;
+            });
             if (newConv) {
                 docConvId = newConv.id;
                 vincularNueva(newConv.id);

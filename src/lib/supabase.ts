@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { candadoDeSesion } from '@/lib/candado-sesion'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -10,6 +11,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
         autoRefreshToken: true,
         storageKey: 'iurexia-auth', // Consistent storage key
         flowType: 'pkce', // More secure auth flow
+        // Una pestaña congelada ya no deja la sesión inservible (8-oct-2026).
+        lock: candadoDeSesion,
     }
 })
 
