@@ -36,12 +36,18 @@ export default function AuthCallbackPage() {
             }
         );
 
-        // Timeout fallback: if nothing happens in 8 seconds, redirect to login
+        /* LA ESPERA, MÁS LARGA QUE LA DEL CANDADO (9-oct-2026). El canje del
+           código ocurre al arrancar el cliente, y si otra pestaña retiene el
+           candado de sesión el arranque espera 10 s antes de tomarlo
+           (`@/lib/candado-sesion`). Con 8 s aquí la página se rendía antes:
+           «Tiempo de espera agotado» y vuelta al login, aunque el canje
+           llegara un instante después. El 8-oct un abogado lo intentó con
+           Google dieciséis veces seguidas. */
         const timeout = setTimeout(() => {
             subscription.unsubscribe();
             setError('Tiempo de espera agotado. Intenta de nuevo.');
             setTimeout(() => router.push('/login'), 2000);
-        }, 8000);
+        }, 25000);
 
         return () => {
             subscription.unsubscribe();
