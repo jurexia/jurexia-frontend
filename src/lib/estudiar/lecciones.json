@@ -30,6 +30,24 @@
    "numero": "V",
    "titulo": "Derecho penal",
    "descripcion": "A quién puede castigar el Estado, con qué garantías, y qué debe hacer con quien no puede ser castigado."
+  },
+  {
+   "id": "civil",
+   "numero": "VI",
+   "titulo": "Derecho civil",
+   "descripcion": "Contratos y obligaciones: hasta dónde llega la libertad de obligarse y qué puede corregir un juez cuando un pacto explota a una de las partes."
+  },
+  {
+   "id": "familiar",
+   "numero": "VII",
+   "titulo": "Derecho familiar",
+   "descripcion": "Custodia, patria potestad y alimentos: cómo se decide cuando está en juego una familia, con el interés superior de la niñez como regla y sin estereotipos."
+  },
+  {
+   "id": "laboral",
+   "numero": "VIII",
+   "titulo": "Derecho del trabajo",
+   "descripcion": "Lo que protege la ley a quien trabaja y lo que exige a quien da trabajo: el despido, la carga de la prueba, los plazos y lo que se paga."
   }
  ],
  "lecciones": [
@@ -4206,6 +4224,958 @@
    "miniatura640": "/estudiar/miniaturas/elegir-a-tu-juez-640.webp"
   },
   {
+   "id": "v80",
+   "slug": "control-difuso-y-concentrado",
+   "eje": "constitucion",
+   "publicada": true,
+   "youtube": "-SM5kKAWZfs",
+   "publicado": "2026-10-09T19:00:00-06:00",
+   "tituloVideo": "Control difuso y control concentrado, en cinco minutos",
+   "duracion": 342,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "Rosendo Radilla, 1974"
+    },
+    {
+     "segundo": 42,
+     "titulo": "Dos respuestas: azul y negro"
+    },
+    {
+     "segundo": 67,
+     "titulo": "Marbury contra Madison, 1803"
+    },
+    {
+     "segundo": 89,
+     "titulo": "Kelsen y el modelo concentrado, 1920"
+    },
+    {
+     "segundo": 110,
+     "titulo": "México: el amparo y el artículo 133"
+    },
+    {
+     "segundo": 149,
+     "titulo": "1948: el amparo llega a la Declaración Universal"
+    },
+    {
+     "segundo": 170,
+     "titulo": "La Corte Interamericana, de 2003 a Radilla"
+    },
+    {
+     "segundo": 202,
+     "titulo": "2011: control difuso para todos los jueces"
+    },
+    {
+     "segundo": 223,
+     "titulo": "Las diferencias"
+    },
+    {
+     "segundo": 265,
+     "titulo": "La pregunta del millón: la P./J. 2/2022"
+    },
+    {
+     "segundo": 318,
+     "titulo": "Suscríbete y comparte"
+    }
+   ],
+   "titulo": "Control difuso y control concentrado",
+   "tituloPlano": "Control difuso y control concentrado",
+   "subtitulo": "Quién puede dejar de aplicar una ley contraria a los derechos humanos",
+   "corto": "Control difuso y control concentrado",
+   "nivel": "licenciatura",
+   "actualizado": "9 de octubre de 2026",
+   "claves": [
+    "control difuso",
+    "control concentrado",
+    "control de convencionalidad",
+    "ex officio",
+    "interpretación conforme",
+    "fórmula Otero",
+    "caso Radilla",
+    "Varios 912/2010"
+   ],
+   "resumen": "Los dos modelos de control de las leyes, el difuso de Marbury v. Madison (1803) y el concentrado de Kelsen (1920), y el camino mexicano: del amparo y las tesis de 1999 al control ex officio de 2011, nacido a raíz del caso Radilla, y a la jurisprudencia de 2022 sobre los jueces de amparo.",
+   "resumenPlano": "Los dos modelos de control de las leyes, el difuso de Marbury v. Madison (1803) y el concentrado de Kelsen (1920), y el camino mexicano: del amparo y las tesis de 1999 al control ex officio de 2011, nacido a raíz del caso Radilla, y a la jurisprudencia de 2022 sobre los jueces de amparo.",
+   "ideas": [
+    "En el control difuso, cualquier juez deja de aplicar la ley en su caso; en el concentrado, ciertos tribunales juzgan la ley misma.",
+    "En 1999 la Suprema Corte reservó el control al Poder Judicial de la Federación; en 2011 lo abrió a todos los jueces.",
+    "El amparo contra una ley sólo protege a quien lo promovió; efectos generales sólo los da la Suprema Corte, con al menos seis votos.",
+    "Desde 2022, el juez de amparo también ejerce el control difuso sobre las leyes aplicadas al quejoso."
+   ],
+   "secciones": [
+    "Introducción: el hombre que componía corridos",
+    "1. Qué es controlar la constitucionalidad",
+    "2. Dos orígenes: Marbury y Kelsen",
+    "3. El camino mexicano: el amparo y el artículo 133",
+    "4. 1999: el control, sólo para el Poder Judicial de la Federación",
+    "5. 1948: el amparo en la Declaración Universal",
+    "6. La línea interamericana: de 2003 a Radilla",
+    "7. 2011: la reforma del artículo 1o. y el Varios 912/2010",
+    "8. Las diferencias hoy",
+    "9. ¿Quién ejerce el control concentrado puede ejercer el difuso?",
+    "Conclusión"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [
+    {
+     "nombre": "John Marshall",
+     "fechas": "1755-1835",
+     "campo": "derecho constitucional",
+     "quien": "Presidente (<em>Chief Justice</em>) de la Corte Suprema de los Estados Unidos.",
+     "aporte": "Redactó la opinión de la Corte en <em>Marbury v. Madison</em>, el precedente emblemático de la revisión judicial de las leyes (<em>judicial review</em>)."
+    },
+    {
+     "nombre": "Hans Kelsen",
+     "fechas": "1881-1973",
+     "campo": "teoría del derecho y derecho constitucional",
+     "quien": "Jurista nacido en Praga y muerto en Berkeley, California; magistrado y ponente permanente del Tribunal Constitucional austriaco hasta que la reforma de 1929 cesó a sus magistrados.",
+     "aporte": "Elaboró, a petición del gobierno austriaco, el proyecto de la Constitución federal de 1920, que confió a un tribunal la anulación de las leyes inconstitucionales."
+    },
+    {
+     "nombre": "Manuel Crescencio García Rejón y Alcalá",
+     "fechas": "1799-1849",
+     "campo": "derecho constitucional",
+     "quien": "Presidió la comisión del Congreso de Yucatán que preparó la reforma constitucional; la mayoría de los autores le atribuye principalmente el proyecto.",
+     "aporte": "La Constitución de Yucatán, sancionada el 31 de marzo de 1841, recogió el amparo contra leyes y actos contrarios a la Constitución (arts. 8 y 62)."
+    },
+    {
+     "nombre": "Mariano Otero",
+     "fechas": "1817-1850",
+     "campo": "derecho constitucional",
+     "quien": "Su nombre está unido al artículo 25 del Acta Constitutiva y de Reformas de 1847, que confió el amparo a los tribunales de la Federación.",
+     "aporte": "La «fórmula Otero», nombre doctrinal del principio de relatividad de las sentencias de amparo."
+    }
+   ],
+   "documentos": [
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "etiqueta": "Caso Radilla Pacheco vs. México",
+     "titulo": "Sentencia de 23 de noviembre de 2009, párrafos 124 y 125",
+     "extracto": "«El 25 de agosto de 1974 Rosendo Radilla Pacheco, de 60 años de edad, y su hijo Rosendo Radilla Martínez, de 11 años de edad, viajaban en un autobús desde Atoyac de Álvarez a Chilpancingo, Guerrero. […] se indicó a los pasajeros que abordaran el autobús, excepto al señor Rosendo Radilla Pacheco, quien quedó detenido porque “componía corridos” (supra párr. 122). El señor Radilla Pacheco indicó que eso no constituía ningún delito, sin embargo, un agente militar le respondió “mientras, ya te chingaste”.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "etiqueta": "Marbury v. Madison, 5 U.S. (1 Cranch) 137 (1803)",
+     "titulo": "p. 177",
+     "extracto": "«Es, sin duda, competencia y deber del poder judicial decir qué es el derecho. Quienes aplican la regla a casos particulares deben, por necesidad, exponer e interpretar esa regla.»",
+     "traducido": true,
+     "idioma": "inglés"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Acta Constitutiva y de Reformas (18 de mayo de 1847)",
+     "titulo": "Artículo 25",
+     "extracto": "«Los tribunales de la Federación ampararán a cualquiera habitante de la República, en el ejercicio y conservación de los derechos que le concedan esta Constitución y las leyes constitucionales, contra todo ataque de los poderes legislativo y ejecutivo, ya de la Federación, ya de los Estados, limitándose dichos tribunales a impartir su protección en el caso particular sobre que verse el proceso, sin hacer ninguna declaración general respecto de la ley o del acto que lo motivare.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "etiqueta": "Constitución Política de los Estados Unidos Mexicanos",
+     "titulo": "Artículo 133 (texto vigente)",
+     "extracto": "«Esta Constitución, las leyes del Congreso de la Unión que emanen de ella y todos los tratados que estén de acuerdo con la misma, celebrados y que se celebren por el Presidente de la República, con aprobación del Senado, serán la Ley Suprema de toda la Unión. Los jueces de cada entidad federativa se arreglarán a dicha Constitución, leyes y tratados, a pesar de las disposiciones en contrario que pueda haber en las Constituciones o leyes de las entidades federativas.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Jurisprudencia",
+     "titulo": "P./J. 74/99, registro digital 193435",
+     "extracto": "«Control difuso de la constitucionalidad de normas generales. No lo autoriza el artículo 133 de la Constitución. […] esta Suprema Corte de Justicia de la Nación considera que el artículo 133 constitucional, no es fuente de facultades de control constitucional para las autoridades que ejercen funciones materialmente jurisdiccionales, respecto de actos ajenos, como son las leyes emanadas del propio Congreso, ni de sus propias actuaciones…»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "onu",
+     "tipoNombre": "Naciones Unidas",
+     "etiqueta": "Declaración Universal de Derechos Humanos",
+     "titulo": "Artículo 8 (texto en español de 1948)",
+     "extracto": "«Toda persona tiene derecho a un recurso efectivo, ante los tribunales nacionales competentes, que la ampare contra actos que violen sus derechos fundamentales reconocidos por la constitución o por la ley.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "etiqueta": "Caso Trabajadores Cesados del Congreso vs. Perú",
+     "titulo": "Sentencia de 24 de noviembre de 2006, párrafo 128",
+     "extracto": "«…los órganos del Poder Judicial deben ejercer no sólo un control de constitucionalidad, sino también “de convencionalidad” ex officio entre las normas internas y la Convención Americana, evidentemente en el marco de sus respectivas competencias y de las regulaciones procesales correspondientes. Esta función no debe quedar limitada exclusivamente por las manifestaciones o actos de los accionantes en cada caso concreto…»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "etiqueta": "Caso Radilla Pacheco vs. México",
+     "titulo": "Sentencia de 23 de noviembre de 2009, párrafo 339",
+     "extracto": "«…el Poder Judicial debe ejercer un “control de convencionalidad” ex officio entre las normas internas y la Convención Americana, evidentemente en el marco de sus respectivas competencias y de las regulaciones procesales correspondientes. En esta tarea, el Poder Judicial debe tener en cuenta no solamente el tratado, sino también la interpretación que del mismo ha hecho la Corte Interamericana, intérprete última de la Convención Americana.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Tesis aislada",
+     "titulo": "P. LXVII/2011(9a.), registro digital 160589",
+     "extracto": "«Control de convencionalidad ex officio en un modelo de control difuso de constitucionalidad. […] Si bien los jueces no pueden hacer una declaración general sobre la invalidez o expulsar del orden jurídico las normas que consideren contrarias a los derechos humanos contenidos en la Constitución y en los tratados (como sí sucede en las vías de control directas establecidas expresamente en los artículos 103, 105 y 107 de la Constitución), sí están obligados a dejar de aplicar las normas inferiores dando preferencia a las contenidas en la Constitución y en los tratados en la materia.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "etiqueta": "Constitución, art. 107, fracción II (DOF, 15 de septiembre de 2024)",
+     "titulo": "Párrafo primero",
+     "extracto": "«Las sentencias que se pronuncien en los juicios de amparo sólo se ocuparán de personas quejosas que lo hubieren solicitado, limitándose a ampararlas y protegerlas, si procediere, en el caso especial sobre el que verse la demanda. Tratándose de juicios de amparo que resuelvan la inconstitucionalidad de normas generales, en ningún caso las sentencias que se dicten fijarán efectos generales.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Tesis aislada (abandonada)",
+     "titulo": "P. X/2015 (10a.), registro digital 2009817",
+     "extracto": "«…no es que los órganos de control concentrado estén exentos de ejercer un control difuso, sino que sólo pueden hacerlo en los términos que la propia Constitución les faculta.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Jurisprudencia",
+     "titulo": "P./J. 2/2022 (11a.), registro digital 2024159",
+     "extracto": "«Los órganos jurisdiccionales del Poder Judicial de la Federación cuando actúan en amparo directo e indirecto deben realizar control de regularidad constitucional ex officio, tanto respecto de las disposiciones procesales que regulan el juicio de amparo, como sobre las normas sustantivas y procesales que se aplicaron en el acto reclamado.»",
+     "traducido": false,
+     "idioma": ""
+    }
+   ],
+   "cronologias": [],
+   "glosario": [
+    {
+     "termino": "Control difuso",
+     "definicion": "Facultad de todo juez de dejar de aplicar de oficio (ex officio), en el caso que resuelve, la norma contraria a la Constitución o a los tratados, sin declarar su invalidez general."
+    },
+    {
+     "termino": "Control concentrado",
+     "definicion": "Facultad de ciertos órganos de juzgar una norma impugnada expresamente y declararla inconstitucional o anularla."
+    },
+    {
+     "termino": "Control de convencionalidad",
+     "definicion": "Examen de las normas internas frente a la Convención Americana y a la interpretación de la Corte Interamericana."
+    },
+    {
+     "termino": "Interpretación conforme",
+     "definicion": "Elegir, entre las interpretaciones posibles de una norma, la que la hace compatible con los derechos humanos."
+    },
+    {
+     "termino": "Fórmula Otero",
+     "definicion": "Principio de relatividad de las sentencias de amparo, que protegen sólo a quien promovió el juicio."
+    },
+    {
+     "termino": "Declaratoria general de inconstitucionalidad",
+     "definicion": "Resolución de la Suprema Corte, con al menos seis votos, que da efectos generales a la inconstitucionalidad de una norma fijada en jurisprudencia de amparo; no procede en materia tributaria."
+    }
+   ],
+   "preguntas": [
+    "¿Qué diferencia hay entre dejar de aplicar una ley en un caso y declararla inconstitucional con efectos generales?",
+    "¿Qué resolvió Marbury v. Madison y por qué Kelsen prefería un tribunal único para anular leyes?",
+    "¿Qué es la fórmula Otero y cómo se refleja hoy en el artículo 107, fracción II?",
+    "¿Cómo leyó la Suprema Corte el artículo 133 en 1999 y qué aportó México al artículo 8 de la Declaración Universal?",
+    "¿Cómo cambió la fórmula del control de convencionalidad entre 2003, Almonacid, Trabajadores Cesados y Radilla?",
+    "¿Cuáles son los tres pasos del control ex officio según la P. LXIX/2011?",
+    "¿Qué cambió entre las tesis de 2015 y la P./J. 2/2022 para los jueces de amparo?"
+   ],
+   "fuentes": [
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, Caso Radilla Pacheco vs. México, sentencia de 23 de noviembre de 2009, Serie C No. 209 (párrs. 124-126, 150 y 338-342).",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_209_esp.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P./J. 20/2014 (10a.), registro digital 2006224.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2006224"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P. LXX/2011 (9a.), Varios 912/2010, registro digital 160480.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/160480"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Oyez, registro del caso Marbury v. Madison (fecha de la decisión).",
+     "url": "https://www.oyez.org/cases/1789-1850/5us137"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "Marbury v. Madison, 5 U.S. (1 Cranch) 137 (1803), pp. 177 y 180.",
+     "url": "https://www.law.cornell.edu/supremecourt/text/5/137"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "Constitución de los Estados Unidos, art. VI, párr. 2 (National Archives).",
+     "url": "https://www.archives.gov/founding-docs/constitution-transcript"
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "Verfassungsgerichtshof (Austria), historia del tribunal.",
+     "url": "https://www.vfgh.gv.at/verfassungsgerichtshof/geschichte/geschichte_ueberblick.de.html"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Hans Kelsen, La garantía jurisdiccional de la Constitución, trad. Rolando Tamayo y Salmorán, UNAM-IIJ, 2001, pp. 9-10, 42-44, 54 y 56.",
+     "url": "https://www.defensoria.unam.mx/web/publicaciones/GarantJConst.pdf"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "J. R. Narváez Hernández, Historia social de la defensa de los derechos en México, SCJN, 2007.",
+     "url": "https://www.scjn.gob.mx/sites/default/files/publicaciones_scjn/publicacion/2016-10/66402_0.pdf"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Acta Constitutiva y de Reformas, 18 de mayo de 1847, art. 25 (facsímil, Cámara de Diputados).",
+     "url": "https://www.diputados.gob.mx/biblioteca/bibdig/const_mex/reformas-1847.pdf"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Constitución de 1857, arts. 102 y 126 (facsímil, Cámara de Diputados).",
+     "url": "https://www.diputados.gob.mx/biblioteca/bibdig/const_mex/const_1857.pdf"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución Política de los Estados Unidos Mexicanos, última reforma DOF 7 de octubre de 2026.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P./J. 73/99, registro digital 193558.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/193558"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P./J. 74/99, registro digital 193435.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/193435"
+    },
+    {
+     "tipo": "onu",
+     "tipoNombre": "Naciones Unidas",
+     "referencia": "ONU, Tercera Comisión, enmiendas de México, A/C.3/266, 12 de octubre de 1948.",
+     "url": "https://undocs.org/A/C.3/266"
+    },
+    {
+     "tipo": "onu",
+     "tipoNombre": "Naciones Unidas",
+     "referencia": "ONU, Tercera Comisión, acta de la 113.ª sesión, A/C.3/SR.113, 26 de octubre de 1948.",
+     "url": "https://undocs.org/A/C.3/SR.113"
+    },
+    {
+     "tipo": "onu",
+     "tipoNombre": "Naciones Unidas",
+     "referencia": "ONU, Asamblea General, acta de la 181.ª sesión plenaria, A/PV.181 (versión española), p. 375.",
+     "url": "https://digitallibrary.un.org/record/617876"
+    },
+    {
+     "tipo": "onu",
+     "tipoNombre": "Naciones Unidas",
+     "referencia": "ONU, Asamblea General, acta de la 183.ª sesión plenaria, A/PV.183, pp. 932-933.",
+     "url": "https://undocs.org/A/PV.183"
+    },
+    {
+     "tipo": "onu",
+     "tipoNombre": "Naciones Unidas",
+     "referencia": "ONU, resolución 217 A (III), Declaración Universal de Derechos Humanos, 10 de diciembre de 1948.",
+     "url": "https://undocs.org/es/A/RES/217(III)"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, Caso Myrna Mack Chang vs. Guatemala, 25 de noviembre de 2003, voto de Sergio García Ramírez, párr. 27.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_101_esp.pdf"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, Caso Almonacid Arellano y otros vs. Chile, 26 de septiembre de 2006, párr. 124.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_154_esp.pdf"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, Caso Trabajadores Cesados del Congreso vs. Perú, 24 de noviembre de 2006, párr. 128.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_158_esp.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P. LXVII/2011(9a.), Varios 912/2010, registro digital 160589.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/160589"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P. LXIX/2011(9a.), Varios 912/2010, registro digital 160525.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/160525"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P. I/2011 (10a.), registro digital 2000008.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2000008"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "Decreto de reforma constitucional en materia del Poder Judicial, DOF 15 de septiembre de 2024.",
+     "url": "https://dof.gob.mx/nota_detalle.php?codigo=5738985&fecha=15/09/2024"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley de Amparo, art. 78 (reformado DOF 13 de marzo de 2025).",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LAmp.pdf"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley Reglamentaria de las fracciones I y II del art. 105 constitucional, reforma DOF 3 de abril de 2025.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LRFIyII_Art105.pdf"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley Orgánica de la Sala Constitucional del Poder Judicial de la Ciudad de México (2019), arts. 14 y 34.",
+     "url": "https://www.poderjudicialcdmx.gob.mx/wp-content/uploads/LEY_ORG_SALA_CONSTITUCIONAL_DEL_PJCDMX_2.1.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P. IX/2015 (10a.), registro digital 2009816 (abandonada).",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2009816"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P. X/2015 (10a.), registro digital 2009817 (abandonada).",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2009817"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P./J. 2/2022 (11a.), contradicción de tesis 351/2014, registro digital 2024159.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2024159"
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-control-difuso-y-concentrado.pdf",
+    "paginas": 12,
+    "kb": 1093,
+    "palabras": 3787,
+    "minutos": 20
+   },
+   "portada": "/estudiar/portadas/control-difuso-y-concentrado.webp",
+   "miniatura": "/estudiar/miniaturas/control-difuso-y-concentrado.webp",
+   "miniatura640": "/estudiar/miniaturas/control-difuso-y-concentrado-640.webp"
+  },
+  {
+   "id": "v81",
+   "slug": "que-es-la-jurisprudencia",
+   "eje": "constitucion",
+   "publicada": true,
+   "youtube": "FcQ_wOcKSfY",
+   "publicado": "2026-10-10T19:00:00-06:00",
+   "tituloVideo": "¿Qué es la jurisprudencia?",
+   "duracion": 478,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "Una jurisprudencia de 1994"
+    },
+    {
+     "segundo": 40,
+     "titulo": "La palabra: iuris prudentia"
+    },
+    {
+     "segundo": 66,
+     "titulo": "Qué es hoy la jurisprudencia"
+    },
+    {
+     "segundo": 86,
+     "titulo": "Del Semanario de 1870 al artículo 94"
+    },
+    {
+     "segundo": 121,
+     "titulo": "Cómo nace hoy: precedente, reiteración y contradicción"
+    },
+    {
+     "segundo": 156,
+     "titulo": "Tesis viejas y la corrección de 2005"
+    },
+    {
+     "segundo": 218,
+     "titulo": "2013: el tribunal que dejó de aplicarla"
+    },
+    {
+     "segundo": 252,
+     "titulo": "2014: la decisión de la Suprema Corte"
+    },
+    {
+     "segundo": 286,
+     "titulo": "El voto de José Ramón Cossío"
+    },
+    {
+     "segundo": 351,
+     "titulo": "¿De dónde viene la obligatoriedad? El 217 y el artículo 94"
+    },
+    {
+     "segundo": 404,
+     "titulo": "El dilema del juez: distinguir"
+    },
+    {
+     "segundo": 448,
+     "titulo": "Suscríbete y comparte"
+    }
+   ],
+   "titulo": "¿Qué es la jurisprudencia?",
+   "tituloPlano": "¿Qué es la jurisprudencia?",
+   "subtitulo": "Del latín iuris prudentia a la contradicción de tesis 299/2013 y el voto de José Ramón Cossío Díaz",
+   "corto": "¿Qué es la jurisprudencia?",
+   "nivel": "licenciatura",
+   "actualizado": "9 de octubre de 2026",
+   "claves": [
+    "jurisprudencia",
+    "precedente obligatorio",
+    "reiteración",
+    "contradicción de criterios",
+    "artículo 94 constitucional",
+    "artículo 217 de la Ley de Amparo",
+    "contradicción de tesis 299/2013",
+    "distinción"
+   ],
+   "resumen": "Qué es la jurisprudencia, de dónde viene la palabra, cómo nació en México la jurisprudencia obligatoria y cómo se forma hoy; por qué la Suprema Corte resolvió en 2014 que ningún juez inferior puede dejar de aplicar su jurisprudencia, qué objetó el ministro José Ramón Cossío Díaz y de dónde viene la obligatoriedad: del artículo 94 de la Constitución, no sólo del 217 de la Ley de Amparo.",
+   "resumenPlano": "Qué es la jurisprudencia, de dónde viene la palabra, cómo nació en México la jurisprudencia obligatoria y cómo se forma hoy; por qué la Suprema Corte resolvió en 2014 que ningún juez inferior puede dejar de aplicar su jurisprudencia, qué objetó el ministro José Ramón Cossío Díaz y de dónde viene la obligatoriedad: del artículo 94 de la Constitución, no sólo del 217 de la Ley de Amparo.",
+   "ideas": [
+    "La jurisprudencia es la interpretación del derecho que hacen los tribunales y que, cumplidos ciertos requisitos, obliga a otros jueces.",
+    "En México se forma hoy por precedente (Pleno de la Suprema Corte, seis votos), por reiteración (cinco sentencias unánimes de un tribunal colegiado) y por contradicción de criterios.",
+    "En 2014 la Suprema Corte resolvió, por siete votos contra dos, que ningún juez de menor jerarquía puede inaplicar su jurisprudencia por control de constitucionalidad o de convencionalidad.",
+    "La obligatoriedad de la jurisprudencia la manda la Constitución (art. 94); la Ley de Amparo fija sus términos. La salida legítima del juez es distinguir."
+   ],
+   "secciones": [
+    "Introducción: una regla que no estaba en ninguna ley",
+    "La palabra y su origen romano",
+    "Qué es hoy la jurisprudencia",
+    "Cómo nació la jurisprudencia obligatoria en México",
+    "Cómo se forma hoy",
+    "La jurisprudencia también se equivoca",
+    "La contradicción de tesis 299/2013",
+    "El voto de José Ramón Cossío Díaz",
+    "¿De dónde viene la obligatoriedad?",
+    "El dilema del juez",
+    "Conclusión"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [
+    {
+     "nombre": "Ulpiano (Domicio Ulpiano)",
+     "fechas": "s. III d. C.",
+     "campo": "derecho romano",
+     "quien": "Jurista romano de la época de los Severos; sus obras son una de las fuentes más citadas del Digesto de Justiniano.",
+     "aporte": "Su definición de la jurisprudencia abre el Digesto y las Instituciones de Justiniano."
+    },
+    {
+     "nombre": "Ignacio L. Vallarta",
+     "fechas": "1830-1893",
+     "campo": "derecho constitucional",
+     "quien": "Jurista y político jalisciense; presidió la Suprema Corte de Justicia entre 1877 y 1882.",
+     "aporte": "La Suprema Corte le atribuye el sistema de las cinco ejecutorias uniformes, origen de la jurisprudencia por reiteración."
+    }
+   ],
+   "documentos": [
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Jurisprudencia (modificada en 2005)",
+     "titulo": "1a./J. 10/94, registro digital 206115",
+     "extracto": "«El que uno de los cónyuges imponga al otro la cópula normal de manera violenta, cuando subsiste la obligación de cohabitar, no es suficiente para que se configure el delito de violación previsto en el artículo 265 del Código Penal para el Distrito Federal, a pesar de la utilización de los medios típicos previstos para su integración; ya que si bien el cónyuge tiene derecho a la relación sexual con su pareja, no puede permitirse que lo obtenga violentamente; por lo que de observar tal conducta se adecuará a lo establecido en el artículo 226 del ordenamiento en cita, al ejercitar indebidamente su derecho.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Digesto de Justiniano",
+     "titulo": "D. 1.1.10.2 (Ulpiano, Reglas, libro I)",
+     "extracto": "«Jurisprudencia es el conocimiento de las cosas divinas y humanas, y la ciencia de lo justo y de lo injusto.»",
+     "traducido": true,
+     "idioma": "latín"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Ley de Amparo de 1882",
+     "titulo": "Artículo 70",
+     "extracto": "«La concesión o denegación del amparo contra el texto expreso de la Constitución ó contra su interpretación, fijada por la Suprema Corte, por lo menos en cinco ejecutorias uniformes, se castigará con la pérdida de empleo, y con prisión de seis meses á tres años, si el Juez ha obrado dolosamente; y si sólo ha procedido por falta de instrucción ó descuido, quedará suspenso de sus funciones por un año.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "etiqueta": "Constitución Política de los Estados Unidos Mexicanos",
+     "titulo": "Artículo 94, párrafos undécimo y duodécimo (texto vigente)",
+     "extracto": "«La ley fijará los términos en que sea obligatoria la jurisprudencia que establezcan los Tribunales del Poder Judicial de la Federación sobre la interpretación de la Constitución y normas generales, así como los requisitos para su interrupción.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Jurisprudencia (modificada)",
+     "titulo": "1a./J. 10/94, registro digital 176065",
+     "extracto": "«…cuando uno de los cónyuges obtiene la cópula por medios violentos -sean éstos físicos y/o morales-, queda debidamente integrado el delito de violación, sin importar la existencia del vínculo matrimonial.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Jurisprudencia",
+     "titulo": "P./J. 64/2014 (10a.), registro digital 2008148",
+     "extracto": "«…aun partiendo del nuevo modelo de interpretación constitucional, no es posible determinar que la jurisprudencia del Máximo Tribunal del país pueda ser objeto de la decisión de un órgano de menor grado que tienda a inaplicarla, como resultado del ejercicio de control de convencionalidad ex officio, porque permitirlo daría como resultado que perdiera su carácter de obligatoria, ocasionando falta de certeza y seguridad jurídica.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "etiqueta": "Voto particular, CT 299/2013",
+     "titulo": "José Ramón Cossío Díaz, párrafos 20, 31 y 39",
+     "extracto": "«Insisto: salvo que se la crea epistémicamente superior o que se admita que su jurisprudencia es infalible, no veo ninguna razón válida que permita pensar en que la Corte está exenta del principio pro persona.»",
+     "traducido": false,
+     "idioma": ""
+    }
+   ],
+   "cronologias": [
+    {
+     "titulo": "",
+     "filas": [
+      {
+       "anio": "1870",
+       "texto": "El 8 de diciembre, el Congreso de la Unión crea el Semanario Judicial de la Federación; lo promulga Benito Juárez. Su primera época comienza en enero de 1871."
+      },
+      {
+       "anio": "1882",
+       "texto": "La Ley de Amparo del 14 de diciembre hace obligatoria la interpretación de la Corte fijada en cinco ejecutorias uniformes."
+      },
+      {
+       "anio": "1897",
+       "texto": "El Código Federal de Procedimientos Civiles suprime la institución de la jurisprudencia."
+      },
+      {
+       "anio": "1908",
+       "texto": "El nuevo Código Federal de Procedimientos Civiles la restablece (art. 786: cinco ejecutorias y nueve votos)."
+      },
+      {
+       "anio": "1951",
+       "texto": "La reforma al art. 107, fr. XIII, la lleva a la Constitución y crea la contradicción de tesis entre tribunales colegiados."
+      },
+      {
+       "anio": "1967",
+       "texto": "La regla pasa al art. 94 de la Constitución."
+      },
+      {
+       "anio": "2011",
+       "texto": "Nacen los plenos de circuito; la Ley de Amparo de 2013 regula la jurisprudencia en sus arts. 215 a 230."
+      },
+      {
+       "anio": "2021",
+       "texto": "Reforma judicial: jurisprudencia por precedentes (ocho votos en Pleno, cuatro en Sala) y plenos regionales; inicia la Undécima Época."
+      },
+      {
+       "anio": "2024",
+       "texto": "Reforma judicial: Corte de nueve integrantes, sin Salas; el precedente exige seis votos. La Duodécima Época inicia el 1 de septiembre de 2025."
+      }
+     ]
+    }
+   ],
+   "glosario": [
+    {
+     "termino": "Jurisprudencia",
+     "definicion": "Criterio de interpretación de los tribunales que, cumplidos los requisitos legales, es obligatorio para otros órganos jurisdiccionales."
+    },
+    {
+     "termino": "Precedente obligatorio",
+     "definicion": "Razones de una sentencia del Pleno de la Suprema Corte aprobadas por al menos seis votos."
+    },
+    {
+     "termino": "Reiteración",
+     "definicion": "Jurisprudencia de un tribunal colegiado formada por cinco sentencias unánimes no interrumpidas por otra en contrario."
+    },
+    {
+     "termino": "Contradicción de criterios",
+     "definicion": "Procedimiento para decidir cuál de dos criterios opuestos debe prevalecer."
+    },
+    {
+     "termino": "Tesis aislada",
+     "definicion": "Criterio publicado que no reúne los requisitos de la jurisprudencia; orienta, pero no obliga."
+    },
+    {
+     "termino": "Distinción",
+     "definicion": "Técnica que permite no aplicar un precedente cuando el caso tiene hechos relevantes distintos."
+    },
+    {
+     "termino": "Interrupción",
+     "definicion": "Pérdida de obligatoriedad de una jurisprudencia cuando el tribunal que la emitió se aparta de ella con argumentos suficientes."
+    },
+    {
+     "termino": "Principio pro persona",
+     "definicion": "Deber de preferir la interpretación que más proteja a la persona (art. 1o. constitucional)."
+    }
+   ],
+   "preguntas": [
+    "¿Qué significa iuris prudentia y qué dice la definición de Ulpiano?",
+    "¿Por qué la Ley de Amparo de 1882 protegió la interpretación de la Corte con una sanción?",
+    "¿Cuáles son las tres formas de integrar jurisprudencia y qué votación exige cada una?",
+    "¿Qué decía la 1a./J. 10/94 y cómo se modificó en 2005?",
+    "¿Qué resolvió la contradicción de tesis 299/2013 y con qué argumento?",
+    "¿Qué objetó José Ramón Cossío Díaz y cómo proponía preservar la seguridad jurídica?",
+    "¿Por qué la obligatoriedad de la jurisprudencia no depende sólo del artículo 217 de la Ley de Amparo?",
+    "¿Qué diferencia hay entre distinguir una jurisprudencia y desobedecerla?"
+   ],
+   "fuentes": [
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, Varios 9/2005-PS, solicitud de modificación de la jurisprudencia 1a./J. 10/94, 16 de noviembre de 2005 (ejecutoria, registro 19271).",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/176065"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 10/94, registro digital 206115.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/206115"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "A. Ernout y A. Meillet, Dictionnaire étymologique de la langue latine, s.v. prūdēns, pp. 540-541.",
+     "url": "https://archive.org/details/DictionnaireEtymologiqueDeLaLangueLatine"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Cicerón, De divinatione, I, 111.",
+     "url": "https://www.thelatinlibrary.com/cicero/divinatione1.shtml"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Corpus iuris civilis, vol. I: Digesta, ed. Th. Mommsen, Berlín, 1893, p. 1 (D. 1.1.10.2).",
+     "url": "https://archive.org/details/corpusiuriscivil00krueuoft/page/n116"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "I. L. García del Corral, Cuerpo del derecho civil romano, t. I, Barcelona, 1889, p. 199 (D. 1.1.10.2).",
+     "url": "https://archive.org/details/cuerpodelderechocivilromanoP1T1"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "I. L. García del Corral, Cuerpo del derecho civil romano, t. I, Barcelona, 1889, p. 208 (D. 1.2.2.49).",
+     "url": "https://archive.org/details/cuerpodelderechocivilromanoP1T1"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "I. L. García del Corral, Cuerpo del derecho civil romano, Instituta 1.2.8, p. 7.",
+     "url": "https://archive.org/details/cuerpodelderechocivilromanoP1T1"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P./J. 145/2000, registro digital 190663.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/190663"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P./J. 6/2023 (11a.), contradicción de criterios 408/2022, registro digital 2027495.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2027495"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley de Amparo, arts. 215 a 230, última reforma DOF 16 de octubre de 2025.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LAmp.pdf"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Decreto del Congreso de la Unión de 8 de diciembre de 1870 (facsímil en SCJN, 2022, p. 12).",
+     "url": "https://www.scjn.gob.mx/sites/default/files/publicaciones_scjn/publicacion/2023-03/UND%C3%89CIMA%20%C3%89POCA%20SJF_DIGITAL%20%281%29.pdf"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "SCJN, La Undécima Época del Semanario Judicial de la Federación. Un nuevo paradigma, 2022, pp. 33-37.",
+     "url": "https://www.scjn.gob.mx/sites/default/files/publicaciones_scjn/publicacion/2023-03/UND%C3%89CIMA%20%C3%89POCA%20SJF_DIGITAL%20%281%29.pdf"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "Diario Oficial de la Federación, 19 de febrero de 1951 (reforma al art. 107, fr. XIII) y fe de erratas de 14 de marzo de 1951.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/cpeum_art.htm"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "Diario Oficial de la Federación, 25 de octubre de 1967 (reforma al art. 94).",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/cpeum_art.htm"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución Política de los Estados Unidos Mexicanos, arts. 1o., 4o., 94 y 107, última reforma DOF 7 de octubre de 2026.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley Orgánica del Poder Judicial de la Federación (DOF 20 de diciembre de 2024), transitorio Décimo Octavo.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LOPJF.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, tesis aislada, registro digital 311812 (1936).",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/311812"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, tesis aislada, registro digital 260106 (1962).",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/260106"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 10/94 (modificada), registro digital 176065.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/176065"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 83/2005, registro digital 178017.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/178017"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Pleno, contradicción de tesis 299/2013, ejecutoria, registro 25944, pp. 4-6, 12-13.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/ejecutoria/25944"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P./J. 64/2014 (10a.), registro digital 2008148.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2008148"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Pleno, versión taquigráfica de la sesión de 13 de octubre de 2014, p. 35.",
+     "url": "https://www.scjn.gob.mx/sites/default/files/versiones-taquigraficas/documento/2016-11-04/13oct2014_0.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "José Ramón Cossío Díaz, voto particular en la CT 299/2013, registro 41855 (párrs. 3, 20, 31, 33 y 39).",
+     "url": "https://sjf2.scjn.gob.mx/detalle/voto/41855"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Pleno, versión taquigráfica de la sesión de 14 de octubre de 2014, p. 33.",
+     "url": "https://www.scjn.gob.mx/sites/default/files/versiones-taquigraficas/documento/2016-11-04/14oct2014_0.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "Juan N. Silva Meza, voto particular en la CT 299/2013, registro 41857.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/voto/41857"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "J. R. Cossío Díaz y R. Lara Chagoyán, «¿Derechos humanos o jurisprudencia infalible?», Cuestiones Constitucionales, núm. 32, 2015, pp. 81-109.",
+     "url": "https://www.redalyc.org/pdf/885/88541038003.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Segunda Sala, 2a. XL/2015 (10a.), registro digital 2009411.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2009411"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Segunda Sala, 2a./J. 139/2015 (10a.), registro digital 2010625.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2010625"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a. LXX/2006, registro digital 175300.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/175300"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "Decreto de reforma a la Ley de Amparo, DOF 7 de junio de 2021 (deroga el art. 230).",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/lamp.htm"
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-que-es-la-jurisprudencia.pdf",
+    "paginas": 11,
+    "kb": 1009,
+    "palabras": 2965,
+    "minutos": 15
+   },
+   "portada": "/estudiar/portadas/que-es-la-jurisprudencia.webp",
+   "miniatura": "/estudiar/miniaturas/que-es-la-jurisprudencia.webp",
+   "miniatura640": "/estudiar/miniaturas/que-es-la-jurisprudencia-640.webp"
+  },
+  {
    "id": "v72",
    "slug": "test-de-proporcionalidad",
    "eje": "razonamiento",
@@ -6023,6 +6993,1757 @@
    "portada": "/estudiar/portadas/lo-que-la-policia-no-puede-hacer.webp",
    "miniatura": "/estudiar/miniaturas/lo-que-la-policia-no-puede-hacer.webp",
    "miniatura640": "/estudiar/miniaturas/lo-que-la-policia-no-puede-hacer-640.webp"
+  },
+  {
+   "id": "v82",
+   "slug": "libertad-de-contratar-y-sus-limites",
+   "eje": "civil",
+   "publicada": true,
+   "youtube": "bfZT1lkGi_w",
+   "publicado": "2026-10-11T12:00:00-06:00",
+   "tituloVideo": "¿Te embargaron por una deuda excesiva? La libertad de contratar y sus límites",
+   "duracion": 481,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "¿Te embargaron? El caso de Ahome"
+    },
+    {
+     "segundo": 61,
+     "titulo": "Qué es un contrato"
+    },
+    {
+     "segundo": 92,
+     "titulo": "Roma: Cicerón y la venta injusta"
+    },
+    {
+     "segundo": 127,
+     "titulo": "El contrato como ley: 1804, 1870 y Lochner"
+    },
+    {
+     "segundo": 168,
+     "titulo": "Los límites: 1917 y la lesión de 1928"
+    },
+    {
+     "segundo": 221,
+     "titulo": "Por qué la lesión no protegía"
+    },
+    {
+     "segundo": 252,
+     "titulo": "El giro: la Convención Americana y 2014"
+    },
+    {
+     "segundo": 306,
+     "titulo": "La regla: usura revisada de oficio"
+    },
+    {
+     "segundo": 353,
+     "titulo": "Después: 2016, 2021 y 2026"
+    },
+    {
+     "segundo": 404,
+     "titulo": "Cualquier contrato: la explotación"
+    },
+    {
+     "segundo": 445,
+     "titulo": "Si te demandan: 8 días"
+    }
+   ],
+   "titulo": "La libertad de contratar y sus límites",
+   "tituloPlano": "La libertad de contratar y sus límites",
+   "subtitulo": "Lesión, usura y explotación, de Roma a la Suprema Corte de Justicia de la Nación",
+   "corto": "La libertad de contratar y sus límites",
+   "nivel": "licenciatura",
+   "actualizado": "9 de octubre de 2026",
+   "claves": [
+    "autonomía de la voluntad",
+    "pacta sunt servanda",
+    "lesión",
+    "usura",
+    "explotación",
+    "pagaré",
+    "reducción prudencial",
+    "artículo 21.3 de la Convención Americana",
+    "control de convencionalidad",
+    "cosa juzgada"
+   ],
+   "resumen": "Qué es la autonomía de la voluntad y por qué nunca ha sido absoluta: del pretor romano y la lesión del año 285 al contrato como ley del siglo XIX, la reacción del siglo XX y el giro de 2014, cuando la Suprema Corte dejó de tratar la usura como lesión y obligó a los jueces a revisarla de oficio.",
+   "resumenPlano": "Qué es la autonomía de la voluntad y por qué nunca ha sido absoluta: del pretor romano y la lesión del año 285 al contrato como ley del siglo XIX, la reacción del siglo XX y el giro de 2014, cuando la Suprema Corte dejó de tratar la usura como lesión y obligó a los jueces a revisarla de oficio.",
+   "ideas": [
+    "En México rige la libertad de contratar: cada uno se obliga en la manera y términos que aparezca que quiso obligarse. Pero esa libertad tiene límites desde el derecho romano.",
+    "La lesión protege a quien fue explotado en su ignorancia, inexperiencia o miseria, pero hay que pedirla, probarla y hacerlo dentro de un año.",
+    "Desde 2014, la usura viola el derecho de propiedad (art. 21.3 de la Convención Americana): el juez debe revisarla de oficio y, si la tasa es notoriamente usuraria, reducirla prudencialmente.",
+    "No hay porcentaje fijo, una tasa alta no es por sí sola usura y, con sentencia firme, la revisión ya no procede."
+   ],
+   "secciones": [
+    "Introducción: 22 pagos",
+    "1. El contrato y la autonomía de la voluntad",
+    "2. Roma y la Edad Media: cumplir lo pactado, con límites",
+    "3. El siglo XIX: el contrato como ley",
+    "4. La reacción: «la ley que libera»",
+    "5. La lesión hoy y por qué no bastaba frente al pagaré",
+    "6. El giro de 2014: la usura como violación de un derecho humano",
+    "7. Después de 2014: la regla se afina",
+    "8. Lo que conviene saber si a uno lo demandan",
+    "Conclusión"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [
+    {
+     "nombre": "Cicerón",
+     "fechas": "",
+     "campo": "política y derecho romanos",
+     "quien": "Gobernador romano de la provincia de Cilicia; en febrero del año 50 a. C. escribió a Ático, desde Laodicea, sobre el caso de Salamina.",
+     "aporte": "Se negó a conceder un interés mayor que el de su edicto: la «centésima», el 1 % mensual o 12 % anual."
+    },
+    {
+     "nombre": "Diocleciano",
+     "fechas": "",
+     "campo": "derecho romano",
+     "quien": "Emperador romano. El Código de Justiniano conserva a su nombre y al de Maximiano rescriptos —respuestas imperiales a particulares— sobre la compraventa.",
+     "aporte": "El rescripto de 285 permitió deshacer la venta de una tierra pagada por menos de la mitad de su verdadero precio."
+    },
+    {
+     "nombre": "Benito Juárez",
+     "fechas": "",
+     "campo": "derecho y política",
+     "quien": "Presidente constitucional de México.",
+     "aporte": "El 8 de diciembre de 1870 aprobó el Código Civil del Distrito Federal, obra de Mariano Yáñez, José María Lafragua, Isidro Montiel y Rafael Dondé."
+    },
+    {
+     "nombre": "Holmes",
+     "fechas": "",
+     "campo": "derecho constitucional",
+     "quien": "Juez de la Corte Suprema de los Estados Unidos.",
+     "aporte": "Su voto disidente en <em>Lochner</em> recordó que las leyes contra la usura limitan desde antiguo la libertad de contratar."
+    },
+    {
+     "nombre": "Henri-Dominique Lacordaire",
+     "fechas": "",
+     "campo": "predicación y pensamiento social",
+     "quien": "Predicador francés; sus <em>Conferencias de Notre-Dame de París</em> se publicaron en varios tomos.",
+     "aporte": "En 1848, al defender el descanso del séptimo día, resumió la crítica a la libertad contractual sin límites."
+    },
+    {
+     "nombre": "Charles Evans Hughes",
+     "fechas": "",
+     "campo": "derecho constitucional",
+     "quien": "Presidente (<em>Chief Justice</em>) de la Corte Suprema de los Estados Unidos.",
+     "aporte": "Redactó la opinión de la Corte en <em>West Coast Hotel Co. v. Parrish</em> (1937), que sostuvo una ley de salario mínimo."
+    }
+   ],
+   "documentos": [
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "Código Civil Federal",
+     "titulo": "Artículo 1832",
+     "extracto": "«En los contratos civiles cada uno se obliga en la manera y términos que aparezca que quiso obligarse, sin que para la validez del contrato se requieran formalidades determinadas, fuera de los casos expresamente designados por la ley.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Digesto de Justiniano",
+     "titulo": "D. 2.14.7.7 (Ulpiano)",
+     "extracto": "«Dice el pretor: “Haré respetar los pactos convenidos que no se hayan hecho con dolo malo, ni contra las leyes, plebiscitos, senadoconsultos, decretos o edictos de los príncipes, ni para defraudar a alguno de ellos”.»",
+     "traducido": true,
+     "idioma": "latín"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Código de Justiniano",
+     "titulo": "C. 4.44.2 (28 de octubre de 285)",
+     "extracto": "«Si tú o tu padre vendisteis por un precio menor una cosa de mayor valor, es humano que, devolviendo tú el precio a los compradores, recuperes el fundo vendido con intervención de la autoridad del juez; o, si el comprador lo prefiere, recibas lo que falta para el precio justo. Se considera que el precio es menor si no se pagó ni la mitad del verdadero precio.»",
+     "traducido": true,
+     "idioma": "latín"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Exposición de la Comisión del Código Civil",
+     "titulo": "Pp. 74-75 (impresa en 1871)",
+     "extracto": "«…porque establecidas las reglas de los contratos en general y en particular, y debiendo ser conocido el Código de todos los ciudadanos, cada uno debe cuidar de asegurarse al contratar. […] Así se cierra la puerta á cuestiones interminables y de muy difícil solucion.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "etiqueta": "Lochner v. New York, 198 U.S. 45 (1905)",
+     "titulo": "Voto disidente del juez Holmes, p. 75",
+     "extracto": "«…interfieren con la libertad de contratar. Las leyes del descanso dominical y las leyes contra la usura son ejemplos antiguos. […] La Decimocuarta Enmienda no convierte en ley la <em>Estática social</em> del señor Herbert Spencer.»",
+     "traducido": true,
+     "idioma": "inglés"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Lacordaire, 52.ª conferencia de Notre-Dame (1848)",
+     "titulo": "«Du double travail de l'homme»",
+     "extracto": "«…entre el fuerte y el débil, entre el rico y el pobre, entre el amo y el servidor, es la libertad la que oprime y la ley la que libera.»",
+     "traducido": true,
+     "idioma": "francés"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "etiqueta": "Código Civil de 1928 (DOF, 26 de mayo de 1928)",
+     "titulo": "Artículo 17, texto original",
+     "extracto": "«Cuando alguno explotando la suma ignorancia, notoria inexperiencia o extrema miseria de otro, obtiene un lucro excesivo que sea evidentemente desproporcionado a lo que él por su parte se obliga, el perjudicado tiene derecho de pedir la rescisión del contrato, y de ser ésta imposible, la reducción equitativa de su obligación. El derecho concedido en este artículo dura un año.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "trat",
+     "tipoNombre": "Tratado",
+     "etiqueta": "Convención Americana sobre Derechos Humanos (1969)",
+     "titulo": "Artículo 21. Derecho a la propiedad privada, numeral 3",
+     "extracto": "«Tanto la usura como cualquier otra forma de explotación del hombre por el hombre, deben ser prohibidas por la ley.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Jurisprudencia",
+     "titulo": "1a./J. 46/2014 (10a.), registro digital 2006794",
+     "extracto": "«…conduce a esta Sala a apartarse de los criterios sostenidos en las tesis 1a./J. 132/2012 (10a.), así como 1a. CCLXIV/2012 (10a.), en virtud de que en su elaboración se equiparó el interés usurario con el interés lesivo […]. Así, resulta que el artículo 21, apartado 3, de la Convención Americana sobre Derechos Humanos, prevé la usura como una forma de explotación del hombre por el hombre, como fenómeno contrario al derecho humano de propiedad, lo que se considera que ocurre cuando una persona obtiene en provecho propio y de modo abusivo sobre la propiedad de otra, un interés excesivo derivado de un préstamo…»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Jurisprudencia",
+     "titulo": "1a./J. 47/2014 (10a.), registro digital 2006795",
+     "extracto": "«…si el juzgador adquiere convicción de oficio de que el pacto de intereses es notoriamente usurario […] debe proceder, también de oficio, a inhibir esa condición usuraria apartándose del contenido del interés pactado, para fijar la condena respectiva sobre una tasa de interés reducida prudencialmente para que no resulte excesiva […]. Ahora bien, cabe destacar que constituyen parámetros guía […] los siguientes: a) el tipo de relación existente entre las partes; b) la calidad de los sujetos que intervienen en la suscripción del pagaré y si la actividad del acreedor se encuentra regulada; c) el destino o finalidad del crédito; d) el monto del crédito; e) el plazo del crédito; f) la existencia de garantías para el pago del crédito; g) las tasas de interés de las instituciones bancarias para operaciones similares a las que se analizan, cuya apreciación únicamente constituye un parámetro de referencia; h) la variación del índice inflacionario nacional durante la vida real del adeudo; i) las condiciones del mercado; y, j) otras cuestiones que generen convicción en el juzgador.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Jurisprudencia",
+     "titulo": "1a./J. 141/2025 (11a.), registro digital 2030860",
+     "extracto": "«La prohibición de explotación de la persona por la persona puede analizarse en cualquier contrato, al margen de su denominación, cuando se pacten intereses moratorios, penas convencionales u otras estipulaciones que generen un provecho económico excesivo para una parte, pues dicho análisis procede cuando exista una desproporción relevante entre las prestaciones que afecte la dignidad de la persona y denote un abuso o desequilibrio en la relación contractual.»",
+     "traducido": false,
+     "idioma": ""
+    }
+   ],
+   "cronologias": [
+    {
+     "titulo": "La usura en la Suprema Corte",
+     "filas": [
+      {
+       "anio": "2016",
+       "texto": "Usura en ordinarios y moratorios; el CAT más alto como referente (1a./J. 54 a 57/2016)."
+      },
+      {
+       "anio": "2019",
+       "texto": "Cada tasa se analiza por separado, sin sumarlas (1a./J. 6/2020)."
+      },
+      {
+       "anio": "2021",
+       "texto": "La reducción alcanza los intereses ya pagados (1a./J. 120/2022)."
+      },
+      {
+       "anio": "2023",
+       "texto": "Si el juicio caduca, no se analiza la usura (1a./J. 64/2024)."
+      },
+      {
+       "anio": "2024",
+       "texto": "La explotación puede analizarse en cualquier contrato (1a./J. 141/2025)."
+      }
+     ]
+    }
+   ],
+   "glosario": [
+    {
+     "termino": "Autonomía de la voluntad",
+     "definicion": "Libertad de decidir si se contrata, con quién y en qué términos, dentro de los límites de la ley."
+    },
+    {
+     "termino": "Lesión",
+     "definicion": "Desproporción evidente entre las prestaciones, obtenida explotando la suma ignorancia, notoria inexperiencia o extrema miseria de otro (art. 17 del Código Civil Federal)."
+    },
+    {
+     "termino": "Usura",
+     "definicion": "Interés excesivo que una persona obtiene en provecho propio y de modo abusivo sobre la propiedad de otra, derivado de un préstamo."
+    },
+    {
+     "termino": "Explotación de la persona por la persona",
+     "definicion": "Uso abusivo en provecho propio de los recursos, el trabajo o la persona de otro; en los contratos, exige una desproporción relevante que afecte la dignidad."
+    }
+   ],
+   "preguntas": [
+    "¿Qué límites ponía el edicto del pretor y qué resolvió Cicerón en el caso de Salamina?",
+    "¿Qué cambió el artículo 17 del Código Civil de 1928 respecto del código de 1870?",
+    "¿Por qué la lesión no protegía al deudor de un pagaré y qué resolvió la contradicción de tesis 350/2013?",
+    "¿Hasta qué momento puede revisarse la usura y por qué una tasa alta no es por sí sola usuraria?"
+   ],
+   "fuentes": [
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, CT 170/2021, engrose firmado.",
+     "url": "https://www2.scjn.gob.mx/juridica/engroses/1/2021/4/2_284666_5869_firmado.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a./J. 120/2022 (11a.), reg. 2025503.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2025503"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Civil Federal, últ. ref. DOF 14 de noviembre de 2025.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CCF.pdf"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código de Comercio, últ. ref. DOF 14 de noviembre de 2025.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CCom.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a. CDXXV/2014 (10a.), reg. 2008086.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2008086"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Digesto, libro 2, título 14, The Roman Law Library (Grenoble).",
+     "url": "https://droitromain.univ-grenoble-alpes.fr/Corpus/d-02.htm"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Cicerón, Cartas a Ático, 5.21 y 6.1, The Latin Library.",
+     "url": "https://www.thelatinlibrary.com/cicero/att5.shtml"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Código de Justiniano, ed. P. Krüger, Berlín, 1892, p. 179.",
+     "url": "https://droitromain.univ-grenoble-alpes.fr/"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "E. Friedberg, <em>Corpus Iuris Canonici</em>, II, Leipzig, 1881.",
+     "url": "https://archive.org/details/BD1141952"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "<em>Code civil des Français</em>, édition officielle, 1804.",
+     "url": "https://commons.wikimedia.org/wiki/File:Code_civil_des_Fran%C3%A7ais,_1804.djvu"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Código Civil del Distrito Federal y Territorio de la Baja California, 1870.",
+     "url": "http://cdigital.dgb.uanl.mx/la/1080000202/1080000202.html"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "<em>Exposición de los cuatro libros del Código Civil del Distrito Federal y Territorio de la Baja-California</em>, México, 1871.",
+     "url": ""
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "Lochner v. New York, 198 U.S. 45 (1905).",
+     "url": "https://tile.loc.gov/storage-services/service/ll/usrep/usrep198/usrep198045/usrep198045.pdf"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Lacordaire, <em>Conférences de Notre-Dame</em>, t. III, 1872, p. 473.",
+     "url": "https://archive.org/details/a589423103lacouoft"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "<em>Reichsgesetzblatt</em> 1896, núm. 21, p. 218 (BGB, § 138).",
+     "url": "https://commons.wikimedia.org/wiki/File:Deutsches_Reichsgesetzblatt_1896_021_218.jpg"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código suizo de las Obligaciones (1911), art. 21, texto vigente.",
+     "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/fr"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución de 1917, DOF 5 de febrero de 1917.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/cpeum/CPEUM_orig_05feb1917_ima.pdf"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "Código Civil de 1928, DOF 26 de mayo de 1928.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/ccf/CCF_orig_26may28_ima.pdf"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "J. R. Narváez, <em>Anuario Mexicano de Historia del Derecho</em>, 16, 2004, p. 219.",
+     "url": "https://revistas-colaboracion.juridicas.unam.mx/index.php/anuario-mexicano-historia-der/article/view/29673"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "West Coast Hotel Co. v. Parrish, 300 U.S. 379 (1937).",
+     "url": "https://tile.loc.gov/storage-services/service/ll/usrep/usrep300/usrep300379/usrep300379.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, ejecutoria de la CT 350/2013, reg. 25106.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/ejecutoria/25106"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "LGTOC, últ. ref. DOF 26 de marzo de 2024.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LGTOC.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a./J. 132/2012 (10a.), reg. 2002817 (abandonada).",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2002817"
+    },
+    {
+     "tipo": "trat",
+     "tipoNombre": "Tratado",
+     "referencia": "Convención Americana sobre Derechos Humanos, art. 21 (OEA).",
+     "url": "https://www.oas.org/dil/esp/tratados_b-32_convencion_americana_sobre_derechos_humanos.htm"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "Decreto de promulgación de la Convención, DOF 7 de mayo de 1981.",
+     "url": "https://dof.gob.mx/nota_detalle.php?codigo=4645612&fecha=07/05/1981"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "CPEUM, últ. ref. DOF 7 de octubre de 2026.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a./J. 46/2014 (10a.), reg. 2006794.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2006794"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a./J. 47/2014 (10a.), reg. 2006795.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2006795"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "Voto particular de J. M. Pardo Rebolledo en la CT 350/2013, Gaceta, Libro 9, t. I, p. 367.",
+     "url": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a./J. 1/2023 (11a.), reg. 2026315.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2026315"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a./J. 6/2020 (10a.), reg. 2022017.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2022017"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a./J. 64/2024 (11a.), reg. 2028824.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2028824"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a./J. 54/2016 (10a.), reg. 2013076.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2013076"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a./J. 55/2016 (10a.), reg. 2013067.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2013067"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a./J. 56/2016 (10a.), reg. 2013068.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2013068"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a./J. 57/2016 (10a.), reg. 2013075.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2013075"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a./J. 2/2023 (11a.), reg. 2026316.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2026316"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, ADR 1823/2014, 9 de mayo de 2018.",
+     "url": "https://www2.scjn.gob.mx/juridica/engroses/1/2014/10/2_165176_4147_firmado.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a. CCLXXXIII/2016 (10a.), reg. 2013219.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2013219"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a./J. 28/2017 (10a.), reg. 2014920.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2014920"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a. CXXXI/2018 (10a.), reg. 2018028.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2018028"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a. CXCIII/2015 (10a.), reg. 2009281.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2009281"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a. CCLXXXV/2015 (10a.), reg. 2010094.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2010094"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a./J. 65/2025 (11a.), reg. 2030472.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2030472"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a./J. 141/2025 (11a.), reg. 2030860.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2030860"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, comunicado 095/2026, 23 de junio de 2026.",
+     "url": "https://www.internet2.scjn.gob.mx/red2/comunicados/comunicado.asp?id=8514"
+    },
+    {
+     "tipo": "ofi",
+     "tipoNombre": "Documento oficial",
+     "referencia": "Poder Judicial de la CDMX, comunicado 95/2024.",
+     "url": "https://www.poderjudicialcdmx.gob.mx/wp-content/uploads/Comunicado-95-1.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "1a. CLI/2018 (10a.), reg. 2018593.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2018593"
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-libertad-de-contratar-y-sus-limites.pdf",
+    "paginas": 13,
+    "kb": 1240,
+    "palabras": 4476,
+    "minutos": 20
+   },
+   "portada": "/estudiar/portadas/libertad-de-contratar-y-sus-limites.webp",
+   "miniatura": "/estudiar/miniaturas/libertad-de-contratar-y-sus-limites.webp",
+   "miniatura640": "/estudiar/miniaturas/libertad-de-contratar-y-sus-limites-640.webp"
+  },
+  {
+   "id": "v84",
+   "slug": "custodia-alimentos-e-igualdad",
+   "eje": "familiar",
+   "publicada": true,
+   "youtube": "h2JxwEG1EDM",
+   "publicado": "2026-10-11T19:00:00-06:00",
+   "tituloVideo": "¿Te pueden quitar a tu hijo por ganar menos que tu pareja?",
+   "duracion": 480,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "El caso: una madre pierde la custodia por pobre"
+    },
+    {
+     "segundo": 42,
+     "titulo": "Lo que respondió la Suprema Corte"
+    },
+    {
+     "segundo": 76,
+     "titulo": "Custodia, patria potestad y alimentos"
+    },
+    {
+     "segundo": 115,
+     "titulo": "El artículo 4o. y el interés superior de la niñez"
+    },
+    {
+     "segundo": 138,
+     "titulo": "«Cuidar es cosa de mujeres»: la preferencia materna"
+    },
+    {
+     "segundo": 173,
+     "titulo": "El estereotipo al revés: el proveedor y la madre que trabaja"
+    },
+    {
+     "segundo": 203,
+     "titulo": "Cómo se decide hoy la custodia"
+    },
+    {
+     "segundo": 237,
+     "titulo": "La pobreza no separa a una familia"
+    },
+    {
+     "segundo": 260,
+     "titulo": "Cuidar también es aportar (CC 44/2023)"
+    },
+    {
+     "segundo": 289,
+     "titulo": "El error del porcentaje automático"
+    },
+    {
+     "segundo": 311,
+     "titulo": "La pensión que nadie puede pagar"
+    },
+    {
+     "segundo": 351,
+     "titulo": "Las medidas provisionales"
+    },
+    {
+     "segundo": 381,
+     "titulo": "Cómo defenderte: incidente, amparo y suplencia"
+    },
+    {
+     "segundo": 425,
+     "titulo": "Lo delicado de decidir"
+    },
+    {
+     "segundo": 448,
+     "titulo": "Suscríbete y comparte"
+    }
+   ],
+   "titulo": "¿Te pueden quitar a tu hijo por ganar menos que tu pareja?",
+   "tituloPlano": "¿Te pueden quitar a tu hijo por ganar menos que tu pareja?",
+   "subtitulo": "Guarda y custodia, alimentos e igualdad en el derecho familiar mexicano, del amparo directo en revisión 1773/2016 a las medidas provisionales",
+   "corto": "Custodia, alimentos e igualdad",
+   "nivel": "licenciatura",
+   "actualizado": "9 de octubre de 2026",
+   "claves": [
+    "guarda y custodia",
+    "patria potestad",
+    "alimentos",
+    "interés superior de la niñez",
+    "estereotipos de género",
+    "preferencia materna",
+    "categorías sospechosas",
+    "medidas provisionales",
+    "amparo indirecto",
+    "suplencia de la queja"
+   ],
+   "resumen": "Por qué ganar menos no basta para perder la custodia de un hijo: qué distingue la custodia, la patria potestad y los alimentos; cómo nació y cayó la preferencia materna; qué estereotipos ha corregido la Suprema Corte; con qué se decide hoy la custodia y se fija la pensión, y cómo se combaten las medidas provisionales.",
+   "resumenPlano": "Por qué ganar menos no basta para perder la custodia de un hijo: qué distingue la custodia, la patria potestad y los alimentos; cómo nació y cayó la preferencia materna; qué estereotipos ha corregido la Suprema Corte; con qué se decide hoy la custodia y se fija la pensión, y cómo se combaten las medidas provisionales.",
+   "ideas": [
+    "Ganar menos no basta: la condición económica es una categoría sospechosa y sólo pesa si pruebas técnicas muestran que afecta al niño.",
+    "La diferencia de dinero entre los padres se corrige con alimentos proporcionales, en los que el cuidado diario también cuenta.",
+    "La preferencia materna sigue escrita en algunos códigos, pero la Corte prohíbe aplicarla en automático.",
+    "Contra una medida provisional cabe el recurso local, si existe, y luego el amparo indirecto, donde la ley manda suplir la queja."
+   ],
+   "secciones": [
+    "Introducción: la recámara decorada",
+    "Custodia, patria potestad y alimentos",
+    "El artículo 4o. y el interés superior",
+    "La preferencia materna y su caída",
+    "El estereotipo al revés",
+    "Cómo se decide hoy la custodia",
+    "Los alimentos: proporción, cuidado y límites",
+    "Las medidas provisionales",
+    "Cómo defenderse",
+    "Conclusión"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [
+    {
+     "nombre": "Venustiano Carranza",
+     "fechas": "1859-1920",
+     "campo": "política y legislación",
+     "quien": "Primer Jefe del Ejército Constitucionalista y Encargado del Poder Ejecutivo; la Cámara de Diputados lo declaró presidente para el cuatrienio de 1916 a 1920.",
+     "aporte": "En abril de 1917 expidió la Ley sobre Relaciones Familiares, que estableció la patria potestad conjunta del padre y la madre."
+    }
+   ],
+   "documentos": [
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "etiqueta": "Amparo directo en revisión 1773/2016",
+     "titulo": "Primera Sala, 6 de diciembre de 2017, párrafos 93 y 114",
+     "extracto": "«…dicho criterio –la pobreza de la madre, que incluye sus ingresos, su vivienda y su menor grado de escolaridad– fue el criterio definitorio en la decisión.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "Código Civil para el Distrito Federal (Ciudad de México)",
+     "titulo": "Artículos 308, fracciones I y II, y 311 (texto vigente)",
+     "extracto": "«Los alimentos comprenden: I. La comida, el vestido, la habitación, la atención médica, la hospitalaria y en su caso, los gastos de embarazo y parto; II. Respecto de niñas, niños y adolescentes, además, los gastos para su educación y para proporcionarles oficio, arte o profesión adecuados a sus circunstancias personales;»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "etiqueta": "Constitución Política de los Estados Unidos Mexicanos",
+     "titulo": "Artículo 4o., párrafo undécimo (texto vigente)",
+     "extracto": "«En todas las decisiones y actuaciones del Estado se velará y cumplirá con el principio del interés superior de la niñez, garantizando de manera plena sus derechos.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "etiqueta": "Amparo directo en revisión 6942/2019",
+     "titulo": "Primera Sala, 13 de enero de 2021, párrafos 102 y 104",
+     "extracto": "«De esta manera se le “castiga” por no cumplir su rol de madre-cuidadora de manera directa, como si fuera la depositaria única de la obligación de crianza y del hogar y como si no fuera viable tener una red de apoyo para el cuidado.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Jurisprudencia",
+     "titulo": "1a./J. 93/2024 (11a.), registro digital 2028893",
+     "extracto": "«El criterio determinante para la custodia debe ser el que garantice el máximo bienestar de las personas menores de edad, sin recurrir a estereotipos relacionados con el género, edad, condición socioeconómica u otras circunstancias…»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Jurisprudencia",
+     "titulo": "1a./J. 96/2023 (11a.), registro digital 2027001",
+     "extracto": "«…fijar la obligación alimentaria de los progenitores que no ejercen el cuidado cotidiano de niñas y niños sin considerar las labores que la otra parte desempeña implicaría imponer una doble carga sobre la progenitora…»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "Código Nacional de Procedimientos Civiles y Familiares",
+     "titulo": "Artículo 569 (fragmento)",
+     "extracto": "«La autoridad jurisdiccional deberá intervenir de oficio en las cuestiones inherentes al orden familiar y deberá decretar las medidas provisionales necesarias sin audiencia de la contraparte y cerciorarse de su cumplimiento, en los casos que a continuación se mencionan, de manera enunciativa y no limitativa: I. Fijación de alimentos; II. Guarda y custodia; III. Régimen de convivencias;»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "Ley de Amparo",
+     "titulo": "Artículo 107, fracción V (texto vigente)",
+     "extracto": "«Contra actos en juicio cuyos efectos sean de imposible reparación, entendiéndose por ellos los que afecten materialmente derechos sustantivos tutelados en la Constitución Política de los Estados Unidos Mexicanos y en los tratados internacionales de los que el Estado Mexicano sea parte;»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "Ley de Amparo",
+     "titulo": "Artículo 79, fracción II (texto vigente)",
+     "extracto": "«La autoridad que conozca del juicio de amparo deberá suplir la deficiencia de los conceptos de violación o agravios, en los casos siguientes: […] II. En favor de las personas menores de edad o incapaces, o en aquellos casos en que se afecte el orden y desarrollo de la familia;»",
+     "traducido": false,
+     "idioma": ""
+    }
+   ],
+   "cronologias": [
+    {
+     "titulo": "Del deber de los padres al interés superior de la niñez",
+     "filas": [
+      {
+       "anio": "1974",
+       "texto": "DOF 31 de diciembre: el art. 4o. declara la igualdad jurídica del varón y la mujer."
+      },
+      {
+       "anio": "1980",
+       "texto": "DOF 18 de marzo: «Es deber de los padres preservar el derecho de los menores a la satisfacción de sus necesidades y a la salud física y mental»."
+      },
+      {
+       "anio": "1990",
+       "texto": "México firma la Convención sobre los Derechos del Niño (26 de enero), el Senado la aprueba (19 de junio) y la ratificación se deposita ante la ONU (21 de septiembre)."
+      },
+      {
+       "anio": "1991",
+       "texto": "DOF 25 de enero: decreto promulgatorio de la Convención."
+      },
+      {
+       "anio": "2000",
+       "texto": "DOF 7 de abril: el art. 4o. reconoce los derechos de niñas y niños a la alimentación, la salud, la educación y el sano esparcimiento."
+      },
+      {
+       "anio": "2011",
+       "texto": "DOF 12 de octubre: el art. 4o. incorpora el interés superior de la niñez."
+      }
+     ]
+    },
+    {
+     "titulo": "La preferencia materna en el Distrito Federal (hoy Ciudad de México)",
+     "filas": [
+      {
+       "anio": "1928",
+       "texto": "Menores de cinco años con la madre, «aun tratándose de divorcio»."
+      },
+      {
+       "anio": "1974",
+       "texto": "Se suprime: el juez resuelve según las circunstancias del caso."
+      },
+      {
+       "anio": "1983",
+       "texto": "Vuelve para los menores de siete años, como medida provisional del divorcio (art. 282, fr. VI)."
+      },
+      {
+       "anio": "2004",
+       "texto": "A más tardar desde ese año, el código añade que la falta de recursos de la madre no es obstáculo para la preferencia."
+      },
+      {
+       "anio": "2008",
+       "texto": "Divorcio sin causa: menores de doce años con la madre como regla general."
+      },
+      {
+       "anio": "2019",
+       "texto": "La Primera Sala declara inconstitucional la regla (amparo en revisión 331/2019)."
+      },
+      {
+       "anio": "2022",
+       "texto": "Reforma: el juez decide si el niño queda con la madre, el padre o incluso un tercero."
+      }
+     ]
+    }
+   ],
+   "glosario": [
+    {
+     "termino": "Guarda y custodia",
+     "definicion": "Cuidado cotidiano de la niña o el niño; define con quién vive."
+    },
+    {
+     "termino": "Patria potestad",
+     "definicion": "Derechos y deberes de padre y madre respecto de sus hijos; en principio la conservan ambos aunque uno solo tenga la custodia."
+    },
+    {
+     "termino": "Categoría sospechosa",
+     "definicion": "Motivo protegido por el art. 1o. constitucional, como el género o la condición económica, cuyo uso exige una justificación rigurosa."
+    },
+    {
+     "termino": "Amparo indirecto",
+     "definicion": "Juicio ante un juez de distrito que procede, entre otros casos, contra actos en juicio que afectan materialmente derechos sustantivos."
+    },
+    {
+     "termino": "Suplencia de la queja",
+     "definicion": "Deber del juez de amparo de completar los argumentos deficientes de la demanda en los casos que fija la ley."
+    },
+    {
+     "termino": "Tesis aislada",
+     "definicion": "Criterio publicado que orienta, pero no obliga; la jurisprudencia sí es obligatoria."
+    }
+   ],
+   "preguntas": [
+    "¿Qué resolvió la Primera Sala en el amparo directo en revisión 1773/2016 y qué no resolvió?",
+    "¿Cuándo entró el interés superior de la niñez al artículo 4o. y desde cuándo obligaba a México por la Convención?",
+    "¿Cómo cambió la preferencia materna entre 1928 y 2022, y dónde sigue escrita?",
+    "¿Qué estereotipos corrigió la Corte en los amparos directos en revisión 1958/2017 y 6942/2019?",
+    "¿Cuándo puede pesar la condición económica de un progenitor en la decisión de custodia?",
+    "¿Qué estableció la contradicción de criterios 44/2023 sobre el trabajo de cuidado?",
+    "¿Por qué el porcentaje es válido, pero el porcentaje automático no?",
+    "¿Qué vías existen contra una pensión o una custodia provisional, y en qué orden?"
+   ],
+   "fuentes": [
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, amparo directo en revisión 1773/2016, 6 de diciembre de 2017, engrose, pp. 1-2, 6, 11, 38-39, 41 y 46-47.",
+     "url": "https://www2.scjn.gob.mx/juridica/engroses/1/2016/10/2_196297_3770_firmado.pdf"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Civil para el Distrito Federal (Ciudad de México), arts. 308, 311, 312, 416 Bis y 444, última reforma G.O. CDMX 20 de agosto de 2026.",
+     "url": "https://data.consejeria.cdmx.gob.mx/images/leyes/2025/CODIGOS_2025/CODIGO_CIVIL_PARA_EL_DF_15.4.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, amparo directo en revisión 6942/2019, 13 de enero de 2021, engrose, pp. 4, 13, 34-35, 42, 55 y 59-61.",
+     "url": "https://www2.scjn.gob.mx/juridica/engroses/1/2019/10/2_262819_5311_firmado.pdf"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Civil Federal, arts. 282 y 311, última reforma DOF 14 de noviembre de 2025.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CCF.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, contradicción de criterios 44/2023, 7 de junio de 2023, engrose.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/ejecutoria/31672"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución Política de los Estados Unidos Mexicanos, arts. 4o. y 38, última reforma DOF 7 de octubre de 2026.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "Reformas al art. 4o. constitucional, DOF 31 de diciembre de 1974, 18 de marzo de 1980, 7 de abril de 2000 y 12 de octubre de 2011 (facsímiles).",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/cpeum_art.htm"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "Decreto promulgatorio de la Convención sobre los Derechos del Niño, DOF 25 de enero de 1991, p. 12.",
+     "url": "https://dof.gob.mx/index_111.php?year=1991&month=01&day=25"
+    },
+    {
+     "tipo": "trat",
+     "tipoNombre": "Tratado",
+     "referencia": "Convención sobre los Derechos del Niño, art. 3 (texto publicado en el DOF el 25 de enero de 1991, compilación de la CNDH).",
+     "url": "https://www.ohchr.org/es/instruments-mechanisms/instruments/convention-rights-child"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Código Civil del Distrito Federal y Territorio de la Baja California (1870), arts. 308 y 392, Imprenta de José Batiza.",
+     "url": "https://books.google.com/books?id=uH4qAAAAYAAJ"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Ley sobre Relaciones Familiares (abril de 1917), considerandos, en SCJN, apéndice documental, Biblioteca Jurídica Virtual de la UNAM, pp. 172-175.",
+     "url": "https://archivos.juridicas.unam.mx/www/bjv/libros/2/930/14.pdf"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "Código Civil para el Distrito y Territorios Federales, DOF 26 de mayo de 1928, p. 63 (art. 260); vigente desde el 1 de octubre de 1932.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/ccf/CCF_orig_26may28_ima.pdf"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "Reformas al Código Civil, DOF 31 de diciembre de 1974 (arts. 259 y 260) y 27 de diciembre de 1983 (art. 282, fr. VI) (facsímiles).",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/ccf/CCF_ref29_27dic83_ima.pdf"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Voto de minoría en el amparo en revisión 1076/2007 (Primera Sala), que transcribe el art. 282, fr. V, del Código Civil para el Distrito Federal (GODF 6 de septiembre de 2004), Alegatos, núm. 71, 2009.",
+     "url": "https://kali.azc.uam.mx/alegatos/pdfs/64/71-12.pdf"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "Gaceta Oficial del Distrito Federal núm. 434, 3 de octubre de 2008, p. 13 (art. 282, ap. B, fr. II).",
+     "url": "https://paot.org.mx/centro/leyes/df/pdf/GODF/GODF_03_10_2008.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, amparo en revisión 331/2019, 21 de noviembre de 2019, engrose, pp. 55 y 58 (párrs. 82, 83 y 88).",
+     "url": "https://www2.scjn.gob.mx/juridica/engroses/1/2019/2/2_254348_4821_firmado.pdf"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Civil para el Distrito Federal, art. 282 (reforma G.O. CDMX 2 de junio de 2022; texto vigente al 20 de agosto de 2026).",
+     "url": "https://paot.org.mx/centro/codigos/df/pdf/2022/GACETA_RECORT_02_06_2022.pdf"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Civil del Estado de México, arts. 4.95 y 4.228 (reforma de la Gaceta del Gobierno de 14 de marzo de 2016, Decreto 68), última reforma POGG 16 de junio de 2026.",
+     "url": "https://legislacion.edomex.gob.mx/sites/legislacion.edomex.gob.mx/files/files/pdf/cod/vig/codvig001.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, amparo directo en revisión 1573/2011, 7 de marzo de 2012, engrose, pp. 2 y 30-31.",
+     "url": "https://www2.scjn.gob.mx/juridica/engroses/1/2011/10/2_129482_199_firmado.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 53/2014 (10a.), jurisprudencia, registro digital 2006791.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2006791"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, amparo directo en revisión 1958/2017, 16 de agosto de 2017, engrose, pp. 12 y 26.",
+     "url": "https://www2.scjn.gob.mx/juridica/engroses/1/2017/10/2_213507_3690_firmado.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a. XV/2020 (10a.), tesis aislada, registro digital 2021979 (abandona la 1a. XXXI/2014).",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2021979"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 148/2024 (11a.), jurisprudencia sobre compensación económica, registro digital 2029368.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2029368"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a. XLVII/2021, tesis aislada, registro digital 2023725.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2023725"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 23/2014 (10a.), jurisprudencia, registro digital 2006226.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2006226"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 12/2017 (10a.), jurisprudencia, registro digital 2013952.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2013952"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a. CVI/2014 (10a.), tesis aislada, registro digital 2005921.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2005921"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, amparo directo en revisión 2618/2013, 23 de octubre de 2013, engrose, p. 45.",
+     "url": "https://www2.scjn.gob.mx/juridica/engroses/1/2013/10/2_154939_1768_firmado.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 93/2024 (11a.), jurisprudencia, registro digital 2028893.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2028893"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 152/2025 (11a.), jurisprudencia, registro digital 2030826.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2030826"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley General de los Derechos de Niñas, Niños y Adolescentes, arts. 22 y 135 Bis, última reforma DOF 15 de enero de 2026.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LGDNNA.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P./J. 21/2014 (10a.), jurisprudencia, registro digital 2006225.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2006225"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, Caso Ramírez Escobar y otros vs. Guatemala, sentencia de 9 de marzo de 2018, Serie C No. 351, párr. 279.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_351_esp.pdf"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, Caso Atala Riffo y niñas vs. Chile, sentencia de 24 de febrero de 2012, Serie C No. 239, párr. 109.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_239_esp.pdf"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, Caso Fornerón e hija vs. Argentina, sentencia de 27 de abril de 2012, Serie C No. 242, párr. 99.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_242_esp.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 44/2001, jurisprudencia, registro digital 189214.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/189214"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 96/2023 (11a.), jurisprudencia, registro digital 2027001.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2027001"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley de Amparo, arts. 17, 79, 107 y 226, última reforma DOF 16 de octubre de 2025.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LAmp.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Tercer Tribunal Colegiado en Materia Civil del Primer Circuito, I.3o.C.578 C, tesis aislada, registro digital 173852.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/173852"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 97/2023 (11a.), jurisprudencia, registro digital 2027000.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2027000"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Tercer Tribunal Colegiado en Materias Civil y de Trabajo del Vigésimo Primer Circuito, XXI.3o.C.T.2 C (10a.), tesis aislada, registro digital 2016225.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2016225"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a. CCCXXXVI/2018 (10a.), tesis aislada, registro digital 2018735.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2018735"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Penal para el Distrito Federal, art. 193, última reforma G.O. CDMX 21 de agosto de 2026.",
+     "url": "https://data.consejeria.cdmx.gob.mx"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P./J. 89/2026 (12a.), jurisprudencia, registro digital 2032166.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2032166"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Nacional de Procedimientos Civiles y Familiares (DOF 7 de junio de 2023), arts. 3o., 556, 558, 569 y 683 y transitorio segundo, última reforma DOF 15 de enero de 2026.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CNPCF.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Primer Tribunal Colegiado en Materia Civil del Décimo Segundo Circuito, XII.1o.C.1 C (12a.), tesis aislada, registro digital 2032749, publicada el 9 de octubre de 2026.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2032749"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 42/2011, jurisprudencia, registro digital 161140.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/161140"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Pleno Regional en Materias Administrativa y Civil de la Región Centro-Norte, PR.A.C.CN. J/1 C (12a.), jurisprudencia, registro digital 2031807.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2031807"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Pleno Regional en Materias Administrativa y Civil de la Región Centro-Norte, PR.A.C.CN. J/9 C (11a.), jurisprudencia, registro digital 2031716.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2031716"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 85/2009, jurisprudencia, registro digital 166028.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/166028"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P./J. 37/92, jurisprudencia, registro digital 205600.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/205600"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 77/2013 (10a.), jurisprudencia, registro digital 2004677.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2004677"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Segundo Tribunal Colegiado en Materia Civil del Tercer Circuito, III.2o.C.131 C, tesis aislada, registro digital 2023608.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2023608"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 191/2005, jurisprudencia, registro digital 175053.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/175053"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 102/2012 (10a.), jurisprudencia, registro digital 2002572.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2002572"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 24/2020 (10a.), jurisprudencia, registro digital 2022087.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2022087"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Tercer Tribunal Colegiado en Materia Civil del Primer Circuito, I.3o.C.835 C, tesis aislada, registro digital 163725.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/163725"
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-custodia-alimentos-e-igualdad.pdf",
+    "paginas": 13,
+    "kb": 1078,
+    "palabras": 4308,
+    "minutos": 20
+   },
+   "portada": "/estudiar/portadas/custodia-alimentos-e-igualdad.webp",
+   "miniatura": "/estudiar/miniaturas/custodia-alimentos-e-igualdad.webp",
+   "miniatura640": "/estudiar/miniaturas/custodia-alimentos-e-igualdad-640.webp"
+  },
+  {
+   "id": "v83",
+   "slug": "despido-injustificado",
+   "eje": "laboral",
+   "publicada": true,
+   "youtube": "7PbQT7LsTfg",
+   "publicado": "2026-10-10T12:00:00-06:00",
+   "tituloVideo": "¿Te despidieron injustificadamente?",
+   "duracion": 445,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "Toño y Don Beto (caso hipotético)"
+    },
+    {
+     "segundo": 32,
+     "titulo": "Del «arrendamiento» al artículo 123"
+    },
+    {
+     "segundo": 90,
+     "titulo": "¿Quién tiene que probar?"
+    },
+    {
+     "segundo": 148,
+     "titulo": "Dos meses y la conciliación"
+    },
+    {
+     "segundo": 174,
+     "titulo": "La cuenta: lo que te deben"
+    },
+    {
+     "segundo": 230,
+     "titulo": "Tres mitos"
+    },
+    {
+     "segundo": 275,
+     "titulo": "¿Cuánto dura un juicio?"
+    },
+    {
+     "segundo": 300,
+     "titulo": "El otro lado del mostrador"
+    },
+    {
+     "segundo": 347,
+     "titulo": "La pollería de la Luz: hacerlo bien"
+    },
+    {
+     "segundo": 398,
+     "titulo": "Si te despidieron, si das trabajo"
+    }
+   ],
+   "titulo": "¿Te despidieron injustificadamente?",
+   "tituloPlano": "¿Te despidieron injustificadamente?",
+   "subtitulo": "El despido en el derecho mexicano: quién prueba, qué plazos corren y cuánto se paga",
+   "corto": "Despido injustificado",
+   "nivel": "licenciatura",
+   "actualizado": "9 de octubre de 2026",
+   "claves": [
+    "despido injustificado",
+    "aviso de rescisión",
+    "carga de la prueba",
+    "ofrecimiento de trabajo",
+    "conciliación prejudicial",
+    "salarios vencidos",
+    "prima de antigüedad",
+    "salario integrado",
+    "micronegocios"
+   ],
+   "resumen": "Del trabajo «arrendado» al artículo 123 de 1917 y a las reglas vigentes del despido: el aviso, la carga de la prueba, los plazos, la conciliación obligatoria, lo que se paga y lo que dicen las cifras oficiales sobre los juicios y los negocios.",
+   "resumenPlano": "Del trabajo «arrendado» al artículo 123 de 1917 y a las reglas vigentes del despido: el aviso, la carga de la prueba, los plazos, la conciliación obligatoria, lo que se paga y lo que dicen las cifras oficiales sobre los juicios y los negocios.",
+   "ideas": [
+    "El patrón sólo puede despedir por las causas del art. 47 y debe dar aviso escrito; sin él, se presume que el despido fue injustificado, salvo prueba en contrario.",
+    "Reconocida la relación de trabajo, el patrón carga con la prueba de la causa del despido; negarlo lisa y llanamente o alegar abandono no le quita esa carga.",
+    "Hay 2 meses para reclamar; la solicitud de conciliación pausa el plazo, pero no lo reinicia.",
+    "Perder el juicio suma hasta 12 meses de salarios vencidos y, después, intereses: liquidar conforme a la ley cuesta mucho menos."
+   ],
+   "secciones": [
+    "Introducción: el conflicto más frecuente",
+    "1. Del trabajo arrendado al artículo 123",
+    "2. El despido hoy: causas, aviso y plazo del patrón",
+    "3. Quién prueba qué",
+    "4. Los plazos y la conciliación obligatoria",
+    "5. Lo que se paga si el despido fue injustificado",
+    "6. Un caso hipotético, con la cuenta completa",
+    "7. La realidad de los juicios y el peso del micronegocio",
+    "8. Buenas prácticas para los dos lados",
+    "Conclusión"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [],
+   "documentos": [
+    {
+     "tipo": "dato",
+     "tipoNombre": "Estadística oficial",
+     "etiqueta": "INEGI · ERLAJUL 2025",
+     "titulo": "Comunicado de prensa 33/26, 25 de junio de 2026, p. 3",
+     "extracto": "«De los conflictos individuales de trabajo, la demanda por despido injustificado presentó el porcentaje más alto, con 59.5 (ver gráfica 2).»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Code civil des Français (1804)",
+     "titulo": "Arts. 1780 y 1781, edición original y oficial, p. 433",
+     "extracto": "«Sólo se pueden comprometer los servicios por un tiempo o para una obra determinada.»",
+     "traducido": true,
+     "idioma": "francés"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Exposición de motivos del Código Civil de 1870",
+     "titulo": "Contrato de obras o prestación de servicios",
+     "extracto": "«Pero como sea cual fuere la esfera social en que el hombre se halle colocado, no puede ser comparado con los seres irracionales y menos aún con las cosas inanimadas, parece un atentado contra la dignidad humana llamar alquiler á la prestación de servicios personales.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Constitución de 1917",
+     "titulo": "Art. 123, fracción XXII (texto original)",
+     "extracto": "«XXII.- El patrono que despida a un obrero sin causa justificada, o por haber ingresado a una asociación o sindicato, o por haber tomado parte en una huelga lícita, estará obligado, a elección del trabajador, a cumplir el contrato o a indemnizarlo con el importe de tres meses de salario. […]»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "Ley Federal del Trabajo",
+     "titulo": "Art. 47, últimos párrafos (texto vigente)",
+     "extracto": "«El patrón que despida a un trabajador deberá darle aviso escrito en el que refiera claramente la conducta o conductas que motivan la rescisión y la fecha o fechas en que se cometieron.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "Ley Federal del Trabajo",
+     "titulo": "Art. 784 (fragmentos)",
+     "extracto": "«En todo caso, corresponderá al patrón probar su dicho cuando exista controversia sobre: I. Fecha de ingreso del trabajador; […] IV. Causa de rescisión de la relación de trabajo; […] VI. […] La negativa lisa y llana del despido, no revierte la carga de la prueba. Asimismo, la negativa del despido y el ofrecimiento del empleo hecho al trabajador, no exime al patrón de probar su dicho; […] XII. Monto y pago del salario;»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Jurisprudencia",
+     "titulo": "2a./J. 41/95, registro digital 200723",
+     "extracto": "«…se propiciaría que el patrón rescindiera la relación laboral violando todos los requisitos legales y luego, al contestar la demanda, negara lisa y llanamente el despido, con lo cual dejaría sin defensa al trabajador, ante la imposibilidad o extrema dificultad que éste tendría de probar un acto que generalmente ocurre en privado.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Jurisprudencia",
+     "titulo": "2a./J. 33/2021 (11a.), registro digital 2023931",
+     "extracto": "«…tratándose de la acción de indemnización constitucional, cuando se haya ofrecido el trabajo y la parte trabajadora lo rechace –explicita o tácitamente–, resulta irrelevante la calificación del ofrecimiento realizado para fijar las cargas probatorias del despido alegado.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "Ley Federal del Trabajo",
+     "titulo": "Art. 518 (texto vigente)",
+     "extracto": "«Prescriben en dos meses las acciones de los trabajadores que sean separados del trabajo. La prescripción corre a partir del día siguiente a la fecha de la separación. Este término se suspenderá a partir de la fecha de presentación de la solicitud de conciliación a que se refiere el artículo 684-B de esta Ley, y se reanudará al día siguiente en que se actualice cualquiera de las hipótesis previstas en el artículo 521, fracción III de esta Ley. […]»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "Ley Federal del Trabajo",
+     "titulo": "Art. 48, párrafos segundo y tercero (texto vigente)",
+     "extracto": "«Si en el juicio correspondiente no comprueba el patrón la causa de la rescisión, el trabajador tendrá derecho, además, cualquiera que hubiese sido la acción intentada, a que se le paguen los salarios vencidos computados desde la fecha del despido hasta por un período máximo de doce meses […].»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Jurisprudencia",
+     "titulo": "2a./J. 28/2016 (10a.), registro digital 2011180",
+     "extracto": "«…a) Evitar que los juicios laborales se prolonguen artificialmente con el fin de obtener una mayor condena por concepto de salarios caídos y b) Impedir la eventual quiebra de las fuentes de trabajo, con perjuicio incluso para otros trabajadores, lo que generaría un gran desempleo…»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Jurisprudencia (contradicción de tesis)",
+     "titulo": "4a./J. 15 XII/89, registro digital 207990",
+     "extracto": "«…dicha prestación únicamente procede en los casos que señalan los artículos 49, 52 y 947 de la Ley mencionada, pues su finalidad es la de resarcir o recompensar al trabajador del perjuicio que se le ocasiona por no poder seguir laborando en el puesto que desempeñaba por una causa ajena a su voluntad…»",
+     "traducido": false,
+     "idioma": ""
+    }
+   ],
+   "cronologias": [
+    {
+     "titulo": "De la Constitución de 1917 a la conciliación obligatoria",
+     "filas": [
+      {
+       "anio": "1917",
+       "texto": "Art. 123, fr. XXII: cumplir el contrato o pagar 3 meses de salario, a elección del trabajador."
+      },
+      {
+       "anio": "1931",
+       "texto": "Primera Ley Federal del Trabajo, de 18 de agosto."
+      },
+      {
+       "anio": "1970",
+       "texto": "Nueva ley: el trabajo «No es artículo de comercio» (art. 3o.) y el despedido cobra los salarios vencidos «desde la fecha del despido hasta que se cumplimente el laudo» (art. 48)."
+      },
+      {
+       "anio": "1980",
+       "texto": "Reforma procesal del 4 de enero: se reforma el art. 784 y se añade al art. 47 el párrafo sobre la falta de aviso."
+      },
+      {
+       "anio": "2012",
+       "texto": "30 de noviembre: tope de 12 meses a los salarios vencidos, más intereses."
+      },
+      {
+       "anio": "2017",
+       "texto": "24 de febrero: tribunales laborales del Poder Judicial y conciliación previa obligatoria."
+      },
+      {
+       "anio": "2019",
+       "texto": "1 de mayo: la ley regula la conciliación prejudicial."
+      },
+      {
+       "anio": "2020-2022",
+       "texto": "El nuevo sistema se implementa en tres etapas: 18 de noviembre de 2020, 3 de noviembre de 2021 y 3 de octubre de 2022."
+      }
+     ]
+    }
+   ],
+   "glosario": [
+    {
+     "termino": "Aviso de rescisión",
+     "definicion": "Documento en el que el patrón señala la conducta y las fechas que motivan el despido; su falta hace presumir que el despido fue injustificado, salvo prueba en contrario."
+    },
+    {
+     "termino": "Negativa lisa y llana",
+     "definicion": "Contestación en la que el patrón sólo niega el despido; no traslada la carga de la prueba al trabajador."
+    },
+    {
+     "termino": "Ofrecimiento de trabajo",
+     "definicion": "Propuesta del patrón, al contestar la demanda, de que el trabajador regrese en los mismos términos y condiciones."
+    },
+    {
+     "termino": "Salario integrado",
+     "definicion": "Cuota diaria más la parte proporcional de las prestaciones que recibe el trabajador; es la base de las indemnizaciones."
+    },
+    {
+     "termino": "Salarios vencidos",
+     "definicion": "Salarios dejados de percibir desde el despido, con un máximo de 12 meses."
+    }
+   ],
+   "preguntas": [
+    "¿Qué decía el art. 1781 del Code civil de 1804 y qué fracción del art. 784 de la Ley Federal del Trabajo dispone lo contrario?",
+    "¿Por qué la negativa lisa y llana no traslada la carga de la prueba, y cuándo debe el trabajador probar la relación de trabajo?",
+    "¿En qué casos el ofrecimiento de trabajo no revierte la carga de la prueba?",
+    "¿Qué efecto tiene la solicitud de conciliación sobre el plazo de 2 meses?",
+    "¿Qué se paga en un despido injustificado y por qué no, en general, los 20 días por año?"
+   ],
+   "fuentes": [
+    {
+     "tipo": "dato",
+     "tipoNombre": "Estadística oficial",
+     "referencia": "INEGI, ERLAJUL 2025, comunicado de prensa 33/26, 25 de junio de 2026.",
+     "url": "https://www.inegi.org.mx/contenidos/saladeprensa/boletines/2026/rellaborales/ERLAJUL2025_CP.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, 2a./J. 41/95, reg. 200723.",
+     "url": ""
+    },
+    {
+     "tipo": "dato",
+     "tipoNombre": "Estadística oficial",
+     "referencia": "INEGI, Censos Económicos 2024 (datos de 2023): comunicado de prensa 79/25 y conjunto de datos nacional, con cálculos propios por estrato y clase SCIAN.",
+     "url": "https://www.inegi.org.mx/contenidos/saladeprensa/boletines/2025/ce/CE2024_def.pdf"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Digesto, 19.2.38 pr. (Paulo), ed. Mommsen-Krueger, The Roman Law Library, Université Grenoble Alpes.",
+     "url": "https://droitromain.univ-grenoble-alpes.fr/Corpus/d-19.htm"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Code civil des Français, edición original y oficial, 1804, p. 433 (BnF-Gallica en Wikimedia Commons).",
+     "url": "https://commons.wikimedia.org/wiki/File:Code_civil_des_Fran%C3%A7ais,_1804.djvu"
+    },
+    {
+     "tipo": "ofi",
+     "tipoNombre": "Documento oficial",
+     "referencia": "Légifrance, Code civil, art. 1781 (vigencia).",
+     "url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006443403"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Código Civil del Distrito Federal y Territorio de la Baja California (1870), en Colección de códigos civiles americanos y europeos, t. I, Madrid, 1879, pp. 1 y 124.",
+     "url": ""
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Manuel Mateos Alarcón, Lecciones de derecho civil, t. V, México, 1896, pp. 4-5.",
+     "url": "https://archive.org/details/leccionesdedere00alargoog"
+    },
+    {
+     "tipo": "ofi",
+     "tipoNombre": "Documento oficial",
+     "referencia": "CNDH, efeméride «Estalla la Huelga de Cananea…», 1 de junio de 1906.",
+     "url": ""
+    },
+    {
+     "tipo": "ofi",
+     "tipoNombre": "Documento oficial",
+     "referencia": "INAH, Boletín núm. 7, «La huelga de Río Blanco, en Veracruz…», 6 de enero de 2025.",
+     "url": ""
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Constitución Política de los Estados Unidos Mexicanos, Diario Oficial, 5 de febrero de 1917 (facsímil, Cámara de Diputados).",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/cpeum/CPEUM_orig_05feb1917_ima.pdf"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Paulo Bonavides, «El carácter pionero de la Constitución de México de 1917», UNAM-IIJ, 2017, p. 32 (cita a Fix-Zamudio y Valencia Carmona).",
+     "url": ""
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución Política de los Estados Unidos Mexicanos, texto vigente, última reforma DOF 7 de octubre de 2026.",
+     "url": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley Federal del Trabajo, texto vigente con notas de reforma, última reforma DOF 14 de mayo de 2026 (Cámara de Diputados).",
+     "url": ""
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Ley Federal del Trabajo, Diario Oficial, 1 de abril de 1970 (facsímil, Cámara de Diputados).",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/lft/LFT_orig_01abr70_ima.pdf"
+    },
+    {
+     "tipo": "ofi",
+     "tipoNombre": "Documento oficial",
+     "referencia": "Auditoría Superior de la Federación, auditoría 2021-1-14PBE-07-0036-2022 al Centro Federal de Conciliación y Registro Laboral, p. 1.",
+     "url": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Cuarta Sala, jurisprudencia de la 7a. Época, reg. 242919.",
+     "url": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, 2a./J. 48/2013 (10a.), reg. 2003486.",
+     "url": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Cuarta Sala, jurisprudencia de la 7a. Época, reg. 242738.",
+     "url": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, 2a./J. 33/2021 (11a.), reg. 2023931.",
+     "url": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, 2a./J. 66/2017 (10a.), reg. 2014508.",
+     "url": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Pleno Regional en Materias Penal y de Trabajo de la Región Centro-Norte, PR.P.T.CN. J/14 L (12a.), reg. 2032614.",
+     "url": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, 2a./J. 47/2019 (10a.), reg. 2019612.",
+     "url": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley de Amparo, texto vigente, última reforma DOF 16 de octubre de 2025, art. 79.",
+     "url": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, 2a. XCVII/2018 (10a.), tesis aislada, reg. 2018399.",
+     "url": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, 2a./J. 119/2003, reg. 182419 (texto anterior a 2012), y Tribunal Colegiado, VII.2o.T.272 L (10a.), aislada, reg. 2021758 (objeto de la contradicción de criterios 165/2025, pendiente).",
+     "url": ""
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "INEGI, valor de la UMA 2026 ($117.31 diarios desde el 1 de febrero), DOF 9 de enero de 2026.",
+     "url": "https://dof.gob.mx/nota_detalle.php?codigo=5778072&fecha=09/01/2026"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, 2a./J. 165/2016 (10a.), reg. 2013286.",
+     "url": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, 2a./J. 28/2016 (10a.), reg. 2011180.",
+     "url": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, 2a./J. 66/2020 (10a.), reg. 2022837.",
+     "url": ""
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "CONASAMI, resolución sobre los salarios mínimos de 2026, DOF 9 de diciembre de 2025.",
+     "url": "https://dof.gob.mx/nota_detalle.php?codigo=5775534&fecha=09/12/2025"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Cuarta Sala, 4a./J. 15 XII/89, reg. 207990.",
+     "url": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Tribunales Colegiados, XXI.2o.C.T.2 L (12a.), reg. 2032605, y II.1o.T.1 L (11a.), reg. 2026782, ambas aisladas.",
+     "url": ""
+    },
+    {
+     "tipo": "dato",
+     "tipoNombre": "Estadística oficial",
+     "referencia": "STPS-DGIET, INDERLAB, indicadores 03 (eficacia de la conciliación), 16 (convenios en 45 días o menos) y 17 (tiempo de resolución), datos a julio de 2026; cálculos propios.",
+     "url": "https://inderlab.stps.gob.mx"
+    },
+    {
+     "tipo": "dato",
+     "tipoNombre": "Estadística oficial",
+     "referencia": "INEGI, RALABE, comunicado de prensa 31/26 (p. 7) y resultados relevantes 18/26 (p. 5).",
+     "url": "https://www.inegi.org.mx/contenidos/saladeprensa/boletines/2026/ralab/RALABE2026_CP.pdf"
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-despido-injustificado.pdf",
+    "paginas": 12,
+    "kb": 1056,
+    "palabras": 4141,
+    "minutos": 20
+   },
+   "portada": "/estudiar/portadas/despido-injustificado.webp",
+   "miniatura": "/estudiar/miniaturas/despido-injustificado.webp",
+   "miniatura640": "/estudiar/miniaturas/despido-injustificado-640.webp"
   }
  ]
 }

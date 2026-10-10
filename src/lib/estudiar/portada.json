@@ -100,6 +100,26 @@
   "publicado": "2026-10-07T19:10:00-06:00"
  },
  {
+  "id": "v80",
+  "slug": "control-difuso-y-concentrado",
+  "numero": "III.4",
+  "titulo": "Control difuso y control concentrado",
+  "subtitulo": "Quién puede dejar de aplicar una ley contraria a los derechos humanos",
+  "miniatura": "/estudiar/miniaturas/control-difuso-y-concentrado-640.webp",
+  "duracion": 342,
+  "publicado": "2026-10-09T19:00:00-06:00"
+ },
+ {
+  "id": "v81",
+  "slug": "que-es-la-jurisprudencia",
+  "numero": "III.5",
+  "titulo": "¿Qué es la jurisprudencia?",
+  "subtitulo": "Del latín iuris prudentia a la contradicción de tesis 299/2013 y el voto de José Ramón Cossío Díaz",
+  "miniatura": "/estudiar/miniaturas/que-es-la-jurisprudencia-640.webp",
+  "duracion": 478,
+  "publicado": "2026-10-10T19:00:00-06:00"
+ },
+ {
   "id": "v72",
   "slug": "test-de-proporcionalidad",
   "numero": "IV.1",
@@ -138,5 +158,35 @@
   "miniatura": "/estudiar/miniaturas/lo-que-la-policia-no-puede-hacer-640.webp",
   "duracion": 864,
   "publicado": "2026-10-08T17:00:00-06:00"
+ },
+ {
+  "id": "v82",
+  "slug": "libertad-de-contratar-y-sus-limites",
+  "numero": "VI.1",
+  "titulo": "La libertad de contratar y sus límites",
+  "subtitulo": "Lesión, usura y explotación, de Roma a la Suprema Corte de Justicia de la Nación",
+  "miniatura": "/estudiar/miniaturas/libertad-de-contratar-y-sus-limites-640.webp",
+  "duracion": 481,
+  "publicado": "2026-10-11T12:00:00-06:00"
+ },
+ {
+  "id": "v84",
+  "slug": "custodia-alimentos-e-igualdad",
+  "numero": "VII.1",
+  "titulo": "¿Te pueden quitar a tu hijo por ganar menos que tu pareja?",
+  "subtitulo": "Guarda y custodia, alimentos e igualdad en el derecho familiar mexicano, del amparo directo en revisión 1773/2016 a las medidas provisionales",
+  "miniatura": "/estudiar/miniaturas/custodia-alimentos-e-igualdad-640.webp",
+  "duracion": 480,
+  "publicado": "2026-10-11T19:00:00-06:00"
+ },
+ {
+  "id": "v83",
+  "slug": "despido-injustificado",
+  "numero": "VIII.1",
+  "titulo": "¿Te despidieron injustificadamente?",
+  "subtitulo": "El despido en el derecho mexicano: quién prueba, qué plazos corren y cuánto se paga",
+  "miniatura": "/estudiar/miniaturas/despido-injustificado-640.webp",
+  "duracion": 445,
+  "publicado": "2026-10-10T12:00:00-06:00"
  }
 ]
