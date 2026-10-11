@@ -1644,6 +1644,16 @@ export default function ChatPage() {
                             >
                                 Mi trabajo
                             </Link>
+                            {/* IUREXIA AGENDA (11-oct-2026): los términos del abogado,
+                                contados con su código y con aviso al correo. */}
+                            <Link
+                                href="/agenda"
+                                data-guide="agenda"
+                                title="Agenda — sus términos y audiencias, con aviso a su correo"
+                                className="relieve relieve-papel px-2.5 sm:px-3"
+                            >
+                                Agenda
+                            </Link>
 
                             {/* Lo último: comunicados de la Corte, tesis de la
                                 semana, Diario Oficial y lo que se mueve en IA. */}

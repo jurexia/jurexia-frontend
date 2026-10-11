@@ -106,7 +106,6 @@ const FICHA_FUENTE: Record<Exclude<Fuente, 'estatal'>, Ficha> = {
     constitucional: { texto: 'Bloque de constitucionalidad', icono: 'balanza', imagen: '/fuentes/corteidh.png' },
     jurisprudencia: { texto: 'Jurisprudencia', icono: 'balanza', imagen: '/fuentes/scjn.png' },
     federal: { texto: 'Legislación federal', icono: 'ley', imagen: '/fuentes/diputados.png' },
-    procesal: { texto: 'Normativa procesal', icono: 'ley' },
     nom: { texto: 'Normas Oficiales Mexicanas', icono: 'ley' },
 };
 

@@ -12,7 +12,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { CalendarClock, X } from 'lucide-react';
+import { CalendarClock, CalendarPlus, X } from 'lucide-react';
+import { crearTermino } from '@/lib/agenda';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1390';
 
@@ -59,6 +60,8 @@ export default function CalculadoraPlazos({ conBoton = true }: { conBoton?: bool
     const [desde, setDesde] = useState('');
     const [hasta, setHasta] = useState('');
     const [res, setRes] = useState<Resultado | null>(null);
+    const [titulo, setTitulo] = useState('');
+    const [guardado, setGuardado] = useState('');
     const [error, setError] = useState('');
     const [cargando, setCargando] = useState(false);
 
@@ -96,6 +99,7 @@ export default function CalculadoraPlazos({ conBoton = true }: { conBoton?: bool
         setCargando(true);
         setError('');
         setRes(null);
+        setGuardado('');
         try {
             const fechas = extra.split(/[\s,;]+/).map((x) => x.trim()).filter((x) => /^\d{4}-\d{2}-\d{2}$/.test(x));
             const r = await fetch(`${API_URL}/plazos/calcular`, {
@@ -243,6 +247,31 @@ export default function CalculadoraPlazos({ conBoton = true }: { conBoton?: bool
                                 </div>
                                 {res.avisos.length > 0 && (
                                     <ul className="list-disc pl-4 text-[11.5px] text-amber-800">{res.avisos.map((a) => <li key={a}>{a}</li>)}</ul>
+                                )}
+                                {res.vencimiento && (
+                                    <div className="space-y-1.5 border-t border-charcoal-900/10 pt-2.5">
+                                        <input className={campo} placeholder="¿Qué hay que hacer? (p. ej. Apelar — exp. 123/2026)"
+                                            value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+                                        <button type="button" disabled={!!guardado}
+                                            onClick={async () => {
+                                                try {
+                                                    await crearTermino({
+                                                        titulo: titulo || (articulo ? `${articulo.abrev} ${articulo.ref}` : 'Término'),
+                                                        expediente: null, organo: null, entidad: null, materia: null, acto: titulo || null,
+                                                        regla, fecha_notificacion: fecha, tipo_notificacion: notif, cantidad, unidad,
+                                                        tipo_dias: res.tipo_dias || null, surte_efectos: res.surte_efectos || null,
+                                                        inicio: res.inicio || null, vencimiento: res.vencimiento as string,
+                                                        fundamento: res.fundamento, avisos: res.avisos, notas: null,
+                                                        origen: 'calculadora', documento_nombre: null, recordar_dias: [3, 1, 0],
+                                                    });
+                                                    setGuardado('Guardado en su agenda · le avisaremos por correo');
+                                                } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar'); }
+                                            }}
+                                            className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#b8892d] py-2 text-[13px] font-semibold text-charcoal-900 disabled:opacity-60">
+                                            <CalendarPlus className="h-4 w-4" /> {guardado || 'Guardar en mi agenda'}
+                                        </button>
+                                        {guardado && <a href="/agenda" className="block text-center text-[12px] text-accent-brown underline">Abrir mi agenda</a>}
+                                    </div>
                                 )}
                             </div>
                         )}

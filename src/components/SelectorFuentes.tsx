@@ -22,7 +22,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { CalendarClock, Check, ChevronDown, ClipboardCheck, Globe, Lock, MapPin, type LucideIcon } from 'lucide-react';
+import { Check, ChevronDown, ClipboardCheck, Globe, Lock, MapPin, type LucideIcon } from 'lucide-react';
 import {
     EVENTO_FUENTES, EVENTO_INTERNET, FUENTES, type Fuente,
     escudoDe, fijarInternet, fuentesElegidas, guardarFuentes, internetEncendido, todasLasFuentes,
@@ -78,13 +78,6 @@ function fichas(estado?: string): Ficha[] {
                 ? `Legislación de ${entidad}`
                 : 'Todas las entidades · elija la suya en la barra superior',
             emblema: escudo,
-        },
-        {
-            clave: 'procesal',
-            titulo: 'Normativa procesal',
-            detalle: 'CNPP, CNPCF, Amparo, LFT, mercantil, LFPCA y agrario · el código que rige en su entidad y sus plazos',
-            emblema: null,
-            icono: CalendarClock,
         },
         {
             clave: 'nom',

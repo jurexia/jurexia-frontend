@@ -4,6 +4,8 @@ module.exports = {
         './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
         './src/components/**/*.{js,ts,jsx,tsx,mdx}',
         './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+        // Las clases que viven en src/lib (p. ej. los colores de urgencia de la agenda).
+        './src/lib/**/*.{js,ts,jsx,tsx}',
     ],
     theme: {
         extend: {

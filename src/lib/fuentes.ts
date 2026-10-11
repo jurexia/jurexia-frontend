@@ -22,14 +22,15 @@
    NUNCA QUEDA VACÍO. Sin fuentes no hay consulta; si algo intenta apagarlas
    todas, vuelven las cuatro. */
 
-export type Fuente = 'constitucional' | 'jurisprudencia' | 'federal' | 'estatal' | 'procesal' | 'nom';
+export type Fuente = 'constitucional' | 'jurisprudencia' | 'federal' | 'estatal' | 'nom';
 
-export const FUENTES: readonly Fuente[] = ['constitucional', 'jurisprudencia', 'federal', 'estatal', 'procesal', 'nom'];
+export const FUENTES: readonly Fuente[] = ['constitucional', 'jurisprudencia', 'federal', 'estatal', 'nom'];
 
-/* PROCESAL Y NOM (11-oct-2026). Dos filas nuevas. Quien ya tenía guardada su
-   elección de cuatro las recibe encendidas una vez (CLAVE_V2); y al enviar se
-   añade MARCA_V2 para que el servidor sepa que este cliente las conoce: sin la
-   marca, el servidor las hace seguir a «federal», como antes. */
+/* NOM (11-oct-2026). Fila nueva; lo procesal ya no es fila: entra solo cuando la
+   consulta lo pide. Quien ya tenía guardada su elección de cuatro recibe la NOM
+   encendida una vez (CLAVE_V2); y al enviar se
+   añade MARCA_V2 para que el servidor sepa que este cliente la conoce: sin la
+   marca, el servidor la hace seguir a «federal», como antes. */
 const CLAVE_V2 = 'iurexia-fuentes-v2';
 export const MARCA_V2 = 'selector2';
 
@@ -53,8 +54,8 @@ export function fuentesElegidas(): Fuente[] {
         const crudo = localStorage.getItem(CLAVE);
         if (!crudo) return [...FUENTES];
         const lista = depurar(JSON.parse(crudo));
-        if (!localStorage.getItem(CLAVE_V2) && !lista.includes('procesal') && !lista.includes('nom')) {
-            return depurar([...lista, 'procesal', 'nom']);
+        if (!localStorage.getItem(CLAVE_V2) && !lista.includes('nom')) {
+            return depurar([...lista, 'nom']);
         }
         return lista;
     } catch {
