@@ -82,7 +82,7 @@ function fichas(estado?: string): Ficha[] {
         {
             clave: 'procesal',
             titulo: 'Normativa procesal',
-            detalle: 'CNPP, CNPCF, Amparo, LFT procesal, juicios mercantiles, LFPCA y agrario · con el código que rige en su entidad y sus plazos',
+            detalle: 'CNPP, CNPCF, Amparo, LFT, mercantil, LFPCA y agrario · el código que rige en su entidad y sus plazos',
             emblema: null,
             icono: CalendarClock,
         },
@@ -226,13 +226,24 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                 <ChevronDown className={`hidden h-3 w-3 flex-shrink-0 transition-transform sm:block ${abierto ? 'rotate-180' : ''}`} />
             </button>
 
+            {/* QUE QUEPA EN CUALQUIER PANTALLA (11-oct-2026). Con siete filas el panel
+                abierto hacia arriba se salía por arriba de la ventana (David, con la
+                captura). Ahora: en el teléfono es una hoja que sube desde abajo, a
+                todo el ancho y con fondo; en pantallas mayores, el globo de siempre
+                pero con altura máxima. En los dos, cabecera y pie fijos y sólo la
+                lista se desplaza. */}
+            {abierto && (
+                <div className="fixed inset-0 z-[69] bg-charcoal-900/30 sm:hidden" aria-hidden="true" onClick={() => setAbierto(false)} />
+            )}
             {abierto && (
                 <div
                     role="menu"
                     aria-label="Fuentes de la consulta"
-                    className="absolute bottom-full left-0 z-40 mb-2 w-[min(23rem,calc(100vw-2.5rem))] overflow-hidden rounded-xl border border-charcoal-900/10 bg-white shadow-[0_12px_40px_rgba(17,17,17,0.16)]"
+                    className="fixed inset-x-0 bottom-0 z-[70] flex max-h-[85dvh] flex-col overflow-hidden rounded-t-2xl border border-charcoal-900/10 bg-white shadow-[0_-12px_40px_rgba(17,17,17,0.18)]
+                        sm:absolute sm:inset-x-auto sm:bottom-full sm:left-0 sm:z-40 sm:mb-2 sm:max-h-[min(34rem,calc(100dvh-8rem))] sm:w-[min(23rem,calc(100vw-2.5rem))] sm:rounded-xl sm:shadow-[0_12px_40px_rgba(17,17,17,0.16)]"
                 >
-                    <div className="flex items-baseline justify-between gap-3 border-b border-charcoal-900/10 px-4 pb-2.5 pt-3">
+                    <div className="mx-auto mt-2 h-1 w-10 flex-shrink-0 rounded-full bg-charcoal-900/15 sm:hidden" aria-hidden="true" />
+                    <div className="flex flex-shrink-0 items-baseline justify-between gap-3 border-b border-charcoal-900/10 px-4 pb-2.5 pt-3">
                         <p className="font-serif text-[15px] text-charcoal-900">Fuentes de la consulta</p>
                         {!todas && (
                             <button
@@ -245,7 +256,7 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                         )}
                     </div>
 
-                    <ul className="py-1.5">
+                    <ul className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-1">
                         {lista.map((f) => {
                             const on = elegidas.includes(f.clave);
                             const ultima = on && elegidas.length === 1;
@@ -258,7 +269,7 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                                         aria-disabled={ultima}
                                         onClick={() => alternar(f.clave)}
                                         title={ultima ? 'Debe quedar al menos una fuente encendida' : undefined}
-                                        className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-cream-100/70 focus-visible:bg-cream-100/70 focus-visible:outline-none
+                                        className={`flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-cream-100/70 focus-visible:bg-cream-100/70 focus-visible:outline-none
                                             ${ultima ? 'cursor-not-allowed' : ''}`}
                                     >
                                         <span className={on ? '' : 'opacity-40 grayscale'}>
@@ -268,7 +279,7 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                                             <span className={`block text-[13px] font-semibold leading-snug ${on ? 'text-charcoal-900' : 'text-gray-500'}`}>
                                                 {f.titulo}
                                             </span>
-                                            <span className="block text-[11.5px] leading-snug text-gray-500">{f.detalle}</span>
+                                            <span className="line-clamp-2 text-[11.5px] leading-snug text-gray-500">{f.detalle}</span>
                                         </span>
                                         <span
                                             aria-hidden="true"
@@ -292,7 +303,7 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                                     role="menuitemcheckbox"
                                     aria-checked={internet}
                                     onClick={() => setInternet(fijarInternet(!internet))}
-                                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-cream-100/70 focus-visible:bg-cream-100/70 focus-visible:outline-none"
+                                    className="flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-cream-100/70 focus-visible:bg-cream-100/70 focus-visible:outline-none"
                                 >
                                     <EmblemaInternet grande apagado={!internet} />
                                     <span className="min-w-0 flex-1">
@@ -316,7 +327,7 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                                     href="/precios"
                                     role="menuitem"
                                     title="Internet está disponible desde el plan Pro"
-                                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-cream-100/70 focus-visible:bg-cream-100/70 focus-visible:outline-none"
+                                    className="flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-cream-100/70 focus-visible:bg-cream-100/70 focus-visible:outline-none"
                                 >
                                     <EmblemaInternet grande apagado />
                                     <span className="min-w-0 flex-1">
@@ -334,7 +345,7 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                         </li>
                     </ul>
 
-                    <p className="border-t border-charcoal-900/10 bg-cream-100/50 px-4 py-2.5 text-[11.5px] leading-snug text-gray-600">
+                    <p className="flex-shrink-0 border-t border-charcoal-900/10 bg-cream-100/50 px-4 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-[11.5px] leading-snug text-gray-600">
                         {internet
                             ? 'Con Internet, Iurexia completa el acervo con sitios oficiales. Se apaga al recargar la página.'
                             : todas

@@ -11,6 +11,7 @@
    junto a las fuentes. */
 
 import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { CalendarClock, X } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1390';
@@ -131,13 +132,13 @@ export default function CalculadoraPlazos({ conBoton = true }: { conBoton?: bool
                     <CalendarClock className="h-3.5 w-3.5 text-accent-brown" /> Plazos
                 </button>
             )}
-            {abierta && (
+            {abierta && typeof document !== 'undefined' && createPortal(
                 <div className="fixed inset-0 z-[80] flex items-end justify-center bg-charcoal-900/40 p-0 sm:items-center sm:p-4" onClick={() => setAbierta(false)}>
                     <div
                         role="dialog"
                         aria-modal="true"
                         aria-label="Calculadora de plazos"
-                        className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-cream-50 p-5 shadow-xl sm:rounded-2xl"
+                        className="max-h-[92dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-2xl bg-cream-50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-xl sm:rounded-2xl sm:p-5"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="mb-3 flex items-start justify-between gap-3">
@@ -202,7 +203,7 @@ export default function CalculadoraPlazos({ conBoton = true }: { conBoton?: bool
                             <label className="col-span-2 text-[11.5px] text-gray-600">Días inhábiles adicionales del tribunal (AAAA-MM-DD, separados por coma)
                                 <input className={campo} value={extra} onChange={(e) => setExtra(e.target.value)} placeholder="2026-11-02, 2026-12-12" />
                             </label>
-                            <label className="text-[11.5px] text-gray-600">Vacaciones o suspensión: desde
+                            <label className="text-[11.5px] text-gray-600">Vacaciones desde
                                 <input type="date" className={campo} value={desde} onChange={(e) => setDesde(e.target.value)} />
                             </label>
                             <label className="text-[11.5px] text-gray-600">hasta
@@ -246,7 +247,8 @@ export default function CalculadoraPlazos({ conBoton = true }: { conBoton?: bool
                             </div>
                         )}
                     </div>
-                </div>
+                </div>,
+                document.body,
             )}
         </>
     );
