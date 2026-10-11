@@ -170,6 +170,16 @@
   "publicado": "2026-10-11T12:00:00-06:00"
  },
  {
+  "id": "v85",
+  "slug": "prision-por-deudas",
+  "numero": "VI.2",
+  "titulo": "¿Puedes ir a prisión por no pagar una deuda?",
+  "subtitulo": "La prohibición de la prisión por deudas en México, de la Lex Poetelia al amparo directo en revisión 4018/2025, la cobranza abusiva y las herramientas del acreedor",
+  "miniatura": "/estudiar/miniaturas/prision-por-deudas-640.webp",
+  "duracion": 532,
+  "publicado": "2026-10-12T19:00:00-06:00"
+ },
+ {
   "id": "v84",
   "slug": "custodia-alimentos-e-igualdad",
   "numero": "VII.1",
@@ -178,6 +188,16 @@
   "miniatura": "/estudiar/miniaturas/custodia-alimentos-e-igualdad-640.webp",
   "duracion": 480,
   "publicado": "2026-10-11T19:00:00-06:00"
+ },
+ {
+  "id": "v86",
+  "slug": "filiacion-adn-e-identidad",
+  "numero": "VII.2",
+  "titulo": "¿Te pueden obligar a ser padre si el ADN dice que no?",
+  "subtitulo": "Filiación, prueba genética e identidad en el derecho mexicano, de la presunción romana a la jurisprudencia del Pleno de 2026",
+  "miniatura": "/estudiar/miniaturas/filiacion-adn-e-identidad-640.webp",
+  "duracion": 862,
+  "publicado": "2026-10-13T19:00:00-06:00"
  },
  {
   "id": "v83",

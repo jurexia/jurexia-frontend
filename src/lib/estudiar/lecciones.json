@@ -35,13 +35,13 @@
    "id": "civil",
    "numero": "VI",
    "titulo": "Derecho civil",
-   "descripcion": "Contratos y obligaciones: hasta dónde llega la libertad de obligarse y qué puede corregir un juez cuando un pacto explota a una de las partes."
+   "descripcion": "Contratos y obligaciones: hasta dónde llega la libertad de obligarse, qué puede corregir un juez cuando un pacto explota a una de las partes y qué puede, y qué no, hacer un acreedor cuando la deuda no se paga."
   },
   {
    "id": "familiar",
    "numero": "VII",
    "titulo": "Derecho familiar",
-   "descripcion": "Custodia, patria potestad y alimentos: cómo se decide cuando está en juego una familia, con el interés superior de la niñez como regla y sin estereotipos."
+   "descripcion": "Filiación, custodia, patria potestad y alimentos: cómo se decide cuando está en juego una familia, con el interés superior de la niñez como regla y sin estereotipos."
   },
   {
    "id": "laboral",
@@ -7590,6 +7590,562 @@
    "miniatura640": "/estudiar/miniaturas/libertad-de-contratar-y-sus-limites-640.webp"
   },
   {
+   "id": "v85",
+   "slug": "prision-por-deudas",
+   "eje": "civil",
+   "publicada": true,
+   "youtube": "idsIg6PoqJc",
+   "publicado": "2026-10-12T19:00:00-06:00",
+   "tituloVideo": "¿Puedes ir a prisión por no pagar una deuda?",
+   "duracion": 532,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "La llamada del cobrador"
+    },
+    {
+     "segundo": 34,
+     "titulo": "Lo que dice la Constitución: artículo 17"
+    },
+    {
+     "segundo": 57,
+     "titulo": "Roma: del cuerpo a los bienes"
+    },
+    {
+     "segundo": 90,
+     "titulo": "Dickens, la Marshalsea y el peonaje porfiriano"
+    },
+    {
+     "segundo": 119,
+     "titulo": "1917 y los tratados internacionales"
+    },
+    {
+     "segundo": 148,
+     "titulo": "Cuándo sí hay cárcel: el engaño"
+    },
+    {
+     "segundo": 179,
+     "titulo": "Caso real: las manzanas de Chihuahua (2026)"
+    },
+    {
+     "segundo": 214,
+     "titulo": "Lo que un cobrador no puede hacer"
+    },
+    {
+     "segundo": 246,
+     "titulo": "Tres mentiras de la cobranza"
+    },
+    {
+     "segundo": 267,
+     "titulo": "Dónde quejarte: REDECO y PROFECO"
+    },
+    {
+     "segundo": 292,
+     "titulo": "El cobrador que intimida comete delito"
+    },
+    {
+     "segundo": 323,
+     "titulo": "Daño moral por cobranza"
+    },
+    {
+     "segundo": 342,
+     "titulo": "Pero la deuda no desaparece: el juicio y el embargo"
+    },
+    {
+     "segundo": 377,
+     "titulo": "Cómo crece una deuda en juicio"
+    },
+    {
+     "segundo": 421,
+     "titulo": "Usura, convenio y carta finiquito"
+    },
+    {
+     "segundo": 455,
+     "titulo": "Pacta sunt servanda"
+    },
+    {
+     "segundo": 486,
+     "titulo": "Una reflexión para ambas partes"
+    },
+    {
+     "segundo": 513,
+     "titulo": "Suscríbete y comparte"
+    }
+   ],
+   "titulo": "¿Puedes ir a prisión por no pagar una deuda?",
+   "tituloPlano": "¿Puedes ir a prisión por no pagar una deuda?",
+   "subtitulo": "La prohibición de la prisión por deudas en México, de la Lex Poetelia al amparo directo en revisión 4018/2025, la cobranza abusiva y las herramientas del acreedor",
+   "corto": "Prisión por deudas y cobranza abusiva",
+   "nivel": "licenciatura",
+   "actualizado": "10 de octubre de 2026",
+   "claves": [
+    "prisión por deudas",
+    "artículo 17 constitucional",
+    "deuda puramente civil",
+    "fraude",
+    "abuso de confianza",
+    "insolvencia fraudulenta",
+    "cobranza extrajudicial ilegal",
+    "CONDUSEF",
+    "REDECO",
+    "PROFECO",
+    "juicio ejecutivo mercantil",
+    "usura",
+    "pacta sunt servanda"
+   ],
+   "resumen": "Por qué en México nadie puede ir a prisión por una deuda puramente civil y cuándo sí hay cárcel; de dónde viene la regla, de Roma a la Constitución de 1917; qué prohíben a los cobradores la CONDUSEF, la PROFECO y los códigos penales; qué puede hacer el acreedor, cómo crece una deuda y por qué, aun sin cárcel, los pactos deben cumplirse.",
+   "resumenPlano": "Por qué en México nadie puede ir a prisión por una deuda puramente civil y cuándo sí hay cárcel; de dónde viene la regla, de Roma a la Constitución de 1917; qué prohíben a los cobradores la CONDUSEF, la PROFECO y los códigos penales; qué puede hacer el acreedor, cómo crece una deuda y por qué, aun sin cárcel, los pactos deben cumplirse.",
+   "ideas": [
+    "Nadie puede ser aprisionado por deudas de carácter puramente civil (art. 17): el deudor responde con sus bienes, no con su cuerpo.",
+    "Sí hay cárcel por fraude, abuso de confianza, insolvencia fraudulenta y por no dar alimentos: no se castiga la deuda, sino la conducta.",
+    "El cobrador no puede amenazar, exhibir ni cobrarle a terceros; el banco o la tienda responden por su despacho, y quien intimida para cobrar puede ir a prisión.",
+    "No ir a la cárcel no es no pagar: hay juicio, embargo y remate, la deuda crece, y la usura reduce los intereses, pero no el capital."
+   ],
+   "secciones": [
+    "Introducción: la llamada de las seis y media",
+    "El artículo 17: los dos extremos",
+    "Del cuerpo a los bienes: la historia de la regla",
+    "Cuándo sí hay cárcel",
+    "La cobranza abusiva",
+    "Qué hacer si te amenaza un cobrador",
+    "Lo que sí puede hacer el acreedor",
+    "La usura, la lesión y el convenio",
+    "Los pactos deben cumplirse",
+    "Conclusión"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [
+    {
+     "nombre": "Charles Dickens",
+     "fechas": "",
+     "campo": "literatura",
+     "quien": "Novelista inglés. En 1824, con doce años, trabajó en la fábrica de betún de Warren mientras su padre estaba preso por deudas en la Marshalsea.",
+     "aporte": "Entre 1855 y 1857 publicó por entregas <em>La pequeña Dorrit</em>, novela en la que el padre de la protagonista, William Dorrit, preso por deudas, es conocido como el Padre de la Marshalsea."
+    },
+    {
+     "nombre": "Hugo Grocio",
+     "fechas": "1583-1645",
+     "campo": "derecho natural y derecho de gentes",
+     "quien": "Jurista, autor de <em>De iure belli ac pacis</em> (<em>Del derecho de la guerra y de la paz</em>), publicado en París en 1625.",
+     "aporte": "Sostuvo que atenerse a los pactos es de derecho natural y que de esa fuente brota el derecho civil: «cum juris naturae sit stare pactis» («siendo de derecho natural atenerse a los pactos»)."
+    }
+   ],
+   "documentos": [
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "etiqueta": "Constitución Política de los Estados Unidos Mexicanos",
+     "titulo": "Artículo 17, párrafos primero y último (texto vigente)",
+     "extracto": "«Ninguna persona podrá hacerse justicia por sí misma, ni ejercer violencia para reclamar su derecho.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Tito Livio, Ab Urbe condita",
+     "titulo": "Libro VIII, 28: la Lex Poetelia Papiria",
+     "extracto": "«Ese año fue para la plebe romana como un nuevo comienzo de la libertad, porque dejaron de quedar sujetos al <em>nexum</em> […] que del dinero prestado respondieran los bienes del deudor, no su cuerpo.»",
+     "traducido": true,
+     "idioma": "latín"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "etiqueta": "Constitución de 1917 (texto original, hoy vigente sin cambios)",
+     "titulo": "Artículo 123, fracción XXIV (hoy apartado A), y artículo 13 transitorio",
+     "extracto": "«De las deudas contraídas por los trabajadores a favor de sus patronos, de sus asociados, familiares o dependientes, sólo será responsable el mismo trabajador, y en ningún caso y por ningún motivo se podrá exigir a los miembros de su familia…»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "etiqueta": "Amparo directo en revisión 4018/2025",
+     "titulo": "Pleno, 9 de septiembre de 2026: la ministra ponente presenta el proyecto",
+     "extracto": "«…lo que está prohibido es que el mero incumplimiento de una obligación surgida de una relación de derecho privado constituya, por sí sola, el fundamento para imponer una pena privativa de libertad.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "etiqueta": "Disposición en Materia de Registros ante la CONDUSEF",
+     "titulo": "Artículo 132, fracciones IX y XXII, y párrafo final (fragmentos)",
+     "extracto": "«IX. Comunicarse fuera del horario comprendido entre las 8:00 a las 21:00 horas, de acuerdo a los husos horarios del domicilio del Deudor;»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Digesto de Justiniano",
+     "titulo": "D. 2.14.7.7 (Ulpiano, Comentarios al Edicto, libro IV)",
+     "extracto": "«Mantendré los pactos convenidos que no se hubieren hecho ni con dolo malo, ni contra las Leyes, Plebiscitos, Senadoconsultos, Edictos de los Principes, y por los que no se cometa fraude contra cualquiera de ellos.»",
+     "traducido": true,
+     "idioma": "latín"
+    }
+   ],
+   "cronologias": [
+    {
+     "titulo": "Del cuerpo a los bienes",
+     "filas": [
+      {
+       "anio": "326 a. C.",
+       "texto": "Según Livio, la Lex Poetelia Papiria abolió el <em>nexum</em>."
+      },
+      {
+       "anio": "1824",
+       "texto": "John Dickens entra preso por deudas en la Marshalsea de Londres."
+      },
+      {
+       "anio": "1857",
+       "texto": "La Constitución prohíbe la prisión por deudas puramente civiles."
+      },
+      {
+       "anio": "1910",
+       "texto": "Turner denuncia el peonaje por deudas en <em>Barbarous Mexico</em>."
+      },
+      {
+       "anio": "1917",
+       "texto": "Constitución: art. 17, art. 123, fracción XXIV, y art. 13 transitorio."
+      },
+      {
+       "anio": "1981",
+       "texto": "México se adhiere al PIDCP y a la Convención Americana."
+      }
+     ]
+    }
+   ],
+   "glosario": [
+    {
+     "termino": "Deuda puramente civil",
+     "definicion": "Deuda nacida de una relación entre particulares, como un préstamo o una renta; por ella nadie puede ir a prisión."
+    },
+    {
+     "termino": "Nexum",
+     "definicion": "Préstamo del derecho romano antiguo por el que un hombre libre quedaba sujeto a su acreedor hasta pagar; lo abolió la Lex Poetelia Papiria."
+    },
+    {
+     "termino": "Despacho de cobranza",
+     "definicion": "Empresa que cobra por cuenta de un banco, una financiera o una tienda, que responden por lo que haga."
+    },
+    {
+     "termino": "Aval u obligado solidario",
+     "definicion": "Quien firma para garantizar la deuda de otro y responde por ella; la referencia, en cambio, no debe nada."
+    },
+    {
+     "termino": "Juicio ejecutivo mercantil",
+     "definicion": "Juicio para cobrar con un documento como el pagaré; empieza con el requerimiento de pago y el embargo."
+    },
+    {
+     "termino": "Versión taquigráfica",
+     "definicion": "Transcripción oficial de una sesión de la SCJN; el engrose es la sentencia ya redactada."
+    }
+   ],
+   "preguntas": [
+    "¿Qué dos reglas contienen el primer y el último párrafo del artículo 17 constitucional?",
+    "¿Qué abolió la Lex Poetelia Papiria y por qué es un error decir que acabó con toda la cárcel por deudas?",
+    "¿Qué deudas cubre la fracción XXIV del artículo 123 y qué dispuso el artículo 13 transitorio de 1917?",
+    "¿Por qué el fraude, el abuso de confianza, la insolvencia fraudulenta y el incumplimiento de alimentos sí pueden llevar a prisión?",
+    "¿Qué resolvió el Pleno en el amparo directo en revisión 4018/2025 y en qué coincidieron la mayoría y la minoría?",
+    "¿Qué parte del salario puede embargarse por una deuda mercantil, y por qué borrar el buró no extingue la deuda?",
+    "¿De dónde viene la máxima pacta sunt servanda y dónde está hoy en el derecho mexicano?"
+   ],
+   "fuentes": [
+    {
+     "tipo": "dato",
+     "tipoNombre": "Estadística oficial",
+     "referencia": "CONDUSEF, Balance sobre las Acciones de Defensa al Usuario, 4.º trimestre de 2025 (enero-diciembre), pp. 3 y 13.",
+     "url": "https://www.condusef.gob.mx"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución Política de los Estados Unidos Mexicanos, arts. 17 y 123 (apartado A, frs. VIII, XXIV y XXVII) y 13 transitorio, última reforma DOF 7 de octubre de 2026.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Civil Federal, arts. 17, 1796, 1843, 1894, 2117, 2239 y 2964, última reforma DOF 14 de noviembre de 2025.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CCF.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a. LIV/2014 (10a.), tesis aislada, registro digital 2005630.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2005630"
+    },
+    {
+     "tipo": "ofi",
+     "tipoNombre": "Documento oficial",
+     "referencia": "CONDUSEF, portal del Registro de Despachos de Cobranza (REDECO), preguntas frecuentes, consultado el 9 de octubre de 2026.",
+     "url": "https://eduweb.condusef.gob.mx/redeco/redeco.aspx"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Aulo Gelio, Noctes Atticae XX.1.45-51, que transmite la Ley de las Doce Tablas (tabla III).",
+     "url": "https://www.thelatinlibrary.com/gellius/gellius20.shtml"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Tito Livio, Ab Urbe condita VIII.28.",
+     "url": "https://www.thelatinlibrary.com/livy/liv.8.shtml"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Décadas de Tito Livio, trad. de fray Pedro de Vega, corregida por Arnaldo Brikman, t. I, Madrid, Imprenta Real, 1793, p. 372.",
+     "url": "https://archive.org/details/bub_gb_2IpR9cBM2dwC"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "John Forster, The Life of Charles Dickens, vol. I, cap. II (1872).",
+     "url": "https://www.gutenberg.org/ebooks/25851"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Constitución Federal de los Estados Unidos Mexicanos de 1857, art. 17 (transcripción de la Orden Jurídico Nacional), p. 6.",
+     "url": "https://www.ordenjuridico.gob.mx/Constitucion/1857.pdf"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "John Kenneth Turner, Barbarous Mexico, Chicago, Charles H. Kerr, 1910, pp. 110-111.",
+     "url": "https://archive.org/details/barbarousmexico00turnuoft"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "Constitución Política de los Estados Unidos Mexicanos, texto original, DOF 5 de febrero de 1917, arts. 17, 123 y 13 transitorio (edición de la Cámara de Diputados).",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/cpeum/CPEUM_orig_05feb1917_ima.pdf"
+    },
+    {
+     "tipo": "trat",
+     "tipoNombre": "Tratado",
+     "referencia": "Pacto Internacional de Derechos Civiles y Políticos, art. 11, DOF 20 de mayo de 1981 (compilación de la Comisión Nacional de los Derechos Humanos, p. 7).",
+     "url": "https://www.scjn.gob.mx/sites/default/files/marco_normativo/documeto/2019-06/Pacto_Internacional_de_Derechos_Civiles_y_Politicos.pdf"
+    },
+    {
+     "tipo": "trat",
+     "tipoNombre": "Tratado",
+     "referencia": "Convención Americana sobre Derechos Humanos, art. 7.7, DOF 7 de mayo de 1981 (texto de la SCJN, p. 6).",
+     "url": "https://www.scjn.gob.mx/sites/default/files/marco_normativo/documeto/2019-06/Convencion_Americana_sobre_Derechos_Humanos_Pacto_de_San_Jose_de_Costa_Rica.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P. XXXII/96, tesis aislada, registro digital 200161.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/200161"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Penal Federal, arts. 284 Bis, 382, 386 y 388 Bis, última reforma DOF 13 de marzo de 2026.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CPF.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Segundo Tribunal Colegiado del Quinto Circuito, V.2o. J/47, jurisprudencia, registro digital 193709.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/193709"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 170/2007, jurisprudencia, registro digital 170416.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/170416"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Penal para el Distrito Federal, arts. 148 Quinquies y 193, y transitorios del decreto publicado en la G.O. CDMX el 12 de diciembre de 2024; última reforma G.O. CDMX 21 de agosto de 2026.",
+     "url": "https://data.consejeria.cdmx.gob.mx"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Pleno, amparo directo en revisión 4018/2025, versión taquigráfica de la sesión pública de 9 de septiembre de 2026, pp. 26-37 (pp. 32-43 del PDF). Sin engrose publicado al 10 de octubre de 2026.",
+     "url": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Penal del Estado de Chihuahua, art. 224, fr. IX (compilación del Congreso del Estado, última reforma POE 22 de febrero de 2017).",
+     "url": "http://congresochihuahua.gob.mx/"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, amparo directo en revisión 6938/2023, 29 de mayo de 2024, engrose, pp. 1-8 y 22 del PDF.",
+     "url": ""
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, amparo directo en revisión 8234/2023, 27 de noviembre de 2024, engrose, pp. 1-6, 21 y 34-36 del PDF.",
+     "url": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley para la Transparencia y Ordenamiento de los Servicios Financieros, arts. 17 Bis 1 a 17 Bis 4 (DOF 10 de enero de 2014), última reforma DOF 14 de noviembre de 2025.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LTOSF.pdf"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "CONDUSEF, Disposición en Materia de Registros ante la CONDUSEF, DOF 14 de octubre de 2022, arts. 122, 127 y 132.",
+     "url": "https://www.dof.gob.mx"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "PROFECO, Acuerdo A/002/2015 por el que se emiten las Disposiciones de carácter general en materia de despachos de cobranza, DOF 1 de septiembre de 2015, arts. 4, 5 y 7.",
+     "url": "https://www.dof.gob.mx"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Pleno, amparo en revisión 323/2025, 15 de enero de 2026, engrose firmado, pp. 1 y 9.",
+     "url": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P./J. 133/2026 (12a.), jurisprudencia, registro digital 2032261.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2032261"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Tercer Tribunal Colegiado en Materia Civil del Primer Circuito, I.3o.C.274 C (10a.), tesis aislada, registro digital 2014364 (amparo directo 104/2017).",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2014364"
+    },
+    {
+     "tipo": "ofi",
+     "tipoNombre": "Documento oficial",
+     "referencia": "CONDUSEF, cuadernillo «Despachos de Cobranza» (2023), pp. 9, 24 y 28 (pp. 11, 26 y 30 del PDF).",
+     "url": "https://www.gob.mx/condusef"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 5/2013 (9a.), jurisprudencia, registro digital 159859.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/159859"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código de Comercio, arts. 78, 362, 1084, 1392, 1396 y 1412, última reforma DOF 14 de noviembre de 2025.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CCom.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 5/2016 (10a.), jurisprudencia, registro digital 2012046.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2012046"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Nacional de Procedimientos Civiles y Familiares, art. 1039, última reforma DOF 15 de enero de 2026.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CNPCF.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Segunda Sala, 2a./J. 42/2014 (10a.), jurisprudencia, registro digital 2006672.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2006672"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 183/2023 (11a.), jurisprudencia, registro digital 2027834.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2027834"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 28/2017 (10a.), jurisprudencia, registro digital 2014920.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2014920"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley para Regular las Sociedades de Información Crediticia, art. 23, última reforma DOF 24 de enero de 2024.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LRSIC.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 47/2014 (10a.), jurisprudencia, registro digital 2006795.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2006795"
+    },
+    {
+     "tipo": "ofi",
+     "tipoNombre": "Documento oficial",
+     "referencia": "CONDUSEF, Proteja su Dinero, «Opciones para consolidaciones, reestructuraciones y quitas» (2017), p. 3 del PDF.",
+     "url": "https://revista.condusef.gob.mx"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley General de Títulos y Operaciones de Crédito, arts. 129 y 174, última reforma DOF 26 de marzo de 2024.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LGTOC.pdf"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Digesto 2.14.7.4 y 2.14.7.7 (Ulpiano), ed. Mommsen-Krüger; trad. de Ildefonso L. García del Corral, Cuerpo del derecho civil romano, 1.ª parte, t. I, Barcelona, Jaime Molinas, 1889, p. 277.",
+     "url": "https://archive.org/details/cuerpodelderechocivilromanoP1T1"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Decretales de Gregorio IX (Liber Extra, 1234), X 1.35.1, c. Antigonus.",
+     "url": "https://www.thelatinlibrary.com/gregdecretals1.html"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "U. Babusiaux, «Vertragsbegriff und Vertragstypenlehre», Universidad de Zúrich, 21 de marzo de 2024, p. 4.",
+     "url": ""
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Hugo Grocio, De iure belli ac pacis (1625), prolegómenos, § 15 (ed. de Ámsterdam, 1735).",
+     "url": "https://archive.org/details/huggrotiidejure00grongoog"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Code civil des Français (1804), art. 1134, edición original y oficial, según el Musée Criminocorpus.",
+     "url": "https://criminocorpus.org/fr/ref/25/19707/"
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-prision-por-deudas.pdf",
+    "paginas": 13,
+    "kb": 1195,
+    "palabras": 4669,
+    "minutos": 25
+   },
+   "portada": "/estudiar/portadas/prision-por-deudas.webp",
+   "miniatura": "/estudiar/miniaturas/prision-por-deudas.webp",
+   "miniatura640": "/estudiar/miniaturas/prision-por-deudas-640.webp"
+  },
+  {
    "id": "v84",
    "slug": "custodia-alimentos-e-igualdad",
    "eje": "familiar",
@@ -8249,6 +8805,564 @@
    "portada": "/estudiar/portadas/custodia-alimentos-e-igualdad.webp",
    "miniatura": "/estudiar/miniaturas/custodia-alimentos-e-igualdad.webp",
    "miniatura640": "/estudiar/miniaturas/custodia-alimentos-e-igualdad-640.webp"
+  },
+  {
+   "id": "v86",
+   "slug": "filiacion-adn-e-identidad",
+   "eje": "familiar",
+   "publicada": true,
+   "youtube": "JYBcDXVwl74",
+   "publicado": "2026-10-13T19:00:00-06:00",
+   "tituloVideo": "¿Te pueden obligar a ser padre si el ADN dice que no?",
+   "duracion": 862,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "Según el acta, papá; según el ADN, no"
+    },
+    {
+     "segundo": 40,
+     "titulo": "¿Cuándo te obliga la ley a ser padre?"
+    },
+    {
+     "segundo": 67,
+     "titulo": "Roma: «pater is est quem nuptiae demonstrant»"
+    },
+    {
+     "segundo": 102,
+     "titulo": "Del Código Napoleón al Código Civil Federal"
+    },
+    {
+     "segundo": 137,
+     "titulo": "El caso: el registro con la vieja acta de matrimonio"
+    },
+    {
+     "segundo": 179,
+     "titulo": "El bautizo como prueba de paternidad"
+    },
+    {
+     "segundo": 231,
+     "titulo": "Juárez y el Registro Civil"
+    },
+    {
+     "segundo": 270,
+     "titulo": "Las tres razones del tribunal"
+    },
+    {
+     "segundo": 350,
+     "titulo": "La identidad de los niños"
+    },
+    {
+     "segundo": 392,
+     "titulo": "El desenlace: un apellido no fabrica a un padre"
+    },
+    {
+     "segundo": 437,
+     "titulo": "El reverso: la huella genética"
+    },
+    {
+     "segundo": 468,
+     "titulo": "La Corte: filiación y biología pueden ser distintas"
+    },
+    {
+     "segundo": 497,
+     "titulo": "Caso 1: el donante y la voluntad procreacional"
+    },
+    {
+     "segundo": 538,
+     "titulo": "Caso 2: doce años después"
+    },
+    {
+     "segundo": 582,
+     "titulo": "Caso 3: dos padres"
+    },
+    {
+     "segundo": 642,
+     "titulo": "Caso 4: la nueva esposa"
+    },
+    {
+     "segundo": 690,
+     "titulo": "¿Y el dinero?"
+    },
+    {
+     "segundo": 718,
+     "titulo": "Las tres preguntas"
+    },
+    {
+     "segundo": 783,
+     "titulo": "¿Y si te pasa a ti?"
+    },
+    {
+     "segundo": 823,
+     "titulo": "Cierre"
+    }
+   ],
+   "titulo": "¿Te pueden obligar a ser padre si el ADN dice que no?",
+   "tituloPlano": "¿Te pueden obligar a ser padre si el ADN dice que no?",
+   "subtitulo": "Filiación, prueba genética e identidad en el derecho mexicano, de la presunción romana a la jurisprudencia del Pleno de 2026",
+   "corto": "Filiación, ADN e identidad",
+   "nivel": "licenciatura",
+   "actualizado": "10 de octubre de 2026",
+   "claves": [
+    "filiación",
+    "presunción de paternidad",
+    "desconocimiento de paternidad",
+    "reconocimiento de hijo",
+    "prueba genética",
+    "derecho a la identidad",
+    "origen biológico",
+    "voluntad procreacional",
+    "reproducción asistida",
+    "realidad social",
+    "Registro Civil"
+   ],
+   "resumen": "Cuándo la ley obliga a un hombre a ser padre y cuándo no: de dónde viene la presunción del matrimonio, por qué un tribunal colegiado borró de dos actas a quien nunca reconoció a los niños, aunque se invocó un bautizo, qué protege el derecho a conocer el origen y en qué casos la filiación se sostiene sin biología.",
+   "resumenPlano": "Cuándo la ley obliga a un hombre a ser padre y cuándo no: de dónde viene la presunción del matrimonio, por qué un tribunal colegiado borró de dos actas a quien nunca reconoció a los niños, aunque se invocó un bautizo, qué protege el derecho a conocer el origen y en qué casos la filiación se sostiene sin biología.",
+   "ideas": [
+    "Fuera del matrimonio, la paternidad nace de un reconocimiento formal o de una sentencia; gestos, fotos o un bautizo no la crean.",
+    "Si el hijo es suyo, un juez puede declarar padre a un hombre que nunca firmó nada, y negarse al ADN hace presumir la filiación.",
+    "El ADN, por sí solo, no deshace una filiación que ya existe por matrimonio, reconocimiento o consentimiento; menos si el niño la vive como suya.",
+    "Saber no es cambiar de padre: como regla, el niño tiene derecho a conocer su origen, y el juez debe fijar cómo y cuándo se le dirá."
+   ],
+   "secciones": [
+    "Introducción: el acta y el bautizo",
+    "La presunción: de Roma a hoy",
+    "La prueba genética",
+    "El caso: un registro sin el padre",
+    "El bautizo y el Registro Civil",
+    "Las tres razones del tribunal",
+    "Identidad y origen",
+    "La bifurcación del Pleno",
+    "La voluntad procreacional",
+    "Filiación sin biología",
+    "Plazos, irrevocabilidad y dinero",
+    "La regla en tres preguntas"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [],
+   "documentos": [
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Digesto de Justiniano",
+     "titulo": "D. 2.4.5 (Paulo) y D. 1.6.6 (Ulpiano)",
+     "extracto": "«Porque [la madre] siempre es cierta, aunque haya concebido fuera de matrimonio; el padre, en cambio, es aquel a quien señalan las nupcias.»",
+     "traducido": true,
+     "idioma": "latín"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Jurisprudencia",
+     "titulo": "1a./J. 101/2006, registro digital 172993",
+     "extracto": "«…debe operar la presunción de la filiación, salvo prueba en contrario, pues como se ha dicho, considerarlo de otra manera llevaría a dejar el interés superior del niño a merced de la voluntad del presunto progenitor…»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Ley Orgánica del Registro Civil (28 de julio de 1859)",
+     "titulo": "Considerando",
+     "extracto": "«…para perfeccionar la independencia en que deben permanecer recíprocamente el Estado y la Iglesia, no puede ya encomendarse a ésta por aquel el registro que había tenido del nacimiento, matrimonio y fallecimiento de las personas…»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "etiqueta": "Tribunal colegiado de circuito",
+     "titulo": "Sentencia de amparo directo (versión pública), p. 44",
+     "extracto": "«Suplantar una paternidad sin el reconocimiento del padre, es tanto como pretender ocultar a los menores involucrados el conocimiento sobre su origen…»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Jurisprudencia del Pleno",
+     "titulo": "P./J. 151/2026 (12a.), registro digital 2032655",
+     "extracto": "«La filiación no es una consecuencia necesaria e inmediata del origen biológico. El derecho a la identidad acepta una bifurcación entre el conocimiento del origen biológico de una persona respecto al establecimiento de su filiación con concordancia biológica.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Tesis aisladas",
+     "titulo": "1a. LXXVIII/2018 y 1a. LXXIX/2018 (10a.), registros digitales 2017285 y 2017287",
+     "extracto": "«…a este consentimiento del padre se le conoce como voluntad procreacional, que es el deseo de asumir a un hijo como propio aunque biológicamente no lo sea.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Tesis aislada",
+     "titulo": "1a. XCVI/2018 (10a.), registro digital 2017755",
+     "extracto": "«…la ausencia de vínculo biológico en las relaciones paterno-filiales no resulta suficiente per se para sustentar la impugnación de paternidad, en tanto resulta acorde con la Constitución Federal que exista un plazo para el ejercicio de esa acción, superado el cual se privilegie un estado de familia consolidado en el tiempo.»",
+     "traducido": false,
+     "idioma": ""
+    }
+   ],
+   "cronologias": [],
+   "glosario": [
+    {
+     "termino": "Filiación",
+     "definicion": "Vínculo jurídico entre el hijo y su padre o su madre, del que derivan el apellido, los alimentos, la patria potestad y la herencia."
+    },
+    {
+     "termino": "Presunción de paternidad",
+     "definicion": "Regla que atribuye al marido los hijos nacidos dentro de los plazos legales del matrimonio."
+    },
+    {
+     "termino": "Desconocimiento de paternidad",
+     "definicion": "Acción del marido para destruir esa presunción, con plazos de caducidad breves."
+    },
+    {
+     "termino": "Reconocimiento de hijo",
+     "definicion": "Acto formal e irrevocable por el que se asume la paternidad de un hijo nacido fuera del matrimonio."
+    },
+    {
+     "termino": "Voluntad procreacional",
+     "definicion": "Consentimiento para asumir como propio al hijo nacido por reproducción asistida, aunque no haya vínculo genético."
+    },
+    {
+     "termino": "Bifurcación",
+     "definicion": "Distinción entre el derecho a conocer el origen biológico y el derecho a una filiación que coincida con él."
+    }
+   ],
+   "preguntas": [
+    "¿De dónde viene la presunción de paternidad y qué plazos heredó el Código Civil Federal?",
+    "¿Qué consecuencias tiene negarse a la prueba de ADN en un juicio de paternidad?",
+    "¿Por qué el bautizo no sirvió para tener por reconocida a la niña, ni para fechar el conocimiento del registro?",
+    "¿Cuáles fueron las tres razones del tribunal colegiado y qué se resolvió sobre los apellidos y los alimentos?",
+    "¿Qué significa que el derecho a la identidad «acepta una bifurcación»?",
+    "¿Qué es la voluntad procreacional y cómo la regulan la Ciudad de México, Argentina y España?",
+    "¿Qué tienen en común los amparos directos en revisión 4686/2016, 4002/2023 y 5129/2024, y en qué se distinguen del caso del bautizo?"
+   ],
+   "fuentes": [
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tribunal colegiado de circuito, sentencia de amparo directo civil, versión pública (78 pp.), pp. 7-12, 16, 19, 21, 40-44, 51-59 y 71-72. Por la intimidad de los niños se omiten el expediente, el órgano, el lugar y las fechas.",
+     "url": ""
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, amparo directo en revisión 5129/2024, 28 de mayo de 2025, ejecutoria publicada en el Semanario, párrs. 1-13, 156 y 159.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/ejecutoria/33505"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Pleno, amparo directo en revisión 4002/2023, 20 de enero de 2026, ejecutoria publicada el 25 de septiembre de 2026, párrs. 1-20 y 133-141 y nota de publicación.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/ejecutoria/34259"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tribunal colegiado de circuito, tesis aislada derivada del caso, registro digital 2025281.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2025281"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tribunal colegiado de circuito, tesis aislada derivada del caso, registro digital 2025283.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2025283"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tribunal colegiado de circuito, tesis aislada derivada del caso, registro digital 2025280.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2025280"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Digesto, D. 1.5.12, 1.6.6, 2.4.5 y 38.16.3.11, ed. Mommsen-Krüger, The Roman Law Library, Université Grenoble Alpes.",
+     "url": "https://droitromain.univ-grenoble-alpes.fr/Corpus/d-02.htm"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Code civil des Français, edición original y oficial, 1804, Libro I, Título VII, arts. 312 y 340 (transcripción validada de Wikisource).",
+     "url": "https://fr.wikisource.org/wiki/Code_civil_des_Fran%C3%A7ais_1804/Livre_I,_Titre_VII"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Código Civil del Distrito Federal y Territorio de la Baja California (1870), arts. 314 y 320, <em>Diario Oficial del Gobierno Supremo de la República</em>, 6 de marzo de 1871; Código Civil de 1884, arts. 290 y 296 (escaneos de la SCJN).",
+     "url": "https://legislacion.scjn.gob.mx"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "Código Civil para el Distrito y Territorios Federales, DOF 26 de mayo de 1928, art. 324; vigente desde el 1 de octubre de 1932.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/ccf/CCF_orig_26may28_ima.pdf"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Civil Federal, arts. 39, 324, 330, 345, 347, 360, 367, 368, 369 y 389, última reforma DOF 14 de noviembre de 2025.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CCF.pdf"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Código de Derecho Canónico (1983), cc. 877 y 1138, texto en español de la Santa Sede.",
+     "url": "https://www.vatican.va/archive/cod-iuris-canonici/esp/documents/cic_libro4_cann1134-1140_sp.html"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "R. Highfield, «30th Anniversary of DNA Fingerprinting», Science Museum Blog, 10 de septiembre de 2014.",
+     "url": "https://blog.sciencemuseum.org.uk/30th-anniversary-of-dna-fingerprinting/"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "M. A. Jobling, «Curiosity in the genes: the DNA fingerprinting story», <em>Investigative Genetics</em>, vol. 4, 2013, art. 20 (cita A. J. Jeffreys, J. F. Brookfield y R. Semeonoff, <em>Nature</em> 317, 1985, pp. 818-819).",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3831598/"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 99/2006, jurisprudencia (contradicción de tesis 154/2005-PS, 18 de octubre de 2006), registro digital 172985.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/172985"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 101/2006, jurisprudencia (contradicción de tesis 154/2005-PS), registro digital 172993.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/172993"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 49/2025 (11a.), jurisprudencia, registro digital 2030412.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2030412"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Ley Orgánica del Registro Civil (Ley sobre el Estado Civil de las Personas), Veracruz, 28 de julio de 1859, considerando, transcripción del INEHRM.",
+     "url": "https://inehrm.gob.mx/work/models/Constitucion1917/Resource/338/1/images/LR_bjuarez34.pdf"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución Política de los Estados Unidos Mexicanos, arts. 4o. (párrafos segundo y décimo, este último adicionado DOF 17 de junio de 2014) y 130, última reforma DOF 7 de octubre de 2026.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf"
+    },
+    {
+     "tipo": "trat",
+     "tipoNombre": "Tratado",
+     "referencia": "Convención sobre los Derechos del Niño, art. 7.1 (texto en español del ACNUDH; decreto promulgatorio, DOF 25 de enero de 1991).",
+     "url": "https://www.ohchr.org/es/instruments-mechanisms/instruments/convention-rights-child"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley General de los Derechos de Niñas, Niños y Adolescentes, art. 19, fr. III, última reforma DOF 15 de enero de 2026.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LGDNNA.pdf"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, Caso Contreras y otros vs. El Salvador, sentencia de 31 de agosto de 2011, Serie C No. 232, párr. 113.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_232_esp.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a. XLV/2012 (10a.), tesis aislada, registro digital 2000340.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2000340"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a. XXIV/2014 (10a.), tesis aislada, registro digital 2005450.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2005450"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a. LXXIII/2017 (10a.), tesis aislada, registro digital 2014646.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2014646"
+    },
+    {
+     "tipo": "eur",
+     "tipoNombre": "Tribunal europeo",
+     "referencia": "TEDH, <em>Mikulić c. Croacia</em>, n.º 53176/99, 7 de febrero de 2002, § 64.",
+     "url": "https://hudoc.echr.coe.int/eng?i=001-60035"
+    },
+    {
+     "tipo": "eur",
+     "tipoNombre": "Tribunal europeo",
+     "referencia": "TEDH, <em>Jäggi c. Suiza</em>, n.º 58757/00, 13 de julio de 2006, § 40 (texto auténtico en francés).",
+     "url": "https://hudoc.echr.coe.int/fre?i=001-76409"
+    },
+    {
+     "tipo": "eur",
+     "tipoNombre": "Tribunal europeo",
+     "referencia": "TEDH (Gran Sala), <em>Odièvre c. Francia</em>, n.º 42326/98, 13 de febrero de 2003, § 44.",
+     "url": "https://hudoc.echr.coe.int/eng?i=001-60935"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P./J. 151/2026 (12a.), jurisprudencia, registro digital 2032655.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2032655"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, P./J. 184/2026 (12a.), jurisprudencia, registro digital 2032654.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2032654"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a. LXIX/2018 (10a.), tesis aislada (amparo directo en revisión 1446/2016), registro digital 2017162.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2017162"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Pleno, acción de inconstitucionalidad 96/2024, 20 de mayo de 2025, ejecutoria publicada en el Semanario, párr. 113.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/ejecutoria/33782"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a. LXXVIII/2018 (10a.), tesis aislada (amparo directo en revisión 2766/2015), registro digital 2017285.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2017285"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a. LXXIX/2018 (10a.), tesis aislada (amparo directo en revisión 2766/2015), registro digital 2017287.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2017287"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Pleno, acción de inconstitucionalidad 16/2016, 7 de junio de 2021, ejecutoria publicada en el Semanario, párrs. 235 y 237.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/ejecutoria/30503"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Civil para el Distrito Federal (Ciudad de México), arts. 326 y 330 (reformado, G.O. CDMX 29 de noviembre de 2024), última reforma G.O. CDMX 20 de agosto de 2026.",
+     "url": "https://data.consejeria.cdmx.gob.mx/images/leyes/2025/CODIGOS_2025/CODIGO_CIVIL_PARA_EL_DF_15.4.pdf"
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "Argentina, Código Civil y Comercial de la Nación (Ley 26.994), arts. 562 y 566 (InfoLEG).",
+     "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/235000-239999/235975/texact.htm"
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "España, Ley 14/2006, de 26 de mayo, sobre técnicas de reproducción humana asistida, arts. 6.3, 8.1 y 8.3 (BOE, texto consolidado).",
+     "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-9292"
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "Brasil, Supremo Tribunal Federal, RE 898.060, Tema 622 de repercusión general, tesis fijada el 22 de septiembre de 2016.",
+     "url": "https://portal.stf.jus.br/jurisprudenciaRepercussao/verAndamentoProcesso.asp?incidente=4803092&numeroProcesso=898060&classeProcesso=RE&numeroTema=622"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, amparo directo en revisión 4686/2016, 3 de mayo de 2017, sinopsis oficial de asuntos destacados, pp. 1-3.",
+     "url": "https://www.scjn.gob.mx/sites/default/files/sinopsis_asuntos_destacados/documento/2017-05/1S-030517-JRCD-4686.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a. XCVI/2018 (10a.), tesis aislada, registro digital 2017755.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2017755"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, amparo directo en revisión 4481/2016, 17 de mayo de 2017, sinopsis oficial de asuntos destacados, pp. 1-4.",
+     "url": "https://www.scjn.gob.mx/sites/default/files/sinopsis_asuntos_destacados/documento/2017-05/1S-170517-AZLL-4481.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 206/2025 (11a.), jurisprudencia, registro digital 2030998.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2030998"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a. XXVIII/2025 (11a.), tesis aislada (amparo directo 18/2020), registro digital 2030691.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2030691"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a. XXVI/2014 (10a.), tesis aislada (Estado de México, art. 4.151: seis meses), registro digital 2005452.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2005452"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Pleno, versión taquigráfica de la sesión pública de 11 de febrero de 2026, amparo directo en revisión 5065/2025.",
+     "url": "https://www.scjn.gob.mx"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 8/2013 (10a.), jurisprudencia, registro digital 2003377.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2003377"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Primer Tribunal Colegiado en Materias Civil y de Trabajo del Octavo Circuito, VIII.1o.C.T.9 C (11a.), tesis aislada, registro digital 2030202.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2030202"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a. LXXXVII/2015 (10a.), tesis aislada, registro digital 2008543.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2008543"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, 1a./J. 42/2011, jurisprudencia, registro digital 161140.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/161140"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, amparo directo en revisión 183/2017, proyecto de sentencia publicado (ponencia de Norma Lucía Piña Hernández), p. 34.",
+     "url": "https://www.scjn.gob.mx/sites/default/files/listas/documento_dos/2018-11/ADR-183-2017-181113.pdf"
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-filiacion-adn-e-identidad.pdf",
+    "paginas": 13,
+    "kb": 1028,
+    "palabras": 4607,
+    "minutos": 25
+   },
+   "portada": "/estudiar/portadas/filiacion-adn-e-identidad.webp",
+   "miniatura": "/estudiar/miniaturas/filiacion-adn-e-identidad.webp",
+   "miniatura640": "/estudiar/miniaturas/filiacion-adn-e-identidad-640.webp"
   },
   {
    "id": "v83",
