@@ -43,11 +43,15 @@ import { textoDelAviso } from '@/lib/fallosChat';
 
 export type Paso = { nombre: string; detalle?: string };
 
-type Ficha = { texto: string; icono: 'ley' | 'balanza' | 'web' | 'enlace' | 'sede'; /** El icono del sitio oficial de la institución consultada. */ imagen?: string };
+type Ficha = { texto: string; icono: 'ley' | 'balanza' | 'web' | 'enlace' | 'sede'; /** El icono del sitio oficial de la institución consultada. */ imagen?: string; /** Abre la calculadora de plazos con este artículo (11-oct-2026). */ accion?: { abrev: string; ref: string } };
 
 const ETAPAS: { nombre: string; titulo: string; glosa: string }[] = [
     { nombre: 'entender', titulo: 'Leyendo la consulta', glosa: 'Materia, jurisdicción y artículos citados' },
     { nombre: 'jurisdiccion', titulo: 'Fijando la jurisdicción', glosa: 'Para no mezclar legislación de otro estado' },
+    // EL PROCEDIMIENTO QUE RIGE (11-oct-2026): qué código procesal aplica en esa
+    // entidad, materia y autoridad —el CNPCF sólo donde hay declaratoria; la
+    // LFPCA sólo ante autoridad federal—. Lo decide regimen_procesal.py.
+    { nombre: 'regimen', titulo: 'Fijando el procedimiento aplicable', glosa: 'Qué código procesal rige en su entidad, materia y autoridad' },
     { nombre: 'expandir', titulo: 'Ampliando la búsqueda', glosa: 'Sinónimos jurídicos y figuras equivalentes' },
     { nombre: 'buscar', titulo: 'Recorriendo el acervo', glosa: 'Artículo por artículo, con su fuente' },
     // LA ETAPA QUE SE EMITÍA Y NO SE VEÍA (19-sep-2026)
@@ -57,6 +61,7 @@ const ETAPAS: { nombre: string; titulo: string; glosa: string }[] = [
     // se guardaba y se tiraba. David, mirando la pantalla: «no veo los cambios».
     // Tenía razón: el trabajo estaba hecho y no se veía por ningún lado.
     { nombre: 'verificadas', titulo: 'Reusando lo ya verificado', glosa: 'Las fuentes que esta conversación ya comprobó no se vuelven a buscar' },
+    { nombre: 'plazos', titulo: 'Plazos verificados', glosa: 'Cotejados letra por letra con el artículo · toque uno para calcular el vencimiento' },
     { nombre: 'precedentes', titulo: 'Buscando precedentes', glosa: 'Jurisprudencia y tesis aisladas' },
     { nombre: 'doctrina', titulo: 'Consultando doctrina', glosa: 'Obras jurídicas de referencia, con autor y página' },
     { nombre: 'web', titulo: 'Buscando en internet', glosa: 'Las fuentes aparecen conforme se consultan — sólo dominios oficiales' },
@@ -101,6 +106,8 @@ const FICHA_FUENTE: Record<Exclude<Fuente, 'estatal'>, Ficha> = {
     constitucional: { texto: 'Bloque de constitucionalidad', icono: 'balanza', imagen: '/fuentes/corteidh.png' },
     jurisprudencia: { texto: 'Jurisprudencia', icono: 'balanza', imagen: '/fuentes/scjn.png' },
     federal: { texto: 'Legislación federal', icono: 'ley', imagen: '/fuentes/diputados.png' },
+    procesal: { texto: 'Normativa procesal', icono: 'ley' },
+    nom: { texto: 'Normas Oficiales Mexicanas', icono: 'ley' },
 };
 
 function fichasDelRecorrido(detalle: string | undefined): Ficha[] {
@@ -176,6 +183,16 @@ function fichasDe(nombre: string, detalle: string | undefined, fuentes: number |
         return ds.length
             ? ds.slice(0, 3).map((d) => ({ texto: d, icono: 'web' as const }))
             : [{ texto: 'Sin fuentes oficiales aplicables', icono: 'web' }];
+    }
+    if (nombre === 'regimen' && detalle) {
+        return detalle.split(' · ').filter(Boolean).map((t) => ({ texto: t, icono: 'sede' as const }));
+    }
+    if (nombre === 'plazos' && detalle) {
+        return detalle.split(';').filter((k) => k.includes('|')).map((k) => {
+            const [abrev, ref] = k.split('|');
+            const art = ref.replace(/^Art[íi]culo\s*/i, 'art. ').replace(/\.$/, '');
+            return { texto: `${abrev} ${art} · Calcular vencimiento`, icono: 'enlace' as const, accion: { abrev, ref } };
+        });
     }
     if (nombre === 'jurisdiccion' && detalle) {
         const nombreEstado = ESTADOS_MEXICO.find((e) => e.value === detalle)?.label ?? detalle;
@@ -376,6 +393,18 @@ export function FlujoAgente({
                                     {fila.fichas.map((f, j) => {
                                         const Icono = ICONOS[f.icono];
                                         return (
+                                            f.accion ? (
+                                                <button
+                                                    type="button"
+                                                    key={f.texto}
+                                                    onClick={() => window.dispatchEvent(new CustomEvent('iurexia:calcular-plazo', { detail: f.accion }))}
+                                                    className="anima-brote inline-flex items-center gap-1.5 rounded-lg border border-accent-brown/40 bg-cream-50 px-2.5 py-1 text-[11px] font-medium text-charcoal-900 hover:bg-cream-100"
+                                                    style={{ animationDelay: `${j * 90}ms` }}
+                                                >
+                                                    <Icono className="h-3 w-3 text-accent-brown" />
+                                                    {f.texto}
+                                                </button>
+                                            ) : (
                                             <span
                                                 key={f.texto}
                                                 className="anima-brote inline-flex items-center gap-1.5 rounded-lg border border-cream-400 bg-white px-2.5 py-1 text-[11px] font-medium text-charcoal-900"
@@ -387,6 +416,7 @@ export function FlujoAgente({
                                                     : <Icono className="h-3 w-3 text-accent-brown" />}
                                                 {f.texto}
                                             </span>
+                                            )
                                         );
                                     })}
                                 </div>

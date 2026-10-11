@@ -22,7 +22,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Check, ChevronDown, Globe, Lock, MapPin } from 'lucide-react';
+import { CalendarClock, Check, ChevronDown, ClipboardCheck, Globe, Lock, MapPin, type LucideIcon } from 'lucide-react';
 import {
     EVENTO_FUENTES, EVENTO_INTERNET, FUENTES, type Fuente,
     escudoDe, fijarInternet, fuentesElegidas, guardarFuentes, internetEncendido, todasLasFuentes,
@@ -46,6 +46,7 @@ interface Ficha {
     titulo: string;
     detalle: string;
     emblema: string | null;
+    icono?: LucideIcon;
 }
 
 function fichas(estado?: string): Ficha[] {
@@ -78,6 +79,20 @@ function fichas(estado?: string): Ficha[] {
                 : 'Todas las entidades · elija la suya en la barra superior',
             emblema: escudo,
         },
+        {
+            clave: 'procesal',
+            titulo: 'Normativa procesal',
+            detalle: 'CNPP, CNPCF, Amparo, LFT procesal, juicios mercantiles, LFPCA y agrario · con el código que rige en su entidad y sus plazos',
+            emblema: null,
+            icono: CalendarClock,
+        },
+        {
+            clave: 'nom',
+            titulo: 'Normas Oficiales Mexicanas',
+            detalle: 'Expediente clínico, NOM-035, teletrabajo, consumo, transporte, ambientales… sólo cuando vienen al caso',
+            emblema: null,
+            icono: ClipboardCheck,
+        },
     ];
 }
 
@@ -93,8 +108,15 @@ function EmblemaInternet({ grande = false, apagado = false }: { grande?: boolean
     );
 }
 
-function Emblema({ src, grande = false }: { src: string | null; grande?: boolean }) {
+function Emblema({ src, grande = false, icono: Icono }: { src: string | null; grande?: boolean; icono?: LucideIcon }) {
     const caja = grande ? 'h-9 w-9' : 'h-4 w-4';
+    if (!src && Icono) {
+        return (
+            <span className={`${caja} grid flex-shrink-0 place-items-center rounded-full bg-cream-100 ring-1 ring-charcoal-900/10`}>
+                <Icono className={grande ? 'h-4 w-4 text-accent-brown' : 'h-2.5 w-2.5 text-accent-brown'} />
+            </span>
+        );
+    }
     if (!src) {
         return (
             <span className={`${caja} grid flex-shrink-0 place-items-center rounded-full bg-cream-100 ring-1 ring-charcoal-900/10`}>
@@ -192,7 +214,7 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                         : 'border-charcoal-900/15 bg-white text-charcoal-700 hover:border-charcoal-900/30 hover:text-charcoal-900'}`}
             >
                 <span className="flex items-center -space-x-1.5">
-                    {encendidas.map((f) => <Emblema key={f.clave} src={f.emblema} />)}
+                    {encendidas.map((f) => <Emblema key={f.clave} src={f.emblema} icono={f.icono} />)}
                     {internet && <EmblemaInternet />}
                 </span>
                 <span className="hidden text-[11px] font-semibold sm:inline">Fuentes</span>
@@ -240,7 +262,7 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                                             ${ultima ? 'cursor-not-allowed' : ''}`}
                                     >
                                         <span className={on ? '' : 'opacity-40 grayscale'}>
-                                            <Emblema src={f.emblema} grande />
+                                            <Emblema src={f.emblema} icono={f.icono} grande />
                                         </span>
                                         <span className="min-w-0 flex-1">
                                             <span className={`block text-[13px] font-semibold leading-snug ${on ? 'text-charcoal-900' : 'text-gray-500'}`}>

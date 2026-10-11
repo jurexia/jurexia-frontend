@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
 import { Message, fuentesWebActivas, fijarFuentesVerificadas } from '@/lib/api';
-import { fuentesElegidas } from '@/lib/fuentes';
+import { fuentesParaEnviar } from '@/lib/fuentes';
 import { esfuerzoParaEnviar, marcadorDeEsfuerzo } from '@/lib/esfuerzo';
 import { Trash2, Scale, Building2, Settings, ChevronDown, ArrowRight, Zap, Shield, Gavel, PlayCircle, Loader2 as Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
@@ -947,7 +947,7 @@ export default function ChatPage() {
             formData.append('fuentes_web', '1');
         }
         // El selector «Fuentes» vale también con documento adjunto.
-        formData.append('fuentes', fuentesElegidas().join(','));
+        formData.append('fuentes', fuentesParaEnviar().join(','));
         /* Como ARCHIVO, no como campo de texto: Starlette corta los campos de
            texto en 1 MiB y una conversación larga lo pasa. El API sigue
            aceptando `historial` como texto, pero si llegan los dos usa éste. */

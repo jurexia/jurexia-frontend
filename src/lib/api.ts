@@ -2,7 +2,7 @@
  * API Client for Iurexia FastAPI Backend
  */
 
-import { fuentesElegidas, FUENTES } from './fuentes';
+import { fuentesElegidas, fuentesParaEnviar, FUENTES } from './fuentes';
 import { esfuerzoParaEnviar } from './esfuerzo';
 import { clasificarFallo, type DatosReintento } from './fallosChat';
 
@@ -187,7 +187,7 @@ async function* streamChatInternal(
             fuentes_web: fuentesWebActivas(),
             // El selector «Fuentes»: se lee al enviar, como el globo. Con las
             // cuatro encendidas el servidor se comporta como siempre.
-            fuentes: extra?.todoElAcervo ? [...FUENTES] : fuentesElegidas(),
+            fuentes: fuentesParaEnviar(extra?.todoElAcervo ? [...FUENTES] : fuentesElegidas()),
             // El desplegable «Esfuerzo»: sólo cuenta si el mensaje pide un
             // escrito, y el servidor lo acota al plan. Ver `./esfuerzo`.
             ...(esfuerzoParaEnviar() ? { esfuerzo: esfuerzoParaEnviar() } : {}),

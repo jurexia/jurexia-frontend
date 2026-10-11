@@ -22,9 +22,21 @@
    NUNCA QUEDA VACÍO. Sin fuentes no hay consulta; si algo intenta apagarlas
    todas, vuelven las cuatro. */
 
-export type Fuente = 'constitucional' | 'jurisprudencia' | 'federal' | 'estatal';
+export type Fuente = 'constitucional' | 'jurisprudencia' | 'federal' | 'estatal' | 'procesal' | 'nom';
 
-export const FUENTES: readonly Fuente[] = ['constitucional', 'jurisprudencia', 'federal', 'estatal'];
+export const FUENTES: readonly Fuente[] = ['constitucional', 'jurisprudencia', 'federal', 'estatal', 'procesal', 'nom'];
+
+/* PROCESAL Y NOM (11-oct-2026). Dos filas nuevas. Quien ya tenía guardada su
+   elección de cuatro las recibe encendidas una vez (CLAVE_V2); y al enviar se
+   añade MARCA_V2 para que el servidor sepa que este cliente las conoce: sin la
+   marca, el servidor las hace seguir a «federal», como antes. */
+const CLAVE_V2 = 'iurexia-fuentes-v2';
+export const MARCA_V2 = 'selector2';
+
+/** Lo que se manda al servidor: la elección más la marca del selector nuevo. */
+export function fuentesParaEnviar(lista?: readonly Fuente[]): string[] {
+    return [...(lista ?? fuentesElegidas()), MARCA_V2];
+}
 
 const CLAVE = 'iurexia-fuentes';
 
@@ -39,7 +51,12 @@ function depurar(lista: unknown): Fuente[] {
 export function fuentesElegidas(): Fuente[] {
     try {
         const crudo = localStorage.getItem(CLAVE);
-        return crudo ? depurar(JSON.parse(crudo)) : [...FUENTES];
+        if (!crudo) return [...FUENTES];
+        const lista = depurar(JSON.parse(crudo));
+        if (!localStorage.getItem(CLAVE_V2) && !lista.includes('procesal') && !lista.includes('nom')) {
+            return depurar([...lista, 'procesal', 'nom']);
+        }
+        return lista;
     } catch {
         return [...FUENTES];
     }
@@ -47,7 +64,7 @@ export function fuentesElegidas(): Fuente[] {
 
 export function guardarFuentes(lista: Fuente[]): Fuente[] {
     const final = depurar(lista);
-    try { localStorage.setItem(CLAVE, JSON.stringify(final)); } catch { /* ventana privada */ }
+    try { localStorage.setItem(CLAVE, JSON.stringify(final)); localStorage.setItem(CLAVE_V2, '1'); } catch { /* ventana privada */ }
     try { window.dispatchEvent(new CustomEvent(EVENTO_FUENTES, { detail: final })); } catch { /* sin ventana */ }
     return final;
 }

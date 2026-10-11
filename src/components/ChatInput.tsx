@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
 import SelectorFuentes from './SelectorFuentes';
+import CalculadoraPlazos from './CalculadoraPlazos';
 import SelectorEsfuerzo from './SelectorEsfuerzo';
 import { FileText, X, Network, ChevronUp, ChevronDown, UploadCloud } from 'lucide-react';
 import { validarAdjunto, EXTENSIONES_ADJUNTO, LIMITE_ADJUNTO_MB } from '@/lib/documento/adjuntos';
@@ -771,6 +772,7 @@ ${draftRequest.descripcion}`;
                     <div className="fila-fuentes mt-2 flex items-center gap-2 border-t border-gray-100 pt-2">
                         <SelectorFuentes estado={estado} disabled={isLoading} />
                         <SelectorEsfuerzo disabled={isLoading} />
+                        <CalculadoraPlazos />
                         <button
                             type="button"
                             data-guide="herramientas"
