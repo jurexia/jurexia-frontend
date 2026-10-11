@@ -99,7 +99,7 @@ function fichas(estado?: string): Ficha[] {
 /* El emblema de Internet: la esfera azul, que es como David quiso el globo
    —«el lenguaje universal de internet»—, en el mismo círculo que los demás. */
 function EmblemaInternet({ grande = false, apagado = false }: { grande?: boolean; apagado?: boolean }) {
-    const caja = grande ? 'h-9 w-9' : 'h-4 w-4';
+    const caja = grande ? 'h-8 w-8' : 'h-4 w-4';
     return (
         <span className={`${caja} grid flex-shrink-0 place-items-center rounded-full ring-1 ring-charcoal-900/10
             ${apagado ? 'bg-gray-50' : 'bg-blue-50'}`}>
@@ -109,7 +109,7 @@ function EmblemaInternet({ grande = false, apagado = false }: { grande?: boolean
 }
 
 function Emblema({ src, grande = false, icono: Icono }: { src: string | null; grande?: boolean; icono?: LucideIcon }) {
-    const caja = grande ? 'h-9 w-9' : 'h-4 w-4';
+    const caja = grande ? 'h-8 w-8' : 'h-4 w-4';
     if (!src && Icono) {
         return (
             <span className={`${caja} grid flex-shrink-0 place-items-center rounded-full bg-cream-100 ring-1 ring-charcoal-900/10`}>
@@ -127,7 +127,7 @@ function Emblema({ src, grande = false, icono: Icono }: { src: string | null; gr
     return (
         <span className={`${caja} grid flex-shrink-0 place-items-center overflow-hidden rounded-full bg-white ring-1 ring-charcoal-900/10`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={src} alt="" className={grande ? 'h-7 w-7 object-contain' : 'h-3 w-3 object-contain'} />
+            <img src={src} alt="" className={grande ? 'h-6 w-6 object-contain' : 'h-3 w-3 object-contain'} />
         </span>
     );
 }
@@ -139,6 +139,22 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
     const [internet, setInternet] = useState(false);
     const [abierto, setAbierto] = useState(false);
     const caja = useRef<HTMLDivElement>(null);
+    // CABE ENTRE EL BOTÓN Y LA BARRA SUPERIOR (11-oct-2026, segunda captura de
+    // David): el máximo fijo dejaba la cabecera del panel bajo la barra de la
+    // página en ventanas bajas. Se mide el espacio real sobre el botón al abrir
+    // y al cambiar el tamaño de la ventana; en el teléfono manda la hoja (85dvh).
+    const [alto, setAlto] = useState<number | null>(null);
+    useEffect(() => {
+        if (!abierto) return;
+        const medir = () => {
+            if (typeof window === 'undefined' || window.innerWidth < 640 || !caja.current) { setAlto(null); return; }
+            const barra = (document.querySelector('header.barra-trabajo') ?? document.querySelector('header'))?.getBoundingClientRect().bottom ?? 72;
+            setAlto(Math.max(200, Math.floor(caja.current.getBoundingClientRect().top - Math.max(barra, 56) - 16)));
+        };
+        medir();
+        window.addEventListener('resize', medir);
+        return () => window.removeEventListener('resize', medir);
+    }, [abierto]);
     const { user, profile } = useAuth();
     const puedeInternet = isAdmin(user?.email) || PLANES_INTERNET.includes(profile?.subscription_type ?? '');
 
@@ -239,11 +255,12 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                 <div
                     role="menu"
                     aria-label="Fuentes de la consulta"
+                    style={alto ? { maxHeight: alto } : undefined}
                     className="fixed inset-x-0 bottom-0 z-[70] flex max-h-[85dvh] flex-col overflow-hidden rounded-t-2xl border border-charcoal-900/10 bg-white shadow-[0_-12px_40px_rgba(17,17,17,0.18)]
                         sm:absolute sm:inset-x-auto sm:bottom-full sm:left-0 sm:z-40 sm:mb-2 sm:max-h-[min(34rem,calc(100dvh-8rem))] sm:w-[min(23rem,calc(100vw-2.5rem))] sm:rounded-xl sm:shadow-[0_12px_40px_rgba(17,17,17,0.16)]"
                 >
                     <div className="mx-auto mt-2 h-1 w-10 flex-shrink-0 rounded-full bg-charcoal-900/15 sm:hidden" aria-hidden="true" />
-                    <div className="flex flex-shrink-0 items-baseline justify-between gap-3 border-b border-charcoal-900/10 px-4 pb-2.5 pt-3">
+                    <div className="flex flex-shrink-0 items-baseline justify-between gap-3 border-b border-charcoal-900/10 px-4 pb-2 pt-2.5">
                         <p className="font-serif text-[15px] text-charcoal-900">Fuentes de la consulta</p>
                         {!todas && (
                             <button
@@ -269,17 +286,17 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                                         aria-disabled={ultima}
                                         onClick={() => alternar(f.clave)}
                                         title={ultima ? 'Debe quedar al menos una fuente encendida' : undefined}
-                                        className={`flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-cream-100/70 focus-visible:bg-cream-100/70 focus-visible:outline-none
+                                        className={`flex w-full items-center gap-2.5 px-3.5 py-1.5 text-left transition-colors hover:bg-cream-100/70 focus-visible:bg-cream-100/70 focus-visible:outline-none
                                             ${ultima ? 'cursor-not-allowed' : ''}`}
                                     >
                                         <span className={on ? '' : 'opacity-40 grayscale'}>
                                             <Emblema src={f.emblema} icono={f.icono} grande />
                                         </span>
                                         <span className="min-w-0 flex-1">
-                                            <span className={`block text-[13px] font-semibold leading-snug ${on ? 'text-charcoal-900' : 'text-gray-500'}`}>
+                                            <span className={`block text-[12.5px] font-semibold leading-tight ${on ? 'text-charcoal-900' : 'text-gray-500'}`}>
                                                 {f.titulo}
                                             </span>
-                                            <span className="line-clamp-2 text-[11.5px] leading-snug text-gray-500">{f.detalle}</span>
+                                            <span className="line-clamp-2 text-[11px] leading-snug text-gray-500 sm:line-clamp-1">{f.detalle}</span>
                                         </span>
                                         <span
                                             aria-hidden="true"
@@ -303,11 +320,11 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                                     role="menuitemcheckbox"
                                     aria-checked={internet}
                                     onClick={() => setInternet(fijarInternet(!internet))}
-                                    className="flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-cream-100/70 focus-visible:bg-cream-100/70 focus-visible:outline-none"
+                                    className="flex w-full items-center gap-2.5 px-3.5 py-1.5 text-left transition-colors hover:bg-cream-100/70 focus-visible:bg-cream-100/70 focus-visible:outline-none"
                                 >
                                     <EmblemaInternet grande apagado={!internet} />
                                     <span className="min-w-0 flex-1">
-                                        <span className={`block text-[13px] font-semibold leading-snug ${internet ? 'text-charcoal-900' : 'text-gray-500'}`}>
+                                        <span className={`block text-[12.5px] font-semibold leading-tight ${internet ? 'text-charcoal-900' : 'text-gray-500'}`}>
                                             Internet
                                         </span>
                                         <span className="block text-[11.5px] leading-snug text-gray-500">
@@ -327,11 +344,11 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                                     href="/precios"
                                     role="menuitem"
                                     title="Internet está disponible desde el plan Pro"
-                                    className="flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-cream-100/70 focus-visible:bg-cream-100/70 focus-visible:outline-none"
+                                    className="flex w-full items-center gap-2.5 px-3.5 py-1.5 text-left transition-colors hover:bg-cream-100/70 focus-visible:bg-cream-100/70 focus-visible:outline-none"
                                 >
                                     <EmblemaInternet grande apagado />
                                     <span className="min-w-0 flex-1">
-                                        <span className="block text-[13px] font-semibold leading-snug text-gray-500">Internet</span>
+                                        <span className="block text-[12.5px] font-semibold leading-tight text-gray-500">Internet</span>
                                         <span className="block text-[11.5px] leading-snug text-gray-500">
                                             Sitios oficiales al día: DOF, Suprema Corte, congresos y tribunales
                                         </span>
@@ -345,7 +362,7 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                         </li>
                     </ul>
 
-                    <p className="flex-shrink-0 border-t border-charcoal-900/10 bg-cream-100/50 px-4 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-[11.5px] leading-snug text-gray-600">
+                    <p className="flex-shrink-0 border-t border-charcoal-900/10 bg-cream-100/50 px-4 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] text-[11px] leading-snug text-gray-600">
                         {internet
                             ? 'Con Internet, Iurexia completa el acervo con sitios oficiales. Se apaga al recargar la página.'
                             : todas
