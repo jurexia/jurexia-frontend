@@ -109,31 +109,44 @@ const LOADER_MESSAGES = [
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
 
+
 // ═══════════════════════════════════════════════════════════════════
-// SVG Inline Icons
+// LA CARA DE SÁLVAME (12-oct-2026)
+//
+// David: llevar /salvame al diseño nuevo «con imágenes de arte y justicia»,
+// donde «la temática de salud es fundamental» — SÓLO diseño: el formulario,
+// los campos que viajan, las llamadas al API y el flujo quedan como estaban.
+//
+// Tres grabados propios en /web/arte, hechos con la técnica de la casa (tinta
+// sepia sobre negro, luz dorada): `vigilia` (Themis a la cabecera de un
+// paciente), `asclepio` (la vara de Asclepio sobre el libro de la ley) y
+// `espera` (el pasillo del hospital). Originales y prompts en
+// IUREXIA-MAC/arte-web-originales/salvame.
+//
+// Fuera la cruz roja de los íconos: es un emblema protegido (Ley para el Uso
+// y Protección de la Denominación y del Emblema de la Cruz Roja). La salud la
+// dice la vara de Asclepio. El carmín se reserva para lo urgente.
 // ═══════════════════════════════════════════════════════════════════
-const MedicalCross = ({ size = 20, color = '#dc2626' }: { size?: number; color?: string }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M9 2h6v6h6v6h-6v6H9v-6H3V8h6z" fill={color} fillOpacity="0.15" />
+
+const ORO = '#e3c994';
+const CARMIN = '#d4675a';
+
+/** La vara de Asclepio: una sola serpiente en un bastón. */
+const Asclepio = ({ size = 20, color = ORO }: { size?: number; color?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M12 2.5v19" strokeWidth="1.7" />
+        <path d="M10.2 4.6c1.2-.9 3.4-.6 3.6.6.3 1.6-3.6 1.7-3.7 3.5-.1 1.8 4 1.8 3.9 3.7-.1 1.9-4 1.9-4 3.7 0 1.6 2.9 1.9 3.9 1" />
+        <circle cx="10.4" cy="4.4" r="0.55" fill={color} stroke="none" />
     </svg>
 );
 
-const HeartPulse = ({ size = 20, color = '#dc2626' }: { size?: number; color?: string }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M19.5 12.572l-7.5 7.428l-7.5-7.428A5 5 0 1 1 12 6.006a5 5 0 1 1 7.5 6.572" />
-        <path d="M12 6v4l-1 2h3l-1 2v4" strokeWidth="1.8" />
-    </svg>
-);
-
-const EcgLine = () => (
-    <svg width="100%" height="24" viewBox="0 0 600 24" preserveAspectRatio="none" style={{ display: 'block', opacity: 0.15 }}>
-        <polyline
-            points="0,12 80,12 100,12 120,2 130,22 140,6 150,18 160,12 200,12 280,12 300,12 320,2 330,22 340,6 350,18 360,12 400,12 480,12 500,12 520,2 530,22 540,6 550,18 560,12 600,12"
-            fill="none"
-            stroke="#dc2626"
-            strokeWidth="1.5"
-        />
-    </svg>
+/** Filete con la vara al centro: separa sin el electrocardiograma de antes. */
+const Filete = () => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, opacity: 0.7 }} aria-hidden>
+        <span style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, transparent, rgba(227,201,148,0.35))' }} />
+        <Asclepio size={18} />
+        <span style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(227,201,148,0.35), transparent)' }} />
+    </div>
 );
 
 const ShieldCheck = ({ size = 18, color = "currentColor" }: { size?: number; color?: string }) => (
@@ -264,16 +277,16 @@ export default function SalvamePage() {
             if (!trimmed) return <div key={i} style={{ height: 12 }} />;
 
             // Horizontal rule
-            if (/^-{3,}$/.test(trimmed)) return <hr key={i} style={{ border: 'none', borderTop: '1px solid #333', margin: '16px 0' }} />;
+            if (/^-{3,}$/.test(trimmed)) return <hr key={i} style={{ border: 'none', borderTop: '1px solid #d8cfbd', margin: '16px 0' }} />;
 
             // ## Heading
             if (trimmed.startsWith('## ')) {
                 const headingText = trimmed.replace(/^#+\s*/, '');
-                return <h3 key={i} style={{ fontSize: 16, fontWeight: 700, color: '#e5e5e5', margin: '20px 0 8px', textTransform: 'uppercase' }}>{headingText}</h3>;
+                return <h3 key={i} style={{ fontSize: 16, fontWeight: 700, color: '#1d1a16', margin: '20px 0 8px', textTransform: 'uppercase' }}>{headingText}</h3>;
             }
             if (trimmed.startsWith('# ')) {
                 const headingText = trimmed.replace(/^#+\s*/, '');
-                return <h2 key={i} style={{ fontSize: 18, fontWeight: 700, color: '#e5e5e5', margin: '24px 0 8px', textAlign: 'center' }}>{headingText}</h2>;
+                return <h2 key={i} style={{ fontSize: 18, fontWeight: 700, color: '#1d1a16', margin: '24px 0 8px', textAlign: 'center' }}>{headingText}</h2>;
             }
 
             // Bullet line
@@ -285,7 +298,7 @@ export default function SalvamePage() {
                 const parts = str.split(/(\*\*.*?\*\*)/g);
                 return parts.map((part, j) => {
                     if (part.startsWith('**') && part.endsWith('**')) {
-                        return <strong key={j} style={{ fontWeight: 700, color: '#e5e5e5' }}>{part.slice(2, -2)}</strong>;
+                        return <strong key={j} style={{ fontWeight: 700, color: '#1d1a16' }}>{part.slice(2, -2)}</strong>;
                     }
                     return <span key={j}>{part}</span>;
                 });
@@ -297,7 +310,7 @@ export default function SalvamePage() {
             if (isBullet) {
                 return (
                     <div key={i} style={{ display: 'flex', gap: 8, paddingLeft: 16, marginBottom: 4 }}>
-                        <span style={{ color: '#666', flexShrink: 0 }}>•</span>
+                        <span style={{ color: '#8a7d66', flexShrink: 0 }}>•</span>
                         <span>{parseInlineBold(bulletText)}</span>
                     </div>
                 );
@@ -308,7 +321,7 @@ export default function SalvamePage() {
                     margin: '4px 0',
                     fontWeight: isAllCaps ? 700 : 400,
                     textAlign: isAllCaps && trimmed.length < 60 ? 'center' : 'justify',
-                    ...(isAllCaps && { color: '#e5e5e5' }),
+                    ...(isAllCaps && { color: '#1d1a16' }),
                 }}>
                     {parseInlineBold(bulletText)}
                 </p>
@@ -463,259 +476,261 @@ export default function SalvamePage() {
     // ─── Auth loading ─────────────────────────────────────────────
     if (authLoading) {
         return (
-            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0f0f' }}>
-                <div style={{ width: 40, height: 40, border: '3px solid rgba(220,38,38,0.3)', borderTopColor: '#dc2626', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0e0d' }}>
+                <div style={{ width: 40, height: 40, border: '3px solid rgba(227,201,148,0.2)', borderTopColor: ORO, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                 <style>{`@keyframes spin { to { transform: rotate(360deg); } } `}</style>
             </div>
         );
     }
 
+    const empezar = () => {
+        if (isAuthenticated) {
+            setPhase('form');
+        } else {
+            router.push('/login?redirect=/salvame');
+        }
+    };
+
     // ═══════════════════════════════════════════════════════════════
     // RENDER
     // ═══════════════════════════════════════════════════════════════
     return (
-        <div style={{ minHeight: '100vh', background: '#0f0f0f', color: '#e5e5e5', fontFamily: "'Inter', 'Segoe UI', sans-serif" }}>
+        <div className="sv-raiz">
 
-            {/* ─── GLOBAL STYLES ──────────────────────────────────────── */}
+            {/* ─── ESTILOS ──────────────────────────────────────────────── */}
             <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 8px rgba(220, 38, 38, 0.3); } 50% { box-shadow: 0 0 24px rgba(220, 38, 38, 0.6);
-} }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes ecgPulse { 0% { stroke-dashoffset: 600; } 100% { stroke-dashoffset: 0; } }
-        .salvame-input { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #e5e5e5; font-size: 15px; font-family: inherit; transition: border-color 0.2s, box-shadow 0.2s; outline: none; box-sizing: border-box; }
-        .salvame-input:focus { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15); }
-        .salvame-input::placeholder { color: #666; }
-        .salvame-select { appearance: none; width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 14px center; color: #e5e5e5; font-size: 15px; font-family: inherit; cursor: pointer; outline: none; transition: border-color 0.2s; }
-        .salvame-select:focus { border-color: #dc2626; }
-        .salvame-textarea { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #e5e5e5; font-size: 15px; font-family: inherit; resize: vertical; min-height: 120px; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
-        .salvame-textarea:focus { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15); }
-        .chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 20px; border: 1px solid #333; background: #1a1a1a; color: #aaa; font-size: 14px; cursor: pointer; transition: all 0.2s; user-select: none; }
-        .chip:hover { border-color: #dc2626; color: #e5e5e5; }
-        .chip.active { background: rgba(220, 38, 38, 0.15); border-color: #dc2626; color: #f87171; }
-        .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; border-radius: 12px; border: none; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-family: inherit; }
-        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4); }
-        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-        .btn-secondary { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #e5e5e5; font-size: 14px; cursor: pointer; transition: all 0.2s; font-family: inherit; }
-        .btn-secondary:hover { border-color: #555; background: #222; }
-        .result-text { white-space: pre-wrap; line-height: 1.8; font-size: 15px; color: #d4d4d4; padding: 24px; background: #141414; border-radius: 12px; border: 1px solid #262626; max-height: 600px; overflow-y: auto; }
+@keyframes latido { 0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 10px 24px -10px rgba(184,56,44,0.55); } 50% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 12px 34px -8px rgba(212,103,90,0.75); } }
+.sv-raiz { min-height: 100vh; background: #0f0e0d; color: #efe6d6; font-family: var(--font-sans), Inter, 'Segoe UI', system-ui, sans-serif; overflow-x: clip; }
+.sv-serif { font-family: var(--font-serif), 'Playfair Display', Georgia, serif; font-weight: 400; }
+.sv-marca { font-family: var(--font-marca), 'Playfair Display', Georgia, serif; font-weight: 600; }
+.sv-rotulo { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: ${ORO}; font-weight: 600; }
+.sv-panel { border: 1px solid; border-radius: 16px; }
+.sv-etiqueta { font-size: 13px; color: #b9ad98; margin-bottom: 6px; display: block; }
+.sv-ayuda { font-size: 11.5px; color: #7d7466; margin-top: 5px; line-height: 1.5; }
+.salvame-input, .salvame-select, .salvame-textarea { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid rgba(227,201,148,0.16); background: #1a1816; color: #efe6d6; font-size: 15px; font-family: inherit; outline: none; box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s; }
+.salvame-input:focus, .salvame-select:focus, .salvame-textarea:focus { border-color: #c9a962; box-shadow: 0 0 0 3px rgba(201,169,98,0.16); }
+.salvame-input::placeholder, .salvame-textarea::placeholder { color: #6f675b; }
+.salvame-select { appearance: none; cursor: pointer; background: #1a1816 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23c9a962' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 14px center; }
+.salvame-textarea { resize: vertical; min-height: 120px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(227,201,148,0.16); background: #1a1816; color: #b9ad98; font-size: 14px; cursor: pointer; transition: all 0.2s; user-select: none; font-family: inherit; }
+.chip:hover { border-color: #c9a962; color: #efe6d6; }
+.chip.active { background: rgba(201,169,98,0.14); border-color: #c9a962; color: #f3e4c8; }
+.btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 14px 30px; border-radius: 12px; border: 1px solid #5e1510; color: #fff7ef; font-size: 16px; font-weight: 600; letter-spacing: 0.01em; cursor: pointer; font-family: inherit; transition: transform 0.25s, filter 0.25s; background: linear-gradient(180deg, #b8382c 0%, #9a2a20 55%, #7d1f17 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 10px 24px -10px rgba(184,56,44,0.55); }
+.btn-primary:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.08); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: 12px; border: 1px solid rgba(227,201,148,0.28); background: transparent; color: #f3e4c8; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s, border-color 0.2s; font-family: inherit; }
+.btn-secondary:hover { border-color: rgba(227,201,148,0.55); background: rgba(255,255,255,0.04); }
+.result-text { white-space: pre-wrap; line-height: 1.85; font-size: 15.5px; color: #2a251e; padding: 44px 48px; border-radius: 6px; max-height: 680px; overflow-y: auto; font-family: var(--font-lectura), Newsreader, Georgia, serif; background-color: #f6f1e7; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23p)' opacity='0.08'/></svg>"); box-shadow: 0 1px 0 rgba(0,0,0,0.6), 0 30px 60px -30px rgba(0,0,0,0.9); }
+
+.sv-hero { position: relative; min-height: min(88vh, 780px); display: flex; align-items: center; overflow: hidden; }
+.sv-hero-arte { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 72% center; }
+.sv-hero-velo { position: absolute; inset: 0; background: linear-gradient(90deg, #0f0e0d 0%, rgba(15,14,13,0.94) 28%, rgba(15,14,13,0.4) 56%, rgba(15,14,13,0) 78%), linear-gradient(180deg, rgba(15,14,13,0) 70%, #0f0e0d 100%); }
+.sv-hero-contenido { position: relative; z-index: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: 96px 32px 72px; }
+.sv-hero-columna { max-width: 560px; }
+.sv-banda { position: relative; overflow: hidden; }
+.sv-banda-arte { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.sv-dos { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+.sv-tres { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.sv-par { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+@media (max-width: 820px) {
+    .sv-hero { display: block; min-height: 0; }
+    .sv-hero-arte { position: relative; display: block; height: 46vh; min-height: 280px; object-position: 76% 35%; }
+    .sv-hero-velo { inset: 0 0 auto 0; height: 46vh; min-height: 280px; background: linear-gradient(180deg, rgba(15,14,13,0) 50%, #0f0e0d 100%); }
+    .sv-hero-contenido { margin-top: -56px; padding: 0 20px 56px; }
+    .sv-dos { grid-template-columns: 1fr; gap: 32px; }
+    .sv-tres { grid-template-columns: 1fr; }
+    .result-text { padding: 28px 22px; }
+}
+@media (max-width: 480px) {
+    .sv-par { grid-template-columns: 1fr; }
+}
+@media (max-width: 400px) {
+    .sv-de-iurexia { display: none; }
+}
 `}</style>
 
-            {/* ─── HEADER BAR ─────────────────────────────────────────── */}
+            {/* ─── BARRA SUPERIOR ──────────────────────────────────────── */}
             <header style={{
-                position: 'sticky', top: 0, zIndex: 50, padding: '12px 24px',
-                background: 'rgba(15,15,15,0.92)', backdropFilter: 'blur(12px)',
-                borderBottom: '1px solid #1f1f1f', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                position: 'sticky', top: 0, zIndex: 50, padding: '12px 20px',
+                background: 'rgba(15,14,13,0.88)', backdropFilter: 'blur(12px)',
+                borderBottom: '1px solid rgba(227,201,148,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                     <button
                         onClick={() => router.push('/plataforma')}
-                        style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', padding: 6 }}
+                        style={{ background: 'none', border: 'none', color: '#b9ad98', cursor: 'pointer', padding: 6, display: 'flex' }}
                         title="Volver"
+                        aria-label="Volver"
                     >
                         <ArrowLeft size={20} />
                     </button>
-                    <MedicalCross size={24} color="#dc2626" />
-                    <span style={{ fontSize: 18, fontWeight: 700, color: '#e5e5e5', letterSpacing: '0.05em' }}>SÁLVAME</span>
-                    <span style={{ fontSize: 12, color: '#555', marginLeft: 4 }}>Iurexia Legal AI</span>
+                    <Asclepio size={22} />
+                    <span className="sv-serif" style={{ fontSize: 20, color: '#f3e4c8', whiteSpace: 'nowrap' }}>Sálvame</span>
+                    <span className="sv-de-iurexia" style={{ fontSize: 12, color: '#7d7466', whiteSpace: 'nowrap' }}>de <span className="sv-marca" style={{ color: '#b9ad98' }}>Iurexia</span></span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 11, color: '#555', padding: '4px 10px', border: '1px solid #2a2a2a', borderRadius: 6 }}>Módulo Gratuito</span>
-                </div>
+                <span style={{ fontSize: 11, color: ORO, padding: '4px 10px', border: '1px solid rgba(227,201,148,0.3)', borderRadius: 999, whiteSpace: 'nowrap' }}>Módulo gratuito</span>
             </header>
 
-            {/* ─── INTRO / TERMS SCREEN (NEW PUBLI DESIGN) ──────────────── */}
+            {/* ─── PORTADA Y PRESENTACIÓN ───────────────────────────────── */}
             {phase === 'intro' && (
                 <div style={{ animation: 'fadeIn 0.8s ease-out' }}>
 
-                    {/* Hero Section */}
-                    <section style={{
-                        minHeight: '80vh',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        textAlign: 'center',
-                        padding: '80px 5% 60px',
-                        position: 'relative'
-                    }}>
-                        {/* Background heart watermark */}
-                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', opacity: 0.03, pointerEvents: 'none' }}>
-                            <HeartPulse size={400} color="#dc2626" />
-                        </div>
-
-                        <div style={{ position: 'relative', zIndex: 1, maxWidth: 800 }}>
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-                                <MedicalCross size={48} color="#dc2626" />
-                                <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 800, margin: 0, letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #fff 0%, #a3a3a3 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                                    SÁLVAME
+                    {/* Portada: Themis a la cabecera del paciente */}
+                    <section className="sv-hero">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/web/arte/vigilia.webp" alt="" className="sv-hero-arte" />
+                        <div className="sv-hero-velo" />
+                        <div className="sv-hero-contenido">
+                            <div className="sv-hero-columna">
+                                <p className="sv-rotulo" style={{ margin: '0 0 18px' }}>Amparo de emergencia por salud · Gratuito</p>
+                                <h1 className="sv-serif" style={{ fontSize: 'clamp(3.2rem, 8vw, 5.6rem)', lineHeight: 1, margin: '0 0 18px', color: '#f3e4c8', letterSpacing: '-0.01em' }}>
+                                    Sálvame
                                 </h1>
-                            </div>
-                            <h2 style={{ fontSize: '1.5rem', color: '#a3a3a3', fontWeight: 400, marginBottom: 32, lineHeight: 1.5 }}>
-                                Amparo de emergencia por salud
-                            </h2>
-                            <p style={{ fontSize: '1.125rem', color: '#999', maxWidth: 600, margin: '0 auto 48px', lineHeight: 1.6 }}>
-                                Si te niegan atención hospitalaria, una cirugía urgente o medicamento vital, el tiempo es crucial. Genera tu demanda de amparo federal en minutos usando Inteligencia Artificial.
-                            </p>
-
-                            <button
-                                className="btn-primary"
-                                onClick={() => {
-                                    if (isAuthenticated) {
-                                        setPhase('form');
-                                    } else {
-                                        router.push('/login?redirect=/salvame');
-                                    }
-                                }}
-                                style={{ padding: '18px 40px', fontSize: '1.125rem', boxShadow: '0 0 15px rgba(220,38,38,0.3)', animation: 'pulseGlow 3s infinite' }}
-                            >
-                                <CheckCircle size={20} color="white" />
-                                Generar Amparo Ahora Gratis
-                            </button>
-
-                            {!isAuthenticated && (
-                                <p style={{ marginTop: 16, color: '#a3a3a3', fontSize: '0.95rem', fontWeight: 500 }}>
-                                    Lo único que tienes que hacer es registrarte, <span style={{ color: '#f5f5f5' }}>te tomará un minuto</span>.
+                                <p className="sv-serif" style={{ fontSize: 'clamp(1.25rem, 2.4vw, 1.6rem)', color: '#e8dcc6', margin: '0 0 22px', lineHeight: 1.35, fontStyle: 'italic' }}>
+                                    La justicia, a la cabecera del paciente.
                                 </p>
-                            )}
+                                <p style={{ fontSize: '1.0625rem', color: '#b9ad98', margin: '0 0 34px', lineHeight: 1.7 }}>
+                                    Si te niegan atención hospitalaria, una cirugía urgente o medicamento vital, el tiempo es crucial. Genera tu demanda de amparo federal en minutos usando Inteligencia Artificial.
+                                </p>
 
-                            <div style={{ width: '100%', maxWidth: 600, margin: '40px auto 0', opacity: 0.3 }}>
-                                <EcgLine />
+                                <button className="btn-primary" onClick={empezar}
+                                    style={{ padding: '17px 34px', fontSize: '1.0625rem', animation: 'latido 3s ease-in-out infinite' }}>
+                                    <Asclepio size={20} color="#fff7ef" />
+                                    Generar amparo ahora, gratis
+                                </button>
+
+                                {!isAuthenticated && (
+                                    <p style={{ marginTop: 14, color: '#b9ad98', fontSize: '0.95rem' }}>
+                                        Lo único que tienes que hacer es registrarte, <span style={{ color: '#f3e4c8' }}>te tomará un minuto</span>.
+                                    </p>
+                                )}
+
+                                <p style={{ marginTop: 26, display: 'flex', alignItems: 'flex-start', gap: 8, color: '#b9ad98', fontSize: 13, lineHeight: 1.55, maxWidth: 480 }}>
+                                    <span style={{ color: CARMIN, flexShrink: 0, marginTop: 1 }}><AlertTriangleIcon size={16} /></span>
+                                    <span><strong style={{ color: CARMIN, fontWeight: 600 }}>Si hay peligro inmediato de vida</strong>, acude primero a urgencias y solicita atención inmediata.</span>
+                                </p>
                             </div>
                         </div>
                     </section>
 
-                    {/* Stats Section */}
-                    <section style={{ padding: '80px 5%', background: '#151515', borderTop: '1px solid #262626', borderBottom: '1px solid #262626' }}>
-                        <div style={{ textAlign: 'center', maxWidth: 700, margin: '0 auto 60px' }}>
-                            <h2 style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: '2.5rem', fontWeight: 300, color: '#f5f5f5', marginBottom: 24 }}>
-                                Por qué creamos SÁLVAME
+                    {/* Por qué creamos Sálvame: el pasillo del hospital */}
+                    <section className="sv-banda" style={{ padding: '110px 24px', borderTop: '1px solid rgba(227,201,148,0.08)' }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/web/arte/espera.webp" alt="" className="sv-banda-arte" style={{ opacity: 0.5 }} />
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, #0f0e0d 0%, rgba(15,14,13,0.55) 22%, rgba(15,14,13,0.7) 50%, rgba(15,14,13,0.55) 78%, #0f0e0d 100%), radial-gradient(60% 70% at 50% 50%, rgba(15,14,13,0.85), rgba(15,14,13,0) 100%)' }} />
+                        <div style={{ position: 'relative', maxWidth: 680, margin: '0 auto', textAlign: 'center' }}>
+                            <p className="sv-rotulo" style={{ margin: '0 0 16px' }}>Nuestra razón</p>
+                            <h2 className="sv-serif" style={{ fontSize: 'clamp(2rem, 4vw, 2.75rem)', color: '#f3e4c8', margin: '0 0 28px', lineHeight: 1.15 }}>
+                                Por qué creamos Sálvame
                             </h2>
-                            <p style={{ color: '#a3a3a3', fontSize: '1.125rem', lineHeight: 1.7, marginBottom: 20 }}>
+                            <p style={{ color: '#d6cab4', fontSize: '1.0625rem', lineHeight: 1.8, marginBottom: 18 }}>
                                 Creamos Iurexia con la mente, pero programamos SÁLVAME con el corazón. Conocemos la desesperación de las salas de espera y la profunda indignidad de tener que suplicar por atención médica. Sabemos que, cuando la vida pende de un hilo, el sentimiento de impotencia es devastador.
                             </p>
-                            <p style={{ color: '#a3a3a3', fontSize: '1.125rem', lineHeight: 1.7, marginBottom: 20 }}>
+                            <p style={{ color: '#d6cab4', fontSize: '1.0625rem', lineHeight: 1.8, marginBottom: 18 }}>
                                 Esta herramienta es nuestra respuesta a la soledad institucional que enfrentamos millones de mexicanos. No importa quién seas, cuánto tengas o dónde te encuentres: ante el dolor, la urgencia y el silencio por parte del personal de salud, Iurexia te toma de la mano. Te entregamos una poderosa herramienta para hacer efectivo tu derecho humano a la salud.
                             </p>
-                            <p style={{ color: '#a3a3a3', fontSize: '1.125rem', lineHeight: 1.7 }}>
+                            <p style={{ color: '#d6cab4', fontSize: '1.0625rem', lineHeight: 1.8, margin: 0 }}>
                                 Pusimos la tecnología más avanzada del mundo al servicio de lo más importante que existe: la salud de ti, de tus seres queridos, o de cualquier persona en grave riesgo ante la indiferencia y desatención de un hospital.
                             </p>
                         </div>
+                    </section>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 30, maxWidth: 1200, margin: '0 auto' }}>
-                            {/* Stat 1: CONEVAL */}
-                            <div style={{ background: '#0f0f0f', border: '1px solid #262626', borderRadius: 16, padding: '40px 30px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-                                <div style={{ fontSize: '3rem', fontWeight: 800, color: '#dc2626', marginBottom: 16 }}>50.4M</div>
-                                <div style={{ fontSize: '1.125rem', color: '#f5f5f5', fontWeight: 600, marginBottom: 12 }}>Mexicanos sin acceso a la salud</div>
-                                <div style={{ color: '#666', fontSize: '0.95rem', lineHeight: 1.6 }}>Más de 50.4 millones de personas experimentaron carencia por acceso a los servicios de salud (39.1% de la población).</div>
-                                <span style={{ display: 'block', marginTop: 16, fontSize: '0.8rem', color: '#444', fontStyle: 'italic' }}>Fuente: CONEVAL (2022)</span>
-                            </div>
-
-                            {/* Stat 2: Colectivo Cero Desabasto */}
-                            <div style={{ background: '#0f0f0f', border: '1px solid #262626', borderRadius: 16, padding: '40px 30px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-                                <div style={{ fontSize: '3rem', fontWeight: 800, color: '#dc2626', marginBottom: 16 }}>15M+</div>
-                                <div style={{ fontSize: '1.125rem', color: '#f5f5f5', fontWeight: 600, marginBottom: 12 }}>Recetas no surtidas</div>
-                                <div style={{ color: '#666', fontSize: '0.95rem', lineHeight: 1.6 }}>Más de 15 millones de recetas médicas no fueron surtidas efectivamente en instituciones de salud pública en un nivel reciente.</div>
-                                <span style={{ display: 'block', marginTop: 16, fontSize: '0.8rem', color: '#444', fontStyle: 'italic' }}>Fuente: Colectivo Cero Desabasto</span>
-                            </div>
-
-                            {/* Stat 3: Amparo 24h */}
-                            <div style={{ background: '#0f0f0f', border: '1px solid #262626', borderRadius: 16, padding: '40px 30px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-                                <div style={{ fontSize: '3rem', fontWeight: 800, color: '#dc2626', marginBottom: 16 }}>24h</div>
-                                <div style={{ fontSize: '1.125rem', color: '#f5f5f5', fontWeight: 600, marginBottom: 12 }}>Derecho a la suspensión</div>
-                                <div style={{ color: '#666', fontSize: '0.95rem', lineHeight: 1.6 }}>Los jueces federales otorgan suspensiones de plano en menos de 24 horas cuando hay peligro inminente de pérdida de la vida.</div>
-                                <span style={{ display: 'block', marginTop: 16, fontSize: '0.8rem', color: '#444', fontStyle: 'italic' }}>Fuente: Ley de Amparo, Arts. 15, 126</span>
-                            </div>
+                    {/* Cifras */}
+                    <section style={{ padding: '24px 24px 96px' }}>
+                        <div className="sv-tres" style={{ maxWidth: 1100, margin: '0 auto' }}>
+                            {[
+                                { cifra: '50.4M', titulo: 'Mexicanos sin acceso a la salud', texto: 'Más de 50.4 millones de personas experimentaron carencia por acceso a los servicios de salud (39.1% de la población).', fuente: 'CONEVAL (2022)' },
+                                { cifra: '15M+', titulo: 'Recetas no surtidas', texto: 'Más de 15 millones de recetas médicas no fueron surtidas efectivamente en instituciones de salud pública en un nivel reciente.', fuente: 'Colectivo Cero Desabasto' },
+                                { cifra: '24h', titulo: 'Derecho a la suspensión', texto: 'Los jueces federales otorgan suspensiones de plano en menos de 24 horas cuando hay peligro inminente de pérdida de la vida.', fuente: 'Ley de Amparo, Arts. 15, 126' },
+                            ].map((c) => (
+                                <div key={c.cifra} className="tarjeta-negra sv-panel" style={{ padding: '36px 28px', textAlign: 'center' }}>
+                                    <div className="sv-serif" style={{ fontSize: '3.2rem', color: ORO, lineHeight: 1, marginBottom: 16 }}>{c.cifra}</div>
+                                    <div style={{ fontSize: '1.0625rem', color: '#f3e4c8', fontWeight: 600, marginBottom: 10 }}>{c.titulo}</div>
+                                    <div style={{ color: '#9d927f', fontSize: '0.95rem', lineHeight: 1.6 }}>{c.texto}</div>
+                                    <span style={{ display: 'block', marginTop: 16, fontSize: '0.78rem', color: '#6f675b', fontStyle: 'italic' }}>Fuente: {c.fuente}</span>
+                                </div>
+                            ))}
                         </div>
                     </section>
 
-                    {/* Features Sections */}
-                    <section style={{ padding: '80px 5%', maxWidth: 1200, margin: '0 auto' }}>
-                        {/* Feature 1 */}
-                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 60, marginBottom: 80 }}>
-                            <div style={{ flex: '1 1 400px' }}>
-                                <h3 style={{ fontSize: '2rem', marginBottom: 20, color: '#f5f5f5' }}>El Juicio de Amparo Salva Vidas</h3>
-                                <p style={{ fontSize: '1.125rem', color: '#a3a3a3', marginBottom: 24, lineHeight: 1.6 }}>
-                                    El Juicio de Amparo no es solo para grandes corporativos, es un derecho diseñado para <span style={{ color: '#dc2626', fontWeight: 600 }}>proteger al ciudadano común</span> contra omisiones de la autoridad.
+                    {/* El amparo salva vidas: la vara de Asclepio sobre la ley */}
+                    <section style={{ padding: '0 24px 96px' }}>
+                        <div className="sv-dos" style={{ maxWidth: 1100, margin: '0 auto' }}>
+                            <div>
+                                <p className="sv-rotulo" style={{ margin: '0 0 14px' }}>La ley protege la vida</p>
+                                <h3 className="sv-serif" style={{ fontSize: 'clamp(1.9rem, 3.4vw, 2.5rem)', margin: '0 0 22px', color: '#f3e4c8', lineHeight: 1.15 }}>El juicio de amparo salva vidas</h3>
+                                <p style={{ fontSize: '1.0625rem', color: '#b9ad98', marginBottom: 18, lineHeight: 1.75 }}>
+                                    El Juicio de Amparo no es solo para grandes corporativos, es un derecho diseñado para <span style={{ color: '#f3e4c8', fontWeight: 600 }}>proteger al ciudadano común</span> contra omisiones de la autoridad.
                                 </p>
-                                <p style={{ fontSize: '1.125rem', color: '#a3a3a3', marginBottom: 24, lineHeight: 1.6 }}>
+                                <p style={{ fontSize: '1.0625rem', color: '#b9ad98', margin: 0, lineHeight: 1.75 }}>
                                     Al presentar este documento, un Juez de Distrito de la Federación obliga legalmente al hospital o institución de salud (IMSS, ISSSTE, local) a brindarte la atención médica o el medicamento que te niegan.
                                 </p>
                             </div>
-                            <div style={{ flex: '1 1 400px', background: 'linear-gradient(145deg, #1a1a1a, #111)', border: '1px solid #262626', borderRadius: 20, padding: 40, position: 'relative', display: 'flex', justifyContent: 'center' }}>
-                                <ShieldCheck size={160} color="#dc2626" />
-                            </div>
-                        </div>
-
-                        {/* Feature 2 */}
-                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 60, marginBottom: 40, flexDirection: 'row-reverse' }}>
-                            <div style={{ flex: '1 1 400px' }}>
-                                <h3 style={{ fontSize: '2rem', marginBottom: 20, color: '#f5f5f5' }}>Respaldo y Tecnología Legal</h3>
-                                <p style={{ fontSize: '1.125rem', color: '#a3a3a3', marginBottom: 24, lineHeight: 1.6 }}>
-                                    SÁLVAME utiliza el motor de inteligencia artificial jurídica más avanzado de México (<span style={{ color: '#c9a962' }}>Iurexia Legal AI</span>). La demanda que generas cuenta con los más altos estándares técnicos.
-                                </p>
-                                <p style={{ fontSize: '1.125rem', color: '#a3a3a3', marginBottom: 24, lineHeight: 1.6 }}>
-                                    El sistema fundamenta automáticamente tu demanda con los <span style={{ color: '#dc2626', fontWeight: 600 }}>artículos 1 y 4 de la Constitución</span>, y busca jurisprudencia en tiempo real para hacer valer tu derecho a la salud.
-                                </p>
-                            </div>
-                            <div style={{ flex: '1 1 400px', background: 'linear-gradient(145deg, #1a1a1a, #111)', border: '1px solid #262626', borderRadius: 20, padding: 40, display: 'flex', flexDirection: 'column', gap: 15 }}>
-                                <div style={{ background: 'rgba(255,255,255,0.05)', padding: 15, borderRadius: 8, borderLeft: '3px solid #c9a962' }}>
-                                    <div style={{ fontSize: 12, color: '#666', marginBottom: 5 }}>Buscando jurisprudencia...</div>
-                                    <div style={{ width: '80%', height: 8, background: '#333', borderRadius: 4 }}></div>
-                                </div>
-                                <div style={{ background: 'rgba(255,255,255,0.05)', padding: 15, borderRadius: 8, borderLeft: '3px solid #dc2626' }}>
-                                    <div style={{ fontSize: 12, color: '#666', marginBottom: 5 }}>Redactando suspensión de plano...</div>
-                                    <div style={{ width: '60%', height: 8, background: '#333', borderRadius: 4 }}></div>
-                                </div>
-                                <div style={{ background: 'rgba(255,255,255,0.05)', padding: 15, borderRadius: 8, borderLeft: '3px solid #a3a3a3' }}>
-                                    <div style={{ fontSize: 12, color: '#666', marginBottom: 5 }}>Fundamentando agravios...</div>
-                                    <div style={{ width: '90%', height: 8, background: '#333', borderRadius: 4 }}></div>
-                                </div>
+                            <div style={{ borderRadius: 18, overflow: 'hidden', border: '1px solid rgba(227,201,148,0.18)', boxShadow: '0 30px 60px -30px rgba(0,0,0,0.95)', maxWidth: 460, justifySelf: 'center', width: '100%' }}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src="/web/arte/asclepio.webp" alt="La vara de Asclepio sobre un libro de leyes abierto, junto a una balanza y un mazo" style={{ display: 'block', width: '100%', height: 'auto' }} />
                             </div>
                         </div>
                     </section>
 
-                    {/* Action CTA Section */}
-                    <section style={{ padding: '80px 5%', textAlign: 'center', background: 'linear-gradient(to bottom, #0f0f0f, #1a0505)', borderTop: '1px solid rgba(220,38,38,0.15)' }}>
-                        <div style={{ maxWidth: 800, margin: '0 auto', background: 'rgba(20,20,20,0.6)', backdropFilter: 'blur(10px)', border: '1px solid #262626', padding: '60px 40px', borderRadius: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+                    {/* Respaldo y tecnología legal */}
+                    <section style={{ padding: '0 24px 96px' }}>
+                        <div className="sv-dos" style={{ maxWidth: 1100, margin: '0 auto' }}>
+                            <div className="tarjeta-negra sv-panel" style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                {[
+                                    { t: 'Buscando jurisprudencia…', w: '80%', c: ORO },
+                                    { t: 'Redactando suspensión de plano…', w: '60%', c: CARMIN },
+                                    { t: 'Fundamentando agravios…', w: '90%', c: '#b9ad98' },
+                                ].map((p) => (
+                                    <div key={p.t} style={{ background: 'rgba(255,255,255,0.03)', padding: 16, borderRadius: 10, borderLeft: `3px solid ${p.c}` }}>
+                                        <div style={{ fontSize: 12.5, color: '#9d927f', marginBottom: 8 }}>{p.t}</div>
+                                        <div style={{ width: p.w, height: 6, background: 'rgba(227,201,148,0.14)', borderRadius: 4 }} />
+                                    </div>
+                                ))}
+                            </div>
+                            <div>
+                                <p className="sv-rotulo" style={{ margin: '0 0 14px' }}>El motor de Iurexia</p>
+                                <h3 className="sv-serif" style={{ fontSize: 'clamp(1.9rem, 3.4vw, 2.5rem)', margin: '0 0 22px', color: '#f3e4c8', lineHeight: 1.15 }}>Respaldo y tecnología legal</h3>
+                                <p style={{ fontSize: '1.0625rem', color: '#b9ad98', marginBottom: 18, lineHeight: 1.75 }}>
+                                    SÁLVAME utiliza el motor de inteligencia artificial jurídica más avanzado de México (<span style={{ color: ORO }}>Iurexia Legal AI</span>). La demanda que generas cuenta con los más altos estándares técnicos.
+                                </p>
+                                <p style={{ fontSize: '1.0625rem', color: '#b9ad98', margin: 0, lineHeight: 1.75 }}>
+                                    El sistema fundamenta automáticamente tu demanda con los <span style={{ color: '#f3e4c8', fontWeight: 600 }}>artículos 1 y 4 de la Constitución</span>, y busca jurisprudencia en tiempo real para hacer valer tu derecho a la salud.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
 
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, color: '#f87171', background: 'rgba(220,38,38,0.1)', padding: '10px 20px', borderRadius: 30, fontSize: '0.95rem', fontWeight: 600, marginBottom: 30 }}>
-                                <AlertTriangleIcon size={20} />
+                    {/* Llamado final, con Themis al fondo */}
+                    <section className="sv-banda" style={{ padding: '96px 24px', borderTop: '1px solid rgba(227,201,148,0.08)' }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/web/arte/themis.webp" alt="" style={{ position: 'absolute', right: 0, top: 0, height: '100%', width: 'auto', opacity: 0.3, maskImage: 'linear-gradient(90deg, transparent, #000 55%), linear-gradient(180deg, transparent, #000 18%, #000 80%, transparent)', WebkitMaskImage: 'linear-gradient(90deg, transparent, #000 55%), linear-gradient(180deg, transparent, #000 18%, #000 80%, transparent)', maskComposite: 'intersect', WebkitMaskComposite: 'source-in' }} />
+                        <div className="tarjeta-negra sv-panel" style={{ position: 'relative', maxWidth: 760, margin: '0 auto', padding: 'clamp(36px, 6vw, 60px) clamp(22px, 5vw, 48px)', textAlign: 'center' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: CARMIN, background: 'rgba(212,103,90,0.1)', border: '1px solid rgba(212,103,90,0.25)', padding: '8px 16px', borderRadius: 999, fontSize: '0.9rem', fontWeight: 600, marginBottom: 26 }}>
+                                <AlertTriangleIcon size={17} />
                                 Uso exclusivo para emergencias reales
                             </div>
-
-                            <h2 style={{ fontSize: '2.5rem', marginBottom: 20, fontWeight: 800, letterSpacing: '-0.02em', color: '#fff' }}>
+                            <h2 className="sv-serif" style={{ fontSize: 'clamp(2rem, 4.4vw, 2.75rem)', margin: '0 0 18px', color: '#f3e4c8', lineHeight: 1.15 }}>
                                 Protege la vida de tus seres queridos hoy.
                             </h2>
-                            <p style={{ fontSize: '1.125rem', color: '#a3a3a3', marginBottom: 40, maxWidth: 600, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
+                            <p style={{ fontSize: '1.0625rem', color: '#b9ad98', margin: '0 auto 34px', maxWidth: 560, lineHeight: 1.7 }}>
                                 No necesitas cuenta premium ni conocimientos legales. Completa un breve formulario y obtén tu demanda lista para imprimir y presentar en el juzgado.
                             </p>
-
-                            <button
-                                className="btn-primary"
-                                onClick={() => {
-                                    if (isAuthenticated) {
-                                        setPhase('form');
-                                    } else {
-                                        router.push('/login?redirect=/salvame');
-                                    }
-                                }}
-                                style={{ padding: '20px 50px', fontSize: '1.25rem' }}
-                            >
-                                <MedicalCross size={20} color="white" />
+                            <button className="btn-primary" onClick={empezar} style={{ padding: '18px 40px', fontSize: '1.125rem' }}>
+                                <Asclepio size={20} color="#fff7ef" />
                                 Comenzar proceso gratuito
                             </button>
-
                             {!isAuthenticated && (
-                                <p style={{ marginTop: 16, color: '#a3a3a3', fontSize: '0.95rem', fontWeight: 500 }}>
-                                    Lo único que tienes que hacer es registrarte, <span style={{ color: '#f5f5f5' }}>te tomará un minuto</span>.
+                                <p style={{ marginTop: 14, color: '#b9ad98', fontSize: '0.95rem' }}>
+                                    Lo único que tienes que hacer es registrarte, <span style={{ color: '#f3e4c8' }}>te tomará un minuto</span>.
                                 </p>
                             )}
-
-                            <p style={{ marginTop: 24, color: '#666', fontSize: '0.9rem' }}>
-                                Responsabilidad social de <strong style={{ color: '#e5e5e5' }}>Iurexia Technologies</strong>
+                            <p style={{ marginTop: 24, color: '#7d7466', fontSize: '0.9rem' }}>
+                                Responsabilidad social de <strong style={{ color: '#d6cab4', fontWeight: 600 }}>Iurexia Technologies</strong>
                             </p>
                         </div>
                     </section>
@@ -723,45 +738,27 @@ export default function SalvamePage() {
                 </div>
             )}
 
-            {/* ─── HERO ───────────────────────────────────────────────── */}
+            {/* ─── CABECERA DEL FORMULARIO ─────────────────────────────── */}
             {phase === 'form' && step === 0 && (
-                <section style={{
-                    padding: '48px 24px 32px', textAlign: 'center', position: 'relative', overflow: 'hidden',
-                    animation: 'fadeIn 0.6s ease-out',
-                }}>
-                    {/* Background heart watermark */}
-                    <div style={{ position: 'absolute', top: 20, right: '10%', opacity: 0.04, pointerEvents: 'none' }}>
-                        <HeartPulse size={280} color="#dc2626" />
-                    </div>
-
-                    <div style={{ position: 'relative', zIndex: 1, maxWidth: 720, margin: '0 auto' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                            <MedicalCross size={32} color="#dc2626" />
-                            <h1 style={{ fontSize: 36, fontWeight: 800, color: '#f5f5f5', margin: 0, letterSpacing: '-0.02em' }}>
-                                SÁLVAME
-                            </h1>
-                        </div>
-                        <h2 style={{ fontSize: 20, fontWeight: 400, color: '#a3a3a3', margin: '8px 0 24px', lineHeight: 1.5 }}>
-                            Amparo de emergencia por salud
-                        </h2>
-                        <p style={{ fontSize: 16, color: '#999', lineHeight: 1.6, maxWidth: 560, margin: '0 auto 20px' }}>
+                <section className="sv-banda" style={{ padding: '56px 24px 36px', animation: 'fadeIn 0.6s ease-out' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/web/arte/vigilia.webp" alt="" className="sv-banda-arte" style={{ opacity: 0.38, objectPosition: '75% 30%' }} />
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, #0f0e0d 0%, rgba(15,14,13,0.8) 45%, rgba(15,14,13,0.35) 100%), linear-gradient(180deg, rgba(15,14,13,0) 55%, #0f0e0d 100%)' }} />
+                    <div style={{ position: 'relative', maxWidth: 640, margin: '0 auto' }}>
+                        <p className="sv-rotulo" style={{ margin: '0 0 12px' }}>Amparo de emergencia por salud</p>
+                        <h1 className="sv-serif" style={{ fontSize: 'clamp(2.4rem, 6vw, 3.25rem)', color: '#f3e4c8', margin: '0 0 12px', lineHeight: 1.05 }}>
+                            Sálvame
+                        </h1>
+                        <p style={{ fontSize: 16, color: '#b9ad98', lineHeight: 1.6, margin: '0 0 22px' }}>
                             Si te niegan atención, cirugía o medicamento vital, genera tu escrito en minutos.
                         </p>
-
-                        {/* ECG line */}
-                        <div style={{ margin: '16px auto', maxWidth: 500 }}>
-                            <EcgLine />
-                        </div>
-
-                        {/* Warning box */}
                         <div style={{
-                            display: 'inline-flex', alignItems: 'flex-start', gap: 10, padding: '14px 20px',
-                            background: 'rgba(220,38,38,0.06)', borderRadius: 12, border: '1px solid rgba(220,38,38,0.15)',
-                            textAlign: 'left', maxWidth: 560,
+                            display: 'flex', alignItems: 'flex-start', gap: 10, padding: '14px 18px',
+                            background: 'rgba(212,103,90,0.08)', borderRadius: 12, border: '1px solid rgba(212,103,90,0.25)',
                         }}>
-                            <AlertTriangleIcon size={20} />
-                            <p style={{ fontSize: 13, color: '#999', margin: 0, lineHeight: 1.5 }}>
-                                <strong style={{ color: '#f87171' }}>Si hay peligro inmediato de vida</strong>, acude a urgencias y solicita atención inmediata.
+                            <span style={{ color: CARMIN, flexShrink: 0 }}><AlertTriangleIcon size={20} /></span>
+                            <p style={{ fontSize: 13, color: '#b9ad98', margin: 0, lineHeight: 1.55 }}>
+                                <strong style={{ color: CARMIN }}>Si hay peligro inmediato de vida</strong>, acude a urgencias y solicita atención inmediata.
                                 Este módulo ayuda a documentar y exigir atención mediante una demanda de amparo.
                             </p>
                         </div>
@@ -769,80 +766,79 @@ export default function SalvamePage() {
                 </section>
             )}
 
-            {/* ─── STEPPER PROGRESS ───────────────────────────────────── */}
+            {/* ─── PASOS ────────────────────────────────────────────────── */}
             {phase === 'form' && (
-                <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 24px 8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 24 }}>
+                <div style={{ maxWidth: 640, margin: '0 auto', padding: `${step === 0 ? 8 : 40}px 24px 8px` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
                         {STEP_LABELS.map((label, i) => (
-                            <div key={i} style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-                                <div style={{
-                                    width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: 13, fontWeight: 600, flexShrink: 0,
-                                    background: i < step ? '#dc2626' : i === step ? 'rgba(220,38,38,0.15)' : '#1a1a1a',
-                                    color: i <= step ? '#fff' : '#555',
-                                    border: i === step ? '2px solid #dc2626' : '1px solid #333',
-                                    transition: 'all 0.3s',
+                            <div key={i} style={{ flex: i < STEP_LABELS.length - 1 ? 1 : '0 0 auto', display: 'flex', alignItems: 'center' }}>
+                                <div className="sv-serif" style={{
+                                    width: 34, height: 34, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: 15, flexShrink: 0, transition: 'all 0.3s',
+                                    background: i < step ? '#c9a962' : i === step ? 'rgba(201,169,98,0.14)' : '#1a1816',
+                                    color: i < step ? '#171614' : i === step ? '#f3e4c8' : '#6f675b',
+                                    border: i === step ? '1.5px solid #c9a962' : '1px solid rgba(227,201,148,0.18)',
                                 }}>
                                     {i < step ? <CheckCircle size={16} /> : i + 1}
                                 </div>
                                 {i < STEP_LABELS.length - 1 && (
-                                    <div style={{ flex: 1, height: 2, background: i < step ? '#dc2626' : '#262626', margin: '0 4px', transition: 'background 0.3s' }} />
+                                    <div style={{ flex: 1, height: 1.5, background: i < step ? '#c9a962' : 'rgba(227,201,148,0.14)', margin: '0 6px', transition: 'background 0.3s' }} />
                                 )}
                             </div>
                         ))}
                     </div>
-                    <p style={{ fontSize: 12, color: '#666', textAlign: 'center', margin: '0 0 8px' }}>
-                        Paso {step + 1} de 4 — {STEP_LABELS[step]}
+                    <p style={{ fontSize: 12, color: '#7d7466', textAlign: 'center', margin: '0 0 10px', letterSpacing: '0.04em' }}>
+                        Paso {step + 1} de 4 — <span style={{ color: '#b9ad98' }}>{STEP_LABELS[step]}</span>
                     </p>
                 </div>
             )}
 
-            {/* ─── FORM CONTAINER ─────────────────────────────────────── */}
+            {/* ─── FORMULARIO ───────────────────────────────────────────── */}
             {phase === 'form' && (
                 <main style={{ maxWidth: 640, margin: '0 auto', padding: '0 24px 40px', animation: 'slideUp 0.4s ease-out' }} key={step}>
 
-                    <div style={{ background: '#151515', borderRadius: 16, border: '1px solid #222', padding: '28px 24px' }}>
+                    <div className="tarjeta-negra sv-panel" style={{ padding: '30px 26px' }}>
 
-                        {/* ─── STEP 0: PROMOVENTE ────────────────────────────── */}
+                        {/* ─── PASO 1: PROMOVENTE ────────────────────────── */}
                         {step === 0 && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                                <h3 style={{ fontSize: 18, fontWeight: 600, color: '#f5f5f5', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <span style={{ opacity: 0.5 }}>01</span> ¿Quién presenta la demanda?
+                                <h3 className="sv-serif" style={{ fontSize: 22, color: '#f3e4c8', margin: 0, display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                                    <span style={{ color: ORO, fontSize: 15 }}>01</span> ¿Quién presenta la demanda?
                                 </h3>
                                 <div>
-                                    <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>Nombre completo del promovente *</label>
+                                    <label className="sv-etiqueta">Nombre completo del promovente *</label>
                                     <input className="salvame-input" placeholder="Ej. María López García" value={form.promovente_nombre}
                                         onChange={e => updateField('promovente_nombre', e.target.value)} />
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                                <div className="sv-par">
                                     <div>
-                                        <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>Teléfono (opcional)</label>
+                                        <label className="sv-etiqueta">Teléfono (opcional)</label>
                                         <input className="salvame-input" placeholder="55 1234 5678" value={form.promovente_telefono}
                                             onChange={e => updateField('promovente_telefono', e.target.value)} />
                                     </div>
                                     <div>
-                                        <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>Correo (opcional)</label>
+                                        <label className="sv-etiqueta">Correo (opcional)</label>
                                         <input className="salvame-input" placeholder="correo@ejemplo.com" value={form.promovente_correo}
                                             onChange={e => updateField('promovente_correo', e.target.value)} />
                                     </div>
                                 </div>
                                 <div>
-                                    <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>Domicilio para notificaciones *</label>
+                                    <label className="sv-etiqueta">Domicilio para notificaciones *</label>
                                     <input className="salvame-input" placeholder="Calle, número, colonia, ciudad, estado, C.P." value={form.promovente_domicilio}
                                         onChange={e => updateField('promovente_domicilio', e.target.value)} />
-                                    <p style={{ fontSize: 11, color: '#555', marginTop: 4 }}>Dirección donde podrás recibir documentos del juzgado.</p>
+                                    <p className="sv-ayuda">Dirección donde podrás recibir documentos del juzgado.</p>
                                 </div>
-                                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, background: form.promueve_por_paciente ? 'rgba(220,38,38,0.06)' : '#1a1a1a', border: `1px solid ${form.promueve_por_paciente ? 'rgba(220,38,38,0.3)' : '#2a2a2a'} `, transition: 'all 0.2s' }}>
+                                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, background: form.promueve_por_paciente ? 'rgba(201,169,98,0.08)' : '#1a1816', border: `1px solid ${form.promueve_por_paciente ? 'rgba(201,169,98,0.4)' : 'rgba(227,201,148,0.12)'}`, transition: 'all 0.2s' }}>
                                     <input type="checkbox" checked={form.promueve_por_paciente}
                                         onChange={e => updateField('promueve_por_paciente', e.target.checked)}
-                                        style={{ marginTop: 2, accentColor: '#dc2626' }} />
-                                    <span style={{ fontSize: 14, color: '#ccc', lineHeight: 1.5 }}>
-                                        Promuevo por el paciente por imposibilidad de hacerlo personalmente <span style={{ color: '#888' }}>(art. 15 Ley de Amparo)</span>
+                                        style={{ marginTop: 3, accentColor: '#c9a962' }} />
+                                    <span style={{ fontSize: 14, color: '#d6cab4', lineHeight: 1.5 }}>
+                                        Promuevo por el paciente por imposibilidad de hacerlo personalmente <span style={{ color: '#8a8070' }}>(art. 15 Ley de Amparo)</span>
                                     </span>
                                 </label>
                                 {form.promueve_por_paciente && (
                                     <div>
-                                        <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>Parentesco con el paciente *</label>
+                                        <label className="sv-etiqueta">Parentesco con el paciente *</label>
                                         <select className="salvame-select" value={form.parentesco} onChange={e => updateField('parentesco', e.target.value)}>
                                             <option value="">Selecciona parentesco</option>
                                             <option value="padre/madre">Padre / Madre</option>
@@ -854,37 +850,37 @@ export default function SalvamePage() {
                                             <option value="amigo/conocido">Amigo / Conocido</option>
                                             <option value="otro">Otro</option>
                                         </select>
-                                        <p style={{ fontSize: 11, color: '#555', marginTop: 4 }}>El art. 15 de la Ley de Amparo permite a cualquier persona promover en caso de imposibilidad del afectado.</p>
+                                        <p className="sv-ayuda">El art. 15 de la Ley de Amparo permite a cualquier persona promover en caso de imposibilidad del afectado.</p>
                                     </div>
                                 )}
                             </div>
                         )}
 
-                        {/* ─── STEP 1: PACIENTE ─────────────────────────────── */}
+                        {/* ─── PASO 2: PACIENTE ─────────────────────────── */}
                         {step === 1 && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                                <h3 style={{ fontSize: 18, fontWeight: 600, color: '#f5f5f5', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <span style={{ opacity: 0.5 }}>02</span> Datos del paciente
+                                <h3 className="sv-serif" style={{ fontSize: 22, color: '#f3e4c8', margin: 0, display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                                    <span style={{ color: ORO, fontSize: 15 }}>02</span> Datos del paciente
                                 </h3>
                                 <div>
-                                    <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>Nombre completo del paciente *</label>
+                                    <label className="sv-etiqueta">Nombre completo del paciente *</label>
                                     <input className="salvame-input" placeholder="Nombre del paciente que necesita atención" value={form.paciente_nombre}
                                         onChange={e => updateField('paciente_nombre', e.target.value)} />
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 14 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: 14 }}>
                                     <div>
-                                        <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>Edad *</label>
+                                        <label className="sv-etiqueta">Edad *</label>
                                         <input className="salvame-input" type="number" min="0" max="120" placeholder="Años" value={form.paciente_edad}
                                             onChange={e => updateField('paciente_edad', e.target.value)} />
                                     </div>
                                     <div>
-                                        <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>Diagnóstico o padecimiento *</label>
+                                        <label className="sv-etiqueta">Diagnóstico o padecimiento *</label>
                                         <input className="salvame-input" placeholder="Ej. Tumor cerebral, insuficiencia renal, fractura expuesta..." value={form.paciente_diagnostico}
                                             onChange={e => updateField('paciente_diagnostico', e.target.value)} />
                                     </div>
                                 </div>
                                 <div>
-                                    <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>¿Cuál es el riesgo actual? *</label>
+                                    <label className="sv-etiqueta">¿Cuál es el riesgo actual? *</label>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                                         {RIESGO_OPTIONS.map(opt => (
                                             <button key={opt.value}
@@ -899,32 +895,32 @@ export default function SalvamePage() {
                             </div>
                         )}
 
-                        {/* ─── STEP 2: AUTORIDAD ───────────────────────────── */}
+                        {/* ─── PASO 3: AUTORIDAD ───────────────────────────── */}
                         {step === 2 && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                                <h3 style={{ fontSize: 18, fontWeight: 600, color: '#f5f5f5', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <span style={{ opacity: 0.5 }}>03</span> Hospital o clínica responsable
+                                <h3 className="sv-serif" style={{ fontSize: 22, color: '#f3e4c8', margin: 0, display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                                    <span style={{ color: ORO, fontSize: 15 }}>03</span> Hospital o clínica responsable
                                 </h3>
                                 <div>
-                                    <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>Institución *</label>
+                                    <label className="sv-etiqueta">Institución *</label>
                                     <select className="salvame-select" value={form.institucion} onChange={e => updateField('institucion', e.target.value)}>
                                         <option value="">Selecciona la institución</option>
                                         {INSTITUCION_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>Nombre del hospital o clínica *</label>
+                                    <label className="sv-etiqueta">Nombre del hospital o clínica *</label>
                                     <input className="salvame-input" placeholder="Ej. Hospital General de Zona No. 32" value={form.hospital_nombre}
                                         onChange={e => updateField('hospital_nombre', e.target.value)} />
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                                <div className="sv-par">
                                     <div>
-                                        <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>Ciudad *</label>
+                                        <label className="sv-etiqueta">Ciudad *</label>
                                         <input className="salvame-input" placeholder="Ej. Guadalajara" value={form.hospital_ciudad}
                                             onChange={e => updateField('hospital_ciudad', e.target.value)} />
                                     </div>
                                     <div>
-                                        <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>Estado *</label>
+                                        <label className="sv-etiqueta">Estado *</label>
                                         <select className="salvame-select" value={form.hospital_estado} onChange={e => updateField('hospital_estado', e.target.value)}>
                                             <option value="">Selecciona estado</option>
                                             {ESTADOS_MEXICO.map(e => <option key={e} value={e}>{e}</option>)}
@@ -932,27 +928,27 @@ export default function SalvamePage() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>Dirección del hospital o clínica</label>
+                                    <label className="sv-etiqueta">Dirección del hospital o clínica</label>
                                     <input className="salvame-input" placeholder="Calle, número, colonia, C.P." value={form.hospital_direccion}
                                         onChange={e => updateField('hospital_direccion', e.target.value)} />
-                                    <p style={{ fontSize: 11, color: '#555', marginTop: 4 }}>Indispensable para señalar la competencia territorial y la autoridad responsable.</p>
+                                    <p className="sv-ayuda">Indispensable para señalar la competencia territorial y la autoridad responsable.</p>
                                 </div>
                                 <div>
-                                    <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>Director / Médico responsable (opcional)</label>
+                                    <label className="sv-etiqueta">Director / Médico responsable (opcional)</label>
                                     <input className="salvame-input" placeholder="Si lo conoces, anota su nombre" value={form.director_nombre}
                                         onChange={e => updateField('director_nombre', e.target.value)} />
                                 </div>
                             </div>
                         )}
 
-                        {/* ─── STEP 3: SITUACIÓN ──────────────────────────── */}
+                        {/* ─── PASO 4: SITUACIÓN ──────────────────────────── */}
                         {step === 3 && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                                <h3 style={{ fontSize: 18, fontWeight: 600, color: '#f5f5f5', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <span style={{ opacity: 0.5 }}>04</span> ¿Qué está pasando?
+                                <h3 className="sv-serif" style={{ fontSize: 22, color: '#f3e4c8', margin: 0, display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                                    <span style={{ color: ORO, fontSize: 15 }}>04</span> ¿Qué está pasando?
                                 </h3>
                                 <div>
-                                    <label style={{ fontSize: 13, color: '#888', marginBottom: 8, display: 'block' }}>Selecciona todo lo que aplica *</label>
+                                    <label className="sv-etiqueta" style={{ marginBottom: 8 }}>Selecciona todo lo que aplica *</label>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                                         {SITUACION_CHIPS.map(s => (
                                             <button key={s}
@@ -965,19 +961,19 @@ export default function SalvamePage() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>
-                                        Cuéntanos en tus palabras <span style={{ color: '#555' }}>(máx. 1200 caracteres)</span>
+                                    <label className="sv-etiqueta">
+                                        Cuéntanos en tus palabras <span style={{ color: '#7d7466' }}>(máx. 1200 caracteres)</span>
                                     </label>
                                     <textarea className="salvame-textarea" maxLength={1200}
                                         placeholder="Describe brevemente qué ha pasado: cuándo llegaron, qué les dijeron, qué atención han negado, cuánto tiempo llevan esperando..."
                                         value={form.descripcion_libre}
                                         onChange={e => updateField('descripcion_libre', e.target.value)}
                                     />
-                                    <p style={{ fontSize: 11, color: '#555', textAlign: 'right', marginTop: 4 }}>{form.descripcion_libre.length}/1200</p>
+                                    <p className="sv-ayuda" style={{ textAlign: 'right' }}>{form.descripcion_libre.length}/1200</p>
                                 </div>
                                 <div>
-                                    <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>
-                                        Detalles adicionales <span style={{ color: '#555' }}>(nombres de médicos que niegan atención, circunstancias relevantes)</span>
+                                    <label className="sv-etiqueta">
+                                        Detalles adicionales <span style={{ color: '#7d7466' }}>(nombres de médicos que niegan atención, circunstancias relevantes)</span>
                                     </label>
                                     <textarea className="salvame-textarea" maxLength={800}
                                         placeholder="Ej: El Dr. Pérez Gómez del turno vespertino nos dijo que no había camas. La enfermera de recepción se negó a registrar al paciente..."
@@ -985,21 +981,21 @@ export default function SalvamePage() {
                                         onChange={e => updateField('detalles_medicos_adicionales', e.target.value)}
                                         style={{ minHeight: 80 }}
                                     />
-                                    <p style={{ fontSize: 11, color: '#555', textAlign: 'right', marginTop: 4 }}>{form.detalles_medicos_adicionales.length}/800</p>
+                                    <p className="sv-ayuda" style={{ textAlign: 'right' }}>{form.detalles_medicos_adicionales.length}/800</p>
                                 </div>
-                                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, background: form.confirma_veracidad ? 'rgba(220,38,38,0.06)' : '#1a1a1a', border: `1px solid ${form.confirma_veracidad ? 'rgba(220,38,38,0.3)' : '#2a2a2a'} `, transition: 'all 0.2s' }}>
+                                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, background: form.confirma_veracidad ? 'rgba(201,169,98,0.08)' : '#1a1816', border: `1px solid ${form.confirma_veracidad ? 'rgba(201,169,98,0.4)' : 'rgba(227,201,148,0.12)'}`, transition: 'all 0.2s' }}>
                                     <input type="checkbox" checked={form.confirma_veracidad}
                                         onChange={e => updateField('confirma_veracidad', e.target.checked)}
-                                        style={{ marginTop: 2, accentColor: '#dc2626' }} />
-                                    <span style={{ fontSize: 14, color: '#ccc', lineHeight: 1.5 }}>
-                                        Lo escrito es veraz según mi leal saber y entender. <span style={{ color: '#888' }}>Bajo protesta de decir verdad.</span>
+                                        style={{ marginTop: 3, accentColor: '#c9a962' }} />
+                                    <span style={{ fontSize: 14, color: '#d6cab4', lineHeight: 1.5 }}>
+                                        Lo escrito es veraz según mi leal saber y entender. <span style={{ color: '#8a8070' }}>Bajo protesta de decir verdad.</span>
                                     </span>
                                 </label>
                             </div>
                         )}
                     </div>
 
-                    {/* ─── NAV BUTTONS ────────────────────────────────────── */}
+                    {/* ─── NAVEGACIÓN ──────────────────────────────────────── */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 20, gap: 12 }}>
                         {step > 0 ? (
                             <button className="btn-secondary" onClick={() => setStep(step - 1)}>
@@ -1013,63 +1009,66 @@ export default function SalvamePage() {
                             </button>
                         ) : (
                             <button className="btn-primary" disabled={!canProceed()} onClick={handleGenerate}
-                                style={{ animation: canProceed() ? 'pulseGlow 2s ease-in-out infinite' : 'none' }}>
-                                <MedicalCross size={18} color="white" /> Generar Amparo de Emergencia
+                                style={{ animation: canProceed() ? 'latido 2.4s ease-in-out infinite' : 'none' }}>
+                                <Asclepio size={18} color="#fff7ef" /> Generar amparo de emergencia
                             </button>
                         )}
                     </div>
 
                     {error && (
-                        <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: 10, background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)', color: '#f87171', fontSize: 14 }}>
+                        <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: 10, background: 'rgba(212,103,90,0.1)', border: '1px solid rgba(212,103,90,0.35)', color: '#f0a397', fontSize: 14 }}>
                             {error}
                         </div>
                     )}
                 </main>
             )}
 
-            {/* ─── GENERATING LOADER ──────────────────────────────────── */}
+            {/* ─── GENERANDO ────────────────────────────────────────────── */}
             {phase === 'generating' && (
-                <main style={{ maxWidth: 640, margin: '0 auto', padding: '60px 24px', textAlign: 'center', animation: 'fadeIn 0.4s ease-out' }}>
-                    <div style={{ marginBottom: 32 }}>
-                        <div style={{ width: 56, height: 56, margin: '0 auto 24px', border: '3px solid rgba(220,38,38,0.2)', borderTopColor: '#dc2626', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                        <p style={{ fontSize: 17, fontWeight: 600, color: '#f5f5f5', marginBottom: 8 }}>
+                <main style={{ maxWidth: 680, margin: '0 auto', padding: '64px 24px', textAlign: 'center', animation: 'fadeIn 0.4s ease-out' }}>
+                    <div style={{ marginBottom: 34 }}>
+                        <div style={{ position: 'relative', width: 64, height: 64, margin: '0 auto 26px' }}>
+                            <div style={{ position: 'absolute', inset: 0, border: '2px solid rgba(227,201,148,0.18)', borderTopColor: ORO, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Asclepio size={26} /></div>
+                        </div>
+                        <p className="sv-serif" style={{ fontSize: 22, color: '#f3e4c8', margin: '0 0 8px' }}>
                             {LOADER_MESSAGES[loaderIdx]}
                         </p>
-                        <p style={{ fontSize: 13, color: '#666' }}>
+                        <p style={{ fontSize: 13, color: '#7d7466', margin: 0 }}>
                             Esto puede tomar entre 30 y 90 segundos
                         </p>
                     </div>
 
-                    {/* Live preview of generated text */}
+                    {/* El escrito, mientras se redacta */}
                     {generatedText && (
-                        <div style={{ textAlign: 'left', maxHeight: 300, overflow: 'hidden', position: 'relative' }}>
-                            <div className="result-text" style={{ fontSize: 13, opacity: 0.6 }}>
+                        <div style={{ textAlign: 'left', maxHeight: 320, overflow: 'hidden', position: 'relative' }}>
+                            <div className="result-text" style={{ fontSize: 13.5, opacity: 0.75 }}>
                                 {renderFormattedText(generatedText)}
                             </div>
-                            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 80, background: 'linear-gradient(transparent, #0f0f0f)' }} />
+                            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 120, background: 'linear-gradient(transparent, #0f0e0d)' }} />
                         </div>
                     )}
                 </main>
             )}
 
-            {/* ─── RESULT ─────────────────────────────────────────────── */}
+            {/* ─── RESULTADO ────────────────────────────────────────────── */}
             {phase === 'result' && (
-                <main ref={resultRef} style={{ maxWidth: 760, margin: '0 auto', padding: '32px 24px 60px', animation: 'fadeIn 0.5s ease-out' }}>
-                    {/* Success banner */}
+                <main ref={resultRef} style={{ maxWidth: 800, margin: '0 auto', padding: '36px 24px 60px', animation: 'fadeIn 0.5s ease-out' }}>
+                    {/* Listo */}
                     <div style={{
-                        display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', marginBottom: 24,
-                        borderRadius: 12, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)',
+                        display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', marginBottom: 22,
+                        borderRadius: 12, background: 'rgba(143,191,138,0.07)', border: '1px solid rgba(143,191,138,0.25)',
                     }}>
-                        <CheckCircle size={22} />
+                        <span style={{ color: '#a9d3a2', flexShrink: 0 }}><CheckCircle size={22} /></span>
                         <div>
-                            <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#4ade80' }}>Amparo generado exitosamente</p>
-                            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#888' }}>Revisa el escrito, descárgalo e imprímelo por triplicado.</p>
+                            <p className="sv-serif" style={{ margin: 0, fontSize: 18, color: '#cfe7c9' }}>Amparo generado</p>
+                            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9d927f' }}>Revisa el escrito, descárgalo e imprímelo por triplicado.</p>
                         </div>
                     </div>
 
-                    {/* Action buttons */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
-                        <button className="btn-primary" onClick={handleDownloadDocx} disabled={downloading} style={{ fontSize: 14 }}>
+                    {/* Acciones */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 22 }}>
+                        <button className="btn-primary" onClick={handleDownloadDocx} disabled={downloading} style={{ fontSize: 14, padding: '11px 22px' }}>
                             <DownloadIcon size={16} /> {downloading ? 'Descargando...' : 'Descargar DOCX'}
                         </button>
                         <button className="btn-secondary" onClick={handlePrint}>
@@ -1083,18 +1082,15 @@ export default function SalvamePage() {
                         </button>
                     </div>
 
-                    {/* Generated text */}
+                    {/* El escrito, en su hoja */}
                     <div className="result-text">{renderFormattedText(generatedText)}</div>
 
-                    {/* ECG separator */}
-                    <div style={{ margin: '32px 0 24px' }}><EcgLine /></div>
+                    <div style={{ margin: '36px 0 28px' }}><Filete /></div>
 
                     {/* ─── GUÍA DE ACCIÓN INMEDIATA ──────────────────────── */}
-                    <div style={{
-                        padding: '24px', borderRadius: 16, background: '#151515', border: '1px solid rgba(220,38,38,0.15)',
-                    }}>
-                        <h3 style={{ fontSize: 17, fontWeight: 700, color: '#f87171', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <AlertTriangleIcon size={20} /> Guía de Acción Inmediata
+                    <div className="tarjeta-negra sv-panel" style={{ padding: '26px 24px' }}>
+                        <h3 className="sv-serif" style={{ fontSize: 22, color: '#f3e4c8', margin: '0 0 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <span style={{ color: CARMIN, display: 'flex' }}><AlertTriangleIcon size={20} /></span> Guía de acción inmediata
                         </h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                             {[
@@ -1106,93 +1102,73 @@ export default function SalvamePage() {
                                 { n: '6', text: 'El juez debe pronunciarse sobre la suspensión de plano en el mismo acto de admisión.' },
                             ].map(item => (
                                 <div key={item.n} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                                    <span style={{
-                                        width: 26, height: 26, borderRadius: '50%', background: 'rgba(220,38,38,0.12)', color: '#f87171',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600, flexShrink: 0,
+                                    <span className="sv-serif" style={{
+                                        width: 26, height: 26, borderRadius: '50%', background: 'rgba(212,103,90,0.12)', color: CARMIN, border: '1px solid rgba(212,103,90,0.3)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0,
                                     }}>{item.n}</span>
-                                    <p style={{ margin: 0, fontSize: 14, color: '#ccc', lineHeight: 1.5 }}>{item.text}</p>
+                                    <p style={{ margin: 0, fontSize: 14, color: '#d6cab4', lineHeight: 1.55 }}>{item.text}</p>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    {/* ─── ¿QUÉ SIGUE? BUTTON + INSTRUCTIONS ──────────── */}
+                    {/* ─── ¿QUÉ SIGUE? ──────────────────────────────────── */}
                     <div style={{ textAlign: 'center', marginTop: 28 }}>
-                        <button
-                            onClick={() => setShowInstructions(!showInstructions)}
-                            style={{
-                                display: 'inline-flex', alignItems: 'center', gap: 10,
-                                padding: '16px 36px', borderRadius: 14, border: 'none',
-                                background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-                                color: 'white', fontSize: 16, fontWeight: 700,
-                                cursor: 'pointer', transition: 'all 0.3s', fontFamily: 'inherit',
-                                boxShadow: '0 4px 20px rgba(220,38,38,0.3)',
-                            }}
-                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(220,38,38,0.5)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(220,38,38,0.3)'; }}
-                        >
-                            ✅ Ya tengo la demanda generada y revisada, ¿qué sigue?
-                            <span style={{ transition: 'transform 0.3s', transform: showInstructions ? 'rotate(180deg)' : 'rotate(0deg)', fontSize: 14 }}>▼</span>
+                        <button className="btn-primary" onClick={() => setShowInstructions(!showInstructions)} style={{ padding: '15px 30px', fontSize: 15.5 }}>
+                            Ya tengo la demanda generada y revisada, ¿qué sigue?
+                            <span style={{ transition: 'transform 0.3s', transform: showInstructions ? 'rotate(180deg)' : 'rotate(0deg)', fontSize: 12 }}>▼</span>
                         </button>
                     </div>
 
                     {showInstructions && (
-                        <div style={{
-                            marginTop: 24, padding: '28px', borderRadius: 16,
-                            background: '#151515', border: '1px solid rgba(220,38,38,0.2)',
-                            animation: 'fadeIn 0.4s ease-out',
-                        }}>
-                            <h3 style={{ fontSize: 20, fontWeight: 700, color: '#f87171', margin: '0 0 24px', textAlign: 'center' }}>
-                                📋 Instrucciones para presentar tu Amparo
+                        <div className="tarjeta-negra sv-panel" style={{ marginTop: 24, padding: '30px 26px', animation: 'fadeIn 0.4s ease-out' }}>
+                            <p className="sv-rotulo" style={{ margin: '0 0 8px', textAlign: 'center' }}>Paso a paso</p>
+                            <h3 className="sv-serif" style={{ fontSize: 26, color: '#f3e4c8', margin: '0 0 28px', textAlign: 'center' }}>
+                                Instrucciones para presentar tu amparo
                             </h3>
 
-                            {/* SECTION 1: ¿A qué instalaciones dirigirte? */}
+                            {/* 1. ¿A qué instalaciones dirigirte? */}
                             <div style={{ marginBottom: 28 }}>
-                                <h4 style={{ fontSize: 16, fontWeight: 700, color: '#e5e5e5', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <span style={{
-                                        width: 28, height: 28, borderRadius: '50%', background: 'rgba(220,38,38,0.15)', color: '#f87171',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, flexShrink: 0,
-                                    }}>1</span>
+                                <h4 style={{ fontSize: 16, fontWeight: 600, color: '#f3e4c8', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <span className="sv-serif" style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid rgba(227,201,148,0.45)', color: ORO, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>1</span>
                                     ¿A qué instalaciones dirigirte? (La jerarquía de juzgados)
                                 </h4>
 
-                                {/* ── Oficialía de Partes Info Card (from DB) ───────── */}
+                                {/* La Oficialía de Partes del estado (del directorio) */}
                                 {juzgadoInfo && (
                                     <div style={{
-                                        padding: '20px', borderRadius: 14, marginBottom: 18, marginLeft: 36,
-                                        background: 'linear-gradient(135deg, rgba(220,38,38,0.06) 0%, rgba(220,38,38,0.02) 100%)',
-                                        border: '1px solid rgba(220,38,38,0.2)',
-                                        boxShadow: '0 2px 12px rgba(220,38,38,0.08)',
+                                        padding: '20px', borderRadius: 14, marginBottom: 18, marginLeft: 38,
+                                        background: 'rgba(201,169,98,0.06)', border: '1px solid rgba(227,201,148,0.25)',
                                     }}>
-                                        <p style={{ margin: '0 0 4px', fontSize: 11, color: '#f87171', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                            🏛️ Oficialía de Partes Común — {form.hospital_estado}
+                                        <p className="sv-rotulo" style={{ margin: '0 0 6px', fontSize: 10.5 }}>
+                                            Oficialía de Partes Común — {form.hospital_estado}
                                         </p>
-                                        <p style={{ margin: '0 0 10px', fontSize: 15, fontWeight: 700, color: '#f5f5f5', lineHeight: 1.4 }}>
+                                        <p style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 600, color: '#f3e4c8', lineHeight: 1.4 }}>
                                             {juzgadoInfo.denominacion_turno}
                                         </p>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                            <p style={{ margin: 0, fontSize: 13, color: '#ccc', lineHeight: 1.5, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                                                <span style={{ flexShrink: 0 }}>📍</span> {juzgadoInfo.direccion_oficialia}
+                                            <p style={{ margin: 0, fontSize: 13, color: '#d6cab4', lineHeight: 1.5 }}>
+                                                <span style={{ color: '#8a8070' }}>Dirección: </span>{juzgadoInfo.direccion_oficialia}
                                             </p>
                                             {juzgadoInfo.telefono && (
-                                                <p style={{ margin: 0, fontSize: 13, color: '#ccc', lineHeight: 1.5, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                    <span style={{ flexShrink: 0 }}>📞</span> {juzgadoInfo.telefono}
+                                                <p style={{ margin: 0, fontSize: 13, color: '#d6cab4', lineHeight: 1.5 }}>
+                                                    <span style={{ color: '#8a8070' }}>Teléfono: </span>{juzgadoInfo.telefono}
                                                 </p>
                                             )}
                                         </div>
-                                        <p style={{ margin: '10px 0 0', fontSize: 12, color: '#4ade80', fontWeight: 600 }}>
-                                            ⏰ Funciona las 24 horas, los 365 días del año
+                                        <p style={{ margin: '10px 0 0', fontSize: 12, color: '#a9d3a2', fontWeight: 600 }}>
+                                            Funciona las 24 horas, los 365 días del año
                                         </p>
-                                        <p style={{ margin: '8px 0 0', fontSize: 11, color: '#666', fontStyle: 'italic' }}>
+                                        <p style={{ margin: '8px 0 0', fontSize: 11, color: '#7d7466', fontStyle: 'italic' }}>
                                             Fuente: Directorio del Consejo de la Judicatura Federal (CJF)
                                         </p>
                                     </div>
                                 )}
 
-                                <p style={{ fontSize: 14, color: '#ccc', lineHeight: 1.7, margin: '0 0 14px', paddingLeft: 36 }}>
-                                    Idealmente, debes acudir a las instalaciones del <strong style={{ color: '#f5f5f5' }}>Poder Judicial de la Federación</strong> para presentarla ante un <strong style={{ color: '#f5f5f5' }}>Juez de Distrito</strong>. Sin embargo, la ley prevé qué hacer si no hay uno cerca:
+                                <p style={{ fontSize: 14, color: '#d6cab4', lineHeight: 1.7, margin: '0 0 14px', paddingLeft: 38 }}>
+                                    Idealmente, debes acudir a las instalaciones del <strong style={{ color: '#f3e4c8' }}>Poder Judicial de la Federación</strong> para presentarla ante un <strong style={{ color: '#f3e4c8' }}>Juez de Distrito</strong>. Sin embargo, la ley prevé qué hacer si no hay uno cerca:
                                 </p>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingLeft: 36 }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingLeft: 38 }}>
                                     {[
                                         'Si en el lugar donde te encuentras no reside un juez de distrito, debes entregar la demanda al juez de primera instancia (un juez local o estatal) dentro de cuya jurisdicción radique la autoridad del hospital que niega la atención. Este juez está obligado a recibirla y acordar de plano la suspensión.',
                                         'Si tampoco hay un juez de primera instancia en el lugar, o si la autoridad no puede ser habida, puedes presentar la demanda ante cualquiera de los órganos judiciales que ejerzan jurisdicción en ese mismo lugar.',
@@ -1200,30 +1176,26 @@ export default function SalvamePage() {
                                     ].map((text, idx) => (
                                         <div key={idx} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                                             <span style={{
-                                                width: 22, height: 22, borderRadius: '50%', background: '#1e1e1e', border: '1px solid #333', color: '#888',
+                                                width: 22, height: 22, borderRadius: '50%', background: '#1a1816', border: '1px solid rgba(227,201,148,0.2)', color: '#9d927f',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, flexShrink: 0, marginTop: 2,
                                             }}>{idx + 1}</span>
-                                            <p style={{ margin: 0, fontSize: 13, color: '#aaa', lineHeight: 1.6 }}>{text}</p>
+                                            <p style={{ margin: 0, fontSize: 13.5, color: '#b9ad98', lineHeight: 1.65 }}>{text}</p>
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
-                            {/* Divider */}
-                            <hr style={{ border: 'none', borderTop: '1px solid #262626', margin: '0 0 28px' }} />
+                            <hr style={{ border: 'none', borderTop: '1px solid rgba(227,201,148,0.12)', margin: '0 0 28px' }} />
 
-                            {/* SECTION 2: Lo que hará el Juez */}
+                            {/* 2. Lo que hará el juez */}
                             <div style={{ marginBottom: 28 }}>
-                                <h4 style={{ fontSize: 16, fontWeight: 700, color: '#e5e5e5', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <span style={{
-                                        width: 28, height: 28, borderRadius: '50%', background: 'rgba(220,38,38,0.15)', color: '#f87171',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, flexShrink: 0,
-                                    }}>2</span>
+                                <h4 style={{ fontSize: 16, fontWeight: 600, color: '#f3e4c8', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <span className="sv-serif" style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid rgba(227,201,148,0.45)', color: ORO, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>2</span>
                                     Lo que hará el Juez (La Suspensión Inmediata)
                                 </h4>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingLeft: 36 }}>
-                                    <p style={{ margin: 0, fontSize: 14, color: '#ccc', lineHeight: 1.7 }}>
-                                        Dado que es un caso de urgencia (artículos 15 y 20 de la Ley de Amparo), el juez debe proveer o dar respuesta <strong style={{ color: '#4ade80' }}>de inmediato</strong>.
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingLeft: 38 }}>
+                                    <p style={{ margin: 0, fontSize: 14, color: '#d6cab4', lineHeight: 1.7 }}>
+                                        Dado que es un caso de urgencia (artículos 15 y 20 de la Ley de Amparo), el juez debe proveer o dar respuesta <strong style={{ color: '#a9d3a2' }}>de inmediato</strong>.
                                     </p>
                                     {[
                                         'El juez decretará la suspensión de los actos reclamados y dictará las medidas necesarias.',
@@ -1231,45 +1203,37 @@ export default function SalvamePage() {
                                         'El juez comunicará esta suspensión sin demora a la autoridad responsable (el hospital) por cualquier medio que permita lograr su inmediato cumplimiento para que atiendan al paciente.',
                                     ].map((text, idx) => (
                                         <div key={idx} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                                            <span style={{ color: '#4ade80', fontSize: 16, flexShrink: 0, marginTop: 1 }}>✓</span>
-                                            <p style={{ margin: 0, fontSize: 13, color: '#aaa', lineHeight: 1.6 }}>{text}</p>
+                                            <span style={{ color: '#a9d3a2', fontSize: 15, flexShrink: 0, marginTop: 1 }}>✓</span>
+                                            <p style={{ margin: 0, fontSize: 13.5, color: '#b9ad98', lineHeight: 1.65 }}>{text}</p>
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
-                            {/* Divider */}
-                            <hr style={{ border: 'none', borderTop: '1px solid #262626', margin: '0 0 28px' }} />
+                            <hr style={{ border: 'none', borderTop: '1px solid rgba(227,201,148,0.12)', margin: '0 0 28px' }} />
 
-                            {/* SECTION 3: La Ratificación */}
+                            {/* 3. La ratificación */}
                             <div>
-                                <h4 style={{ fontSize: 16, fontWeight: 700, color: '#e5e5e5', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <span style={{
-                                        width: 28, height: 28, borderRadius: '50%', background: 'rgba(220,38,38,0.15)', color: '#f87171',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, flexShrink: 0,
-                                    }}>3</span>
+                                <h4 style={{ fontSize: 16, fontWeight: 600, color: '#f3e4c8', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <span className="sv-serif" style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid rgba(227,201,148,0.45)', color: ORO, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>3</span>
                                     El seguimiento obligatorio: La Ratificación
                                 </h4>
-                                <div style={{ paddingLeft: 36 }}>
-                                    <div style={{
-                                        padding: '16px 18px', borderRadius: 12, background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.15)', marginBottom: 14,
-                                    }}>
-                                        <p style={{ margin: 0, fontSize: 13, color: '#fbbf24', lineHeight: 1.6, fontWeight: 500 }}>
-                                            ⚠️ Este paso no siempre ocurrirá (dada la naturaleza del acto reclamado); sin embargo, dependerá del criterio del juez y no debes olvidarlo una vez que pase la urgencia médica.
+                                <div style={{ paddingLeft: 38 }}>
+                                    <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(227,201,148,0.07)', border: '1px solid rgba(227,201,148,0.22)', marginBottom: 14 }}>
+                                        <p style={{ margin: 0, fontSize: 13, color: ORO, lineHeight: 1.6, fontWeight: 500 }}>
+                                            Este paso no siempre ocurrirá (dada la naturaleza del acto reclamado); sin embargo, dependerá del criterio del juez y no debes olvidarlo una vez que pase la urgencia médica.
                                         </p>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                        <p style={{ margin: 0, fontSize: 14, color: '#ccc', lineHeight: 1.7 }}>
-                                            El Juez podría ordenar al actuario, si es que es posible, que <strong style={{ color: '#f5f5f5' }}>el paciente ratifique (confirme)</strong> la demanda de amparo que tú presentaste por él.
+                                        <p style={{ margin: 0, fontSize: 14, color: '#d6cab4', lineHeight: 1.7 }}>
+                                            El Juez podría ordenar al actuario, si es que es posible, que <strong style={{ color: '#f3e4c8' }}>el paciente ratifique (confirme)</strong> la demanda de amparo que tú presentaste por él.
                                         </p>
-                                        <p style={{ margin: 0, fontSize: 14, color: '#ccc', lineHeight: 1.7 }}>
-                                            Si el paciente, por sí mismo o por medio de su representante, <strong style={{ color: '#f87171' }}>no ratifica la demanda, esta se tendrá por no presentada</strong> y quedarán sin efecto. Es importante que, si está en condiciones, la persona hospitalizada tenga conocimiento de que se presentó una demanda de amparo a su nombre para que la ratifique en caso de que así sea requerido.
+                                        <p style={{ margin: 0, fontSize: 14, color: '#d6cab4', lineHeight: 1.7 }}>
+                                            Si el paciente, por sí mismo o por medio de su representante, <strong style={{ color: CARMIN }}>no ratifica la demanda, esta se tendrá por no presentada</strong> y quedarán sin efecto. Es importante que, si está en condiciones, la persona hospitalizada tenga conocimiento de que se presentó una demanda de amparo a su nombre para que la ratifique en caso de que así sea requerido.
                                         </p>
-                                        <div style={{
-                                            padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)',
-                                        }}>
-                                            <p style={{ margin: 0, fontSize: 13, color: '#4ade80', lineHeight: 1.6 }}>
-                                                💚 Si la persona no está en posibilidades por sus condiciones de salud, no te preocupes — no será necesaria esa ratificación inmediata.
+                                        <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(143,191,138,0.07)', border: '1px solid rgba(143,191,138,0.22)' }}>
+                                            <p style={{ margin: 0, fontSize: 13, color: '#a9d3a2', lineHeight: 1.6 }}>
+                                                Si la persona no está en posibilidades por sus condiciones de salud, no te preocupes — no será necesaria esa ratificación inmediata.
                                             </p>
                                         </div>
                                     </div>
@@ -1281,81 +1245,41 @@ export default function SalvamePage() {
                 </main>
             )}
 
-            {/* ─── OMS/OPS DATA SECTION ───────────────────────────────── */}
+            {/* ─── DATOS DE SALUD (OMS/OPS) ────────────────────────────── */}
             {(phase === 'form' || phase === 'result') && (
-                <section style={{
-                    maxWidth: 760, margin: '0 auto', padding: '24px 24px 60px',
-                    animation: 'fadeIn 0.6s ease-out 0.2s both',
-                }}>
-                    <div style={{ margin: '0 0 20px' }}><EcgLine /></div>
-                    <h3 style={{ fontSize: 16, fontWeight: 600, color: '#888', margin: '0 0 16px', textAlign: 'center' }}>
-                        Datos de Salud — México (OMS/OPS)
-                    </h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
+                <section style={{ maxWidth: 800, margin: '0 auto', padding: '24px 24px 64px', animation: 'fadeIn 0.6s ease-out 0.2s both' }}>
+                    <div style={{ margin: '0 0 22px' }}><Filete /></div>
+                    <p className="sv-rotulo" style={{ margin: '0 0 18px', textAlign: 'center' }}>Datos de salud — México (OMS/OPS)</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
                         {[
-                            {
-                                icon: <MedicalCross size={18} color="#dc2626" />,
-                                title: 'Cobertura de servicios esenciales',
-                                value: '79.0',
-                                unit: '/ 100',
-                                desc: 'Índice de Cobertura de Servicios de Salud (UHC), 2023.',
-                                source: 'OMS',
-                            },
-                            {
-                                icon: <HospitalIcon size={18} />,
-                                title: 'Capacidad y acceso a servicios',
-                                value: '45.0',
-                                unit: '/ 100',
-                                desc: 'Subíndice de capacidad y acceso (UHC), 2023.',
-                                source: 'OMS',
-                            },
-                            {
-                                icon: <ChartIcon size={18} />,
-                                title: 'Gasto actual en salud',
-                                value: '6.08%',
-                                unit: 'del PIB',
-                                desc: 'Gasto corriente en salud de México, 2021.',
-                                source: 'Banco Mundial / OMS',
-                            },
-                            {
-                                icon: <ShieldCheck size={18} />,
-                                title: 'Seguridad del paciente',
-                                value: '1 de 10',
-                                unit: 'pacientes',
-                                desc: 'Sufre daños durante la atención; muchos son prevenibles.',
-                                source: 'OMS (contexto global)',
-                            },
+                            { icon: <Asclepio size={18} />, title: 'Cobertura de servicios esenciales', value: '79.0', unit: '/ 100', desc: 'Índice de Cobertura de Servicios de Salud (UHC), 2023.', source: 'OMS' },
+                            { icon: <HospitalIcon size={18} />, title: 'Capacidad y acceso a servicios', value: '45.0', unit: '/ 100', desc: 'Subíndice de capacidad y acceso (UHC), 2023.', source: 'OMS' },
+                            { icon: <ChartIcon size={18} />, title: 'Gasto actual en salud', value: '6.08%', unit: 'del PIB', desc: 'Gasto corriente en salud de México, 2021.', source: 'Banco Mundial / OMS' },
+                            { icon: <ShieldCheck size={18} />, title: 'Seguridad del paciente', value: '1 de 10', unit: 'pacientes', desc: 'Sufre daños durante la atención; muchos son prevenibles.', source: 'OMS (contexto global)' },
                         ].map((card, i) => (
-                            <div key={i} style={{
-                                padding: '18px', borderRadius: 14, background: '#151515', border: '1px solid #222',
-                                transition: 'border-color 0.2s',
-                            }}
-                                onMouseEnter={e => (e.currentTarget.style.borderColor = '#333')}
-                                onMouseLeave={e => (e.currentTarget.style.borderColor = '#222')}
-                            >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, color: '#999' }}>
+                            <div key={i} className="tarjeta-negra sv-panel" style={{ padding: 18, borderRadius: 14 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, color: ORO }}>
                                     {card.icon}
-                                    <span style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{card.title}</span>
+                                    <span style={{ fontSize: 11.5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#9d927f' }}>{card.title}</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 6 }}>
-                                    <span style={{ fontSize: 28, fontWeight: 700, color: '#f5f5f5' }}>{card.value}</span>
-                                    <span style={{ fontSize: 13, color: '#666' }}>{card.unit}</span>
+                                    <span className="sv-serif" style={{ fontSize: 30, color: '#f3e4c8' }}>{card.value}</span>
+                                    <span style={{ fontSize: 13, color: '#7d7466' }}>{card.unit}</span>
                                 </div>
-                                <p style={{ margin: 0, fontSize: 12, color: '#666', lineHeight: 1.4 }}>{card.desc}</p>
-                                <p style={{ margin: '6px 0 0', fontSize: 10, color: '#444' }}>Fuente: {card.source}</p>
+                                <p style={{ margin: 0, fontSize: 12.5, color: '#9d927f', lineHeight: 1.45 }}>{card.desc}</p>
+                                <p style={{ margin: '6px 0 0', fontSize: 10.5, color: '#6f675b' }}>Fuente: {card.source}</p>
                             </div>
                         ))}
                     </div>
                 </section>
             )}
 
-            {/* ─── FOOTER ─────────────────────────────────────────────── */}
-            <footer style={{ padding: '16px 24px', borderTop: '1px solid #1a1a1a', textAlign: 'center' }}>
-                <p style={{ margin: 0, fontSize: 11, color: '#444' }}>
-                    Iurexia Legal AI · SÁLVAME · Este módulo no constituye asesoría legal personalizada.
+            {/* ─── PIE ──────────────────────────────────────────────────── */}
+            <footer style={{ padding: '18px 24px', borderTop: '1px solid rgba(227,201,148,0.1)', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: 11.5, color: '#7d7466' }}>
+                    <span className="sv-marca">Iurexia</span> Legal AI · Sálvame · Este módulo no constituye asesoría legal personalizada.
                 </p>
             </footer>
         </div>
     );
 }
-
