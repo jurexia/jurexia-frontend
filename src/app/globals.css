@@ -2103,16 +2103,17 @@ h6 {
 }
 
 /* ═══ LA REJILLA DE HERRAMIENTAS DEL COMPOSITOR (25-sep-2026) ═══════════════
-   Cinco mosaicos iguales —Escrito legal, Sentencia, Precedentes, Jurimetría y
-   Toulmin— desde que el rayo y el globo salieron de la fila de arriba. Lo que
-   decide si caben NO es la pantalla sino el compositor: junto al documento
-   abierto, el chat se queda en 420 px aun en un monitor ancho, y ahí cada
-   mosaico mide ~68 px. Por eso una consulta de CONTENEDOR y no de pantalla:
-   por debajo de 500 px el icono va encima de la palabra, «Escrito legal» se
-   dice «Escrito» y el candado se calla (el gris ya dice que está cerrado). */
+   Seis mosaicos iguales —Escrito legal, Sentencia, Precedentes, Jurimetría,
+   Cronología (12-oct-2026) y Toulmin— desde que el rayo y el globo salieron de
+   la fila de arriba. Lo que decide si caben NO es la pantalla sino el
+   compositor: junto al documento abierto, el chat se queda en 420 px aun en un
+   monitor ancho, y ahí cada mosaico mide ~60 px. Por eso una consulta de
+   CONTENEDOR y no de pantalla: por debajo de 560 px el icono va encima de la
+   palabra, «Escrito legal» se dice «Escrito» y el candado se calla (el gris ya
+   dice que está cerrado). */
 .herramientas { container-type: inline-size; }
 .herramientas .mosaico-corto { display: none; }
-@container (max-width: 500px) {
+@container (max-width: 560px) {
   .herramientas .mosaico { flex-direction: column; gap: 2px; padding-left: 2px; padding-right: 2px; }
   .herramientas .mosaico-candado,
   .herramientas .mosaico-largo { display: none; }

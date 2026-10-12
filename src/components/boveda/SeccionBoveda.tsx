@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 
 import { isAdmin } from '@/app/leyesestatales/adminGuard'
+import { BOTON, BOTON_SUAVE, Seccion } from '@/components/carpetas/Mesa'
 import { useAuth } from '@/lib/useAuth'
 import {
     ErrorBoveda, PLANES_PLATINUM, ROTULO_ESTADO, borrarDocumentoBoveda, columnasSugeridas,
@@ -88,23 +89,18 @@ export default function SeccionBoveda({ carpetaId }: { carpetaId: string }) {
 
     if (!platinum) {
         return (
-            <section className="mb-8 rounded-xl border border-cream-400 bg-white p-5">
-                <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-accent-brown">
-                    <Vault className="h-4 w-4" />
-                    Bóveda
-                    <span className="ml-1 inline-flex items-center gap-1 rounded-full border border-accent-gold/40 px-2 py-0.5 text-[10px] font-semibold normal-case tracking-normal">
-                        <Lock className="h-2.5 w-2.5" /> Plan Platinum
-                    </span>
-                </h2>
-                <p className="mt-2.5 text-sm leading-relaxed text-charcoal-700/80">
+            <Seccion
+                id="boveda"
+                rotulo="Bóveda · Plan Platinum"
+                titulo="Pregúntale al expediente completo"
+                acciones={<span className="flex items-center gap-1 rounded-full bg-charcoal-900 px-2.5 py-1 text-[10px] font-semibold tracking-wider text-[#c9a962]"><Lock className="h-2.5 w-2.5" /> Platinum</span>}>
+                <p className="text-[13.5px] leading-relaxed text-piedra-700">
                     Sube el expediente completo —hasta 500 documentos en PDF o Word— y pregúntale a todos a
                     la vez: Iurexia responde citando el documento y la página. Arma tablas de revisión
                     (partes, vigencias, penas convencionales, jurisdicción…) con la cita literal de cada
                     respuesta, y expórtalas a Excel o Word.
                 </p>
-                <Link
-                    href="/precios"
-                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-charcoal-900 px-4 py-2 text-sm font-semibold text-cream-50 transition hover:bg-charcoal-800">
+                <Link href="/precios" className={`${BOTON} mt-4`}>
                     <Lock className="h-4 w-4 text-accent-gold" />
                     Ver el plan Platinum
                 </Link>
@@ -121,7 +117,7 @@ export default function SeccionBoveda({ carpetaId }: { carpetaId: string }) {
                         </button>
                     </p>
                 ) : null}
-            </section>
+            </Seccion>
         )
     }
 
@@ -221,8 +217,8 @@ export default function SeccionBoveda({ carpetaId }: { carpetaId: string }) {
     const contando = (r?.por_revisar ?? 0) > 0
 
     return (
-        <section
-            className={`mb-8 rounded-xl border bg-white p-5 transition ${arrastrando ? 'border-accent-gold ring-2 ring-accent-gold/40' : 'border-cream-400'}`}
+        <div
+            className={`rounded-2xl transition ${arrastrando ? 'ring-2 ring-accent-gold/60' : ''}`}
             onDragOver={(e) => { e.preventDefault(); setArrastrando(true) }}
             onDragLeave={() => setArrastrando(false)}
             onDrop={(e) => {
@@ -230,28 +226,17 @@ export default function SeccionBoveda({ carpetaId }: { carpetaId: string }) {
                 setArrastrando(false)
                 void subir(Array.from(e.dataTransfer.files))
             }}>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-accent-brown">
-                    <Vault className="h-4 w-4" />
-                    Bóveda
-                    {r ? (
-                        <span className="ml-1 text-xs font-normal normal-case tracking-normal text-charcoal-700/60">
-                            {r.listos.toLocaleString('es-MX')} documentos · {r.paginas_listas.toLocaleString('es-MX')} páginas
-                        </span>
-                    ) : null}
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                    {r && r.listos > 0 ? (
-                        <Link
-                            href={`/chat?carpeta=${carpetaId}&boveda=1`}
-                            className="flex items-center gap-2 rounded-lg bg-charcoal-900 px-3.5 py-2 text-sm font-semibold text-cream-50 transition hover:bg-charcoal-800">
-                            <MessagesSquare className="h-4 w-4 text-accent-gold" />
-                            Preguntar a la Bóveda
-                        </Link>
-                    ) : null}
-                </div>
-            </div>
-            <p className="mt-2.5 text-sm leading-relaxed text-charcoal-700/80">
+        <Seccion
+            id="boveda"
+            rotulo={r ? `Bóveda · ${r.listos.toLocaleString('es-MX')} documentos · ${r.paginas_listas.toLocaleString('es-MX')} páginas` : 'Bóveda'}
+            titulo="Pregúntale al expediente completo"
+            acciones={r && r.listos > 0 ? (
+                <Link href={`/chat?carpeta=${carpetaId}&boveda=1`} className={BOTON}>
+                    <MessagesSquare className="h-4 w-4 text-accent-gold" />
+                    Preguntar a la Bóveda
+                </Link>
+            ) : undefined}>
+            <p className="text-[13.5px] leading-relaxed text-piedra-700">
                 Hasta {reglas?.cuotas.docs_carpeta ?? 500} documentos (PDF o Word) para preguntarles juntos.
                 Subir no cuesta: Iurexia cuenta las páginas y te dice cuánto costará antes de indexar
                 (1 consulta por cada {reglas?.reglas.paginas_ocr_por_consulta ?? 10} páginas escaneadas
@@ -274,13 +259,13 @@ export default function SeccionBoveda({ carpetaId }: { carpetaId: string }) {
                 <button
                     onClick={() => entradaArchivos.current?.click()}
                     disabled={subida !== null}
-                    className="flex items-center gap-1.5 rounded-lg border border-cream-400 bg-cream-50 px-3 py-2 text-sm font-semibold text-charcoal-700 transition hover:bg-cream-200 disabled:opacity-50">
+                    className={BOTON_SUAVE}>
                     <FileUp className="h-4 w-4" /> Subir documentos
                 </button>
                 <button
                     onClick={() => entradaCarpeta.current?.click()}
                     disabled={subida !== null}
-                    className="flex items-center gap-1.5 rounded-lg border border-cream-400 bg-cream-50 px-3 py-2 text-sm font-semibold text-charcoal-700 transition hover:bg-cream-200 disabled:opacity-50">
+                    className={BOTON_SUAVE}>
                     <FolderUp className="h-4 w-4" /> Subir una carpeta
                 </button>
                 <span className="text-xs text-charcoal-700/50">o arrástralos aquí</span>
@@ -318,14 +303,14 @@ export default function SeccionBoveda({ carpetaId }: { carpetaId: string }) {
                         <button
                             onClick={() => void confirmar()}
                             disabled={cobrando || !cot.alcanza || cot.excede_cuota}
-                            className="flex items-center gap-2 rounded-lg bg-charcoal-900 px-4 py-2 text-sm font-semibold text-cream-50 transition hover:bg-charcoal-800 disabled:opacity-50">
+                            className={BOTON}>
                             {cobrando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Vault className="h-4 w-4 text-accent-gold" />}
                             Indexar · {cot.consultas} {cot.consultas === 1 ? 'consulta' : 'consultas'}
                         </button>
                         <button
                             onClick={() => void descartarPendientes()}
                             disabled={cobrando}
-                            className="rounded-lg border border-cream-400 px-4 py-2 text-sm font-semibold text-charcoal-700 transition hover:bg-cream-100">
+                            className={BOTON_SUAVE}>
                             Descartar
                         </button>
                     </div>
@@ -348,7 +333,7 @@ export default function SeccionBoveda({ carpetaId }: { carpetaId: string }) {
                         <button
                             onClick={() => void nuevaTabla()}
                             disabled={creandoTabla}
-                            className="flex items-center gap-1.5 rounded-lg border border-cream-400 px-3 py-1.5 text-sm font-semibold text-charcoal-700 transition hover:bg-cream-100 disabled:opacity-50">
+                            className={BOTON_SUAVE}>
                             {creandoTabla ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                             Nueva tabla
                         </button>
@@ -425,7 +410,8 @@ export default function SeccionBoveda({ carpetaId }: { carpetaId: string }) {
                     </button>
                 </details>
             ) : null}
-        </section>
+        </Seccion>
+        </div>
     )
 }
 

@@ -91,11 +91,11 @@ function estadoDe(s: Seguimiento, rev: Revision | undefined): Estado {
                  texto: 'Le toca a usted: marque la casilla', icono: AlertTriangle };
     }
     if (!rev) {
-        return { color: 'text-charcoal-500', fondo: 'bg-cream-100 border-cream-400',
+        return { color: 'text-piedra-500', fondo: 'bg-cream-100 border-cream-400',
                  texto: 'Aún no se ha revisado hoy', icono: Clock };
     }
     if (rev.resultado === 'inhabil') {
-        return { color: 'text-charcoal-500', fondo: 'bg-cream-100 border-cream-400',
+        return { color: 'text-piedra-500', fondo: 'bg-cream-100 border-cream-400',
                  texto: 'Hoy es inhábil', icono: Clock };
     }
     if (rev.resultado.startsWith('fallo')) {
@@ -166,7 +166,7 @@ export default function SeguimientoPanel() {
 
     if (cargando) {
         return (
-            <div className="flex items-center gap-2 py-16 text-sm text-charcoal-500">
+            <div className="flex items-center gap-2 py-16 text-sm text-piedra-500">
                 <Loader2 className="h-4 w-4 animate-spin" /> Abriendo el seguimiento…
             </div>
         );
@@ -174,20 +174,20 @@ export default function SeguimientoPanel() {
 
     if (!filas.length) {
         return (
-            <div className="rounded-2xl border border-cream-400 bg-white px-8 py-14 text-center">
+            <div className="rounded-2xl bg-white/90 px-8 py-14 text-center ring-1 ring-charcoal-900/10">
                 <FolderClosed className="mx-auto mb-4 h-10 w-10 text-charcoal-900"
                               strokeWidth={1.25} />
                 <h3 className="font-serif text-xl font-semibold text-charcoal-900">
                     Todavía no sigue ningún expediente
                 </h3>
-                <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-charcoal-600">
+                <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-piedra-600">
                     Dé de alta el número y el órgano, y Iurexia lo revisa cada día a las
                     9:10, hora de la Ciudad de México. Le escribirá sólo cuando haya algo
                     nuevo — y también si un día no pudo revisar.
                 </p>
                 <button
                     onClick={() => setAlta(true)}
-                    className="mt-6 inline-flex items-center gap-2 rounded-lg bg-charcoal-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-charcoal-800"
+                    className="mt-6 inline-flex items-center gap-2 rounded-full bg-charcoal-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-charcoal-800"
                 >
                     <Plus className="h-4 w-4" /> Seguir un expediente
                 </button>
@@ -200,7 +200,7 @@ export default function SeguimientoPanel() {
     return (
         <div>
             {/* La promesa comprobable */}
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cream-400 bg-white px-4 py-3">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white/90 px-4 py-3 ring-1 ring-charcoal-900/10">
                 <p className="text-sm text-charcoal-700">
                     {ultimaCompleta
                         ? <>Última revisión completa: <strong className="text-charcoal-900">
@@ -210,7 +210,7 @@ export default function SeguimientoPanel() {
                 </p>
                 <button
                     onClick={() => setAlta(true)}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-charcoal-900/12 px-3 py-1.5 text-xs font-semibold text-charcoal-800 transition-colors hover:bg-charcoal-900/[0.04]">
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-charcoal-900/12 px-3 py-1.5 text-xs font-semibold text-charcoal-800 transition-colors hover:bg-charcoal-900/[0.04]">
                     <Plus className="h-3.5 w-3.5" /> Seguir otro
                 </button>
             </div>
@@ -222,7 +222,7 @@ export default function SeguimientoPanel() {
                     const federal = s.organo?.jurisdiccion === 'PJF';
                     return (
                         <li key={s.id}
-                            className="rounded-xl border border-cream-400 bg-white p-4 transition-shadow hover:shadow-sm">
+                            className="rounded-2xl bg-white/90 p-4 ring-1 ring-charcoal-900/10 transition-shadow hover:shadow-md">
                             <div className="flex flex-wrap items-start justify-between gap-3">
                                 <div className="min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-2">
@@ -232,13 +232,13 @@ export default function SeguimientoPanel() {
                                         <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
                                             federal
                                                 ? 'border-accent-gold/40 bg-accent-gold/10 text-accent-brown'
-                                                : 'border-charcoal-900/12 bg-charcoal-900/[0.04] text-charcoal-600'}`}>
+                                                : 'border-charcoal-900/12 bg-charcoal-900/[0.04] text-piedra-600'}`}>
                                             {federal ? <Scale className="h-2.5 w-2.5" />
                                                      : <Building2 className="h-2.5 w-2.5" />}
                                             {federal ? 'Federal' : 'Ciudad de México'}
                                         </span>
                                         {s.neun && (
-                                            <span className="font-mono text-[11px] text-charcoal-400">
+                                            <span className="font-mono text-[11px] text-piedra-400">
                                                 NEUN {s.neun}
                                             </span>
                                         )}
@@ -246,7 +246,7 @@ export default function SeguimientoPanel() {
                                     <p className="mt-1 truncate text-sm font-medium text-charcoal-800">
                                         {s.alias}
                                     </p>
-                                    <p className="mt-0.5 truncate text-xs text-charcoal-500">
+                                    <p className="mt-0.5 truncate text-xs text-piedra-500">
                                         {s.organo?.nombre}
                                     </p>
                                 </div>
@@ -264,7 +264,7 @@ export default function SeguimientoPanel() {
             <SeguirExpediente abierto={alta} cerrar={() => setAlta(false)}
                               alGuardar={traer} />
 
-            <p className="mt-5 text-xs leading-relaxed text-charcoal-400">
+            <p className="mt-5 text-xs leading-relaxed text-piedra-400">
                 La información procede de los portales oficiales y es de carácter
                 informativo; no sustituye la consulta del expediente. El Consejo de la
                 Judicatura Federal advierte que sus datos, aun siendo los mismos que

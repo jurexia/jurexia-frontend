@@ -14,6 +14,7 @@ import {
     Mic,
     BookOpen,
     BarChart2,
+    GanttChartSquare,
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
 import SelectorFuentes from './SelectorFuentes';
@@ -25,6 +26,8 @@ import TextEnhanceModal from './TextEnhanceModal';
 import DraftModal, { DraftRequest } from './DraftModal';
 import SentenciaModal from './SentenciaModal';
 import JurimetriaModal from './JurimetriaModal';
+import PanelCronologia from './cronologia/PanelCronologia';
+import { puedeCronologia } from '@/lib/cronologia';
 import { enhanceText } from '@/lib/api';
 import { useAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
@@ -90,7 +93,8 @@ export default function ChatInput({
     const [showEnhanceModal, setShowEnhanceModal] = useState(false);
     const [showDraftModal, setShowDraftModal] = useState(false);
     const [showSentenciaModal, setShowSentenciaModal] = useState(false);
-    const [showUpgradeModal, setShowUpgradeModal] = useState<'pro' | 'platinum' | null>(null);
+    const [showUpgradeModal, setShowUpgradeModal] = useState<'pro' | 'platinum' | 'cronologia' | null>(null);
+    const [showCronologia, setShowCronologia] = useState(false);
     const [showJurimetriaModal, setShowJurimetriaModal] = useState(false);
     const [attachedDocument, setAttachedDocument] = useState<{ file: File; fileName: string } | null>(null);
     const [arrastrando, setArrastrando] = useState(false);
@@ -216,6 +220,9 @@ export default function ChatInput({
     const _PRO_PLUS = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
     const canAccessPrecedentes = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
     const canAccessJurimetria  = isAdmin(user?.email) || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
+    // La Cronología del expediente (12-oct-2026) es de Platinum; la API lo
+    // comprueba también, esto sólo decide si el mosaico va con candado.
+    const canAccessCronologia = puedeCronologia(profile?.subscription_type, user?.email);
     // (El Secretario del PJF se mudó a la barra superior del chat; su
     //  comprobación de plan vive ahora en app/chat/page.tsx.)
 
@@ -812,7 +819,7 @@ ${draftRequest.descripcion}`;
                             teléfono, o el chat reducido a 420 px junto al
                             documento— cada mosaico pone el icono encima de la
                             palabra: ver `.herramientas` en globals.css. */}
-                        <div className={`grid ${onAbrirConstructor ? 'grid-cols-5' : 'grid-cols-4'} gap-1.5 w-full`}>
+                        <div className={`grid ${onAbrirConstructor ? 'grid-cols-6' : 'grid-cols-5'} gap-1.5 w-full`}>
 
                             <button
                                 data-guide="escrito"
@@ -886,6 +893,22 @@ ${draftRequest.descripcion}`;
                                 <BarChart2 className="w-2.5 h-2.5 flex-shrink-0" />
                                 <span className="truncate">Jurimetría</span>
                                 {!canAccessJurimetria && <Lock className="mosaico-candado w-2 h-2 flex-shrink-0 opacity-60" />}
+                            </button>
+
+                            <button
+                                data-guide="cronologia"
+                                onClick={() => canAccessCronologia ? setShowCronologia(true) : setShowUpgradeModal('cronologia')}
+                                title={!canAccessCronologia ? 'Plan Platinum' : 'Cronología del expediente: hechos con su página, cuestiones y plazos'}
+                                className={`mosaico flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
+                                    transition-all duration-200
+                                    ${!canAccessCronologia
+                                        ? 'bg-gray-200 text-gray-400 cursor-pointer'
+                                        : 'bg-charcoal-900/90 text-white/90 hover:bg-charcoal-900 hover:text-white'
+                                    }`}
+                            >
+                                <GanttChartSquare className="w-2.5 h-2.5 flex-shrink-0" />
+                                <span className="truncate">Cronología</span>
+                                {!canAccessCronologia && <Lock className="mosaico-candado w-2 h-2 flex-shrink-0 opacity-60" />}
                             </button>
 
                             {onAbrirConstructor && (
@@ -1188,6 +1211,8 @@ ${draftRequest.descripcion}`;
                 userEmail={user?.email ?? ''}
             />
 
+            <PanelCronologia abierto={showCronologia} onCerrar={() => setShowCronologia(false)} />
+
             {/* Modal de upgrade — aparece al tocar funciones bloqueadas */}
             {showUpgradeModal !== null && (
                 <div
@@ -1207,7 +1232,16 @@ ${draftRequest.descripcion}`;
                             incluía el «Redactor TCC Beta», pero el redactor es del
                             plan Ultra Secretarios desde el 13-sep-2026, y la
                             Jurimetría la tienen Platinum y Ultra (`canAccessJurimetria`). */}
-                        {showUpgradeModal === 'platinum' ? (
+                        {showUpgradeModal === 'cronologia' ? (
+                            <>
+                                <p className="text-[10px] font-bold tracking-[0.18em] text-[#c9a962] uppercase mb-2">
+                                    Cronología · Plan Platinum
+                                </p>
+                                <p className="text-white/80 text-sm leading-relaxed mb-6">
+                                    Suba un expediente completo y reciba la cronología de los hechos con la página exacta de cada uno, las cuestiones en disputa y los plazos que corren. Está en el plan <span className="text-white font-semibold">Platinum</span> de Iurexia.
+                                </p>
+                            </>
+                        ) : showUpgradeModal === 'platinum' ? (
                             <>
                                 <p className="text-[10px] font-bold tracking-[0.18em] text-[#c9a962] uppercase mb-2">
                                     Jurimetría · Plan Platinum
@@ -1232,7 +1266,7 @@ ${draftRequest.descripcion}`;
                                 className="block w-full py-2.5 rounded-xl text-center text-sm font-bold transition-all hover:scale-[1.02] active:scale-95"
                                 style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c56d)', color: '#1a1a1a' }}
                             >
-                                {showUpgradeModal === 'platinum' ? 'Ver plan Platinum' : 'Ver planes Pro'}
+                                {showUpgradeModal === 'pro' ? 'Ver planes Pro' : 'Ver plan Platinum'}
                             </a>
                             <button
                                 onClick={() => setShowUpgradeModal(null)}
