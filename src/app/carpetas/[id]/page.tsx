@@ -14,12 +14,15 @@ import {
     Loader2,
     Sparkles,
     FileSignature,
+    GanttChartSquare,
+    Lock,
     Target,
     Trash2,
     Upload,
 } from 'lucide-react'
 
 import GenerarEscrito from '@/components/GenerarEscrito'
+import PanelCronologia from '@/components/cronologia/PanelCronologia'
 import Navbar from '@/components/Navbar'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { ArchivoIcono, CarpetaIcono } from '@/components/CarpetaIcono'
@@ -44,6 +47,7 @@ import {
 } from '@/lib/expedientes'
 import { consultasDeCarpeta, tituloLimpio, type ConsultaDeCarpeta } from '@/lib/consultas-carpeta'
 import { flujoPorId } from '@/lib/flujos'
+import { lista as listarCronologias, puedeCronologia, type TrabajoCrono } from '@/lib/cronologia'
 
 /**
  * Dentro de una carpeta.
@@ -67,7 +71,7 @@ function Detalle() {
     const router = useRouter()
     const params = useParams<{ id: string }>()
     const id = String(params?.id ?? '')
-    const { session, profile } = useAuth()
+    const { session, profile, user } = useAuth()
 
     const [expediente, setExpediente] = useState<Expediente | null>(null)
     const [documentos, setDocumentos] = useState<DocumentoExpediente[]>([])
@@ -82,6 +86,11 @@ function Detalle() {
     /* Las consultas que viven en esta carpeta (25-sep-2026). `null`: la base
        todavía no guarda el vínculo, y la sección no se enseña. */
     const [consultas, setConsultas] = useState<ConsultaDeCarpeta[] | null>(null)
+    // La Cronología del expediente (12-oct-2026, Platinum): lee los PDF de la
+    // carpeta sin volver a subirlos. `cronologiaDe` abre una ya hecha.
+    const [cronologiaAbierta, setCronologiaAbierta] = useState(false)
+    const [cronologiaDe, setCronologiaDe] = useState<string | null>(null)
+    const [cronologias, setCronologias] = useState<TrabajoCrono[]>([])
 
     useEffect(() => {
         if (!id) return
@@ -89,6 +98,14 @@ function Detalle() {
         consultasDeCarpeta(id).then((c) => { if (vigente) setConsultas(c) })
         return () => { vigente = false }
     }, [id])
+
+    const conCronologia = puedeCronologia(profile?.subscription_type, user?.email)
+    useEffect(() => {
+        if (!id || !conCronologia || cronologiaAbierta) return
+        let vigente = true
+        listarCronologias(id).then((c) => { if (vigente) setCronologias(c) }).catch(() => {})
+        return () => { vigente = false }
+    }, [id, conCronologia, cronologiaAbierta])
 
     const entradaArchivo = useRef<HTMLInputElement>(null)
     const gavetaDestino = useRef<CategoriaDocumento>('base')
@@ -568,6 +585,61 @@ function Detalle() {
                             : 'Redactar un escrito · 1 consulta'}
                     </button>
                 </section>
+
+                {/* ── Cronología del expediente (12-oct-2026, Platinum) ─────
+                    Los PDF de la carpeta se leen donde ya están guardados: no
+                    se vuelven a subir. Cuesta una consulta por cada N páginas y
+                    el panel lo dice antes de cobrar. */}
+                <section className="mb-8 rounded-xl border border-cream-400 bg-white p-5">
+                    <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-accent-brown">
+                        <GanttChartSquare className="h-4 w-4" />
+                        Cronología del expediente
+                        {!conCronologia && <span className="ml-1 flex items-center gap-1 rounded-full bg-charcoal-900 px-2 py-0.5 text-[10px] tracking-wider text-[#c9a962]"><Lock className="h-2.5 w-2.5" /> Platinum</span>}
+                    </h2>
+                    <p className="mt-2.5 text-sm leading-relaxed text-charcoal-700/80">
+                        Los hechos del expediente en orden, cada uno con la página donde consta; las
+                        cuestiones en disputa y los plazos que corren, para Word y para su agenda.
+                        Se cobra en proporción a las páginas, y se le dice cuánto antes de cobrar.
+                    </p>
+                    {cronologias.length > 0 && (
+                        <ul className="mt-3 divide-y divide-cream-300 rounded-lg border border-cream-300">
+                            {cronologias.slice(0, 5).map((c) => (
+                                <li key={c.id}>
+                                    <button
+                                        onClick={() => { setCronologiaDe(c.id); setCronologiaAbierta(true) }}
+                                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-cream-100">
+                                        <span className="min-w-0 flex-1 truncate">{c.titulo || 'Cronología'}</span>
+                                        <span className="flex-shrink-0 text-xs text-charcoal-700/60">
+                                            {c.paginas} págs. · {c.estado === 'lista'
+                                                ? new Date(c.created_at).toLocaleDateString('es-MX')
+                                                : c.estado === 'error' ? 'falló' : 'en proceso'}
+                                        </span>
+                                        <ChevronRight className="h-4 w-4 flex-shrink-0 text-charcoal-700/40" />
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                    <button
+                        onClick={() => { setCronologiaDe(null); setCronologiaAbierta(true) }}
+                        disabled={conCronologia && documentos.length === 0}
+                        className="mt-4 flex items-center gap-2 rounded-lg bg-charcoal-900 px-5 py-2.5 text-sm font-semibold text-cream-50 transition hover:bg-charcoal-800 disabled:opacity-50">
+                        {conCronologia ? <GanttChartSquare className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                        {!conCronologia
+                            ? 'Disponible en Platinum'
+                            : documentos.length === 0
+                                ? 'Sube un documento primero'
+                                : 'Construir la cronología'}
+                    </button>
+                </section>
+
+                <PanelCronologia
+                    abierto={cronologiaAbierta}
+                    onCerrar={() => setCronologiaAbierta(false)}
+                    carpetaId={id}
+                    documentosCarpeta={documentos.map((d) => ({ id: d.id, nombre: d.nombre, mime_type: d.mime_type }))}
+                    trabajoInicial={cronologiaDe}
+                />
 
                 {/* ── Las gavetas ──────────────────────────────────────────── */}
                 <h2 className="mb-4 font-serif text-xl font-semibold text-charcoal-900">
