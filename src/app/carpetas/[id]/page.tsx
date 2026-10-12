@@ -27,6 +27,9 @@ import Navbar from '@/components/Navbar'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { ArchivoIcono, CarpetaIcono } from '@/components/CarpetaIcono'
 import { useAuth } from '@/lib/useAuth'
+import { CalendarDays, FolderOpen, Pencil } from 'lucide-react'
+import { BOTON, BOTON_CLARO, BOTON_CLARO_SUAVE, BOTON_SUAVE, Cifra, FondoMesa, Portada, Seccion } from '@/components/carpetas/Mesa'
+import { arteDeCarpeta, haceCuanto } from '@/lib/arte-carpeta'
 import {
     actualizarObjetivo,
     borrarDocumento,
@@ -58,6 +61,11 @@ import { lista as listarCronologias, puedeCronologia, type TrabajoCrono } from '
  * El análisis va **arriba de los documentos** a propósito. Si el abogado abre y
  * lo primero que ve es una lista de archivos, esto es un Dropbox; si lo primero
  * que ve es «te falta el acuse de recibo del 12 de marzo», es otra cosa.
+ *
+ * EL REDISEÑO (12-oct-2026), el de la Agenda y Connect: la portada oscura con
+ * el grabado de la carpeta, la columna de trabajo en secciones <Seccion> y, al
+ * lado, la ficha con el avance, el índice de la carpeta y los atajos. Una
+ * sección nueva se arma con <Seccion> para que la carpeta hable igual.
  */
 export default function CarpetaPage() {
     return (
@@ -267,39 +275,44 @@ function Detalle() {
 
     if (cargando) {
         return (
-            <div className="min-h-screen bg-cream-300">
+            <FondoMesa>
                 <Navbar plataforma />
-                <div className="mx-auto max-w-4xl px-4 pt-28">
-                    <div className="h-48 animate-pulse rounded-xl border border-cream-400 bg-cream-100" />
+                <div className="mx-auto max-w-6xl px-4 pt-20 sm:px-6">
+                    <div className="h-64 animate-pulse rounded-2xl bg-[#2a2620]/80" />
+                    <div className="mt-7 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+                        <div className="h-72 animate-pulse rounded-2xl bg-white/60" />
+                        <div className="hidden h-72 animate-pulse rounded-2xl bg-white/60 lg:block" />
+                    </div>
                 </div>
-            </div>
+            </FondoMesa>
         )
     }
 
     if (!expediente) {
         return (
-            <div className="min-h-screen bg-cream-300">
+            <FondoMesa>
                 <Navbar plataforma />
-                <div className="mx-auto max-w-4xl px-4 pt-28 text-center">
-                    <h1 className="font-serif text-2xl text-charcoal-900">
+                <div className="mx-auto max-w-xl px-4 pt-32 text-center">
+                    <p className="text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent-brown">Mis carpetas</p>
+                    <h1 className="mt-2 font-serif text-[30px] font-normal text-charcoal-900">
                         Esta carpeta ya no existe
                     </h1>
-                    <button
-                        onClick={() => router.push('/carpetas')}
-                        className="mt-4 text-sm font-semibold text-accent-brown hover:underline">
+                    <button onClick={() => router.push('/carpetas')} className={`${BOTON} mt-6`}>
+                        <ArrowLeft className="h-4 w-4" />
                         Volver a mis carpetas
                     </button>
                 </div>
-            </div>
+            </FondoMesa>
         )
     }
 
     const tipo = tipoCarpeta(expediente.tipo)
     const gavetas = categoriasDe(expediente.tipo)
     const leidos = documentos.filter((d) => d.extracto).length
+    const materia = expediente.materia ? etiquetaMateria(expediente.materia) : null
 
     return (
-        <div className="min-h-screen bg-cream-300">
+        <FondoMesa>
             <Navbar plataforma />
 
             <input
@@ -320,242 +333,228 @@ function Detalle() {
                 />
             ) : null}
 
-            <main className="mx-auto max-w-4xl px-4 pb-20 pt-24 sm:px-6">
-                {/* ── Ruta ─────────────────────────────────────────────────── */}
-                <button
-                    onClick={() => router.push('/carpetas')}
-                    className="mb-5 flex items-center gap-1.5 text-sm text-charcoal-700/70 transition hover:text-charcoal-900">
-                    <ArrowLeft className="h-4 w-4" />
-                    Mis carpetas inteligentes
-                </button>
-
-                {/* ── Encabezado ───────────────────────────────────────────── */}
-                <div className="mb-6 flex items-start gap-5">
-                    <CarpetaIcono
-                        tipo={expediente.tipo}
-                        tamano={84}
-                        documentos={documentos.length}
-                        avance={expediente.avance}
-                    />
-                    <div className="min-w-0 flex-1">
-                        <h1 className="font-serif text-2xl font-semibold leading-tight text-charcoal-900">
-                            {nombreCarpeta(expediente)}
-                        </h1>
-                        <p className="mt-1 text-sm text-charcoal-700/60">
-                            {tipo.label}
-                            {expediente.materia ? ` · ${etiquetaMateria(expediente.materia)}` : ''}
-                            {` · ${documentos.length} ${documentos.length === 1 ? 'documento' : 'documentos'}`}
-                        </p>
+            <main className="mx-auto max-w-6xl px-4 pb-20 pt-20 sm:px-6">
+                {/* ── La portada: el grabado de la carpeta, su nombre y lo que
+                    se hace desde aquí. El mismo grabado que su tarjeta en el
+                    escritorio, para que se reconozca al entrar. */}
+                <Portada
+                    arte={arteDeCarpeta(expediente.id, expediente.tipo)}
+                    arriba={
+                        <button
+                            onClick={() => router.push('/carpetas')}
+                            className="mb-5 inline-flex items-center gap-1.5 border-b border-[#bdab86]/70 pb-0.5 text-[12px] text-[#e4d4b6] transition hover:text-white">
+                            <ArrowLeft className="h-3.5 w-3.5" />
+                            Mis carpetas inteligentes
+                        </button>
+                    }
+                    rotulo={[tipo.label, materia].filter(Boolean).join(' · ')}
+                    titulo={nombreCarpeta(expediente)}>
+                    <div className="mt-5 flex flex-wrap gap-2">
+                        <Cifra valor={documentos.length} rotulo={documentos.length === 1 ? 'documento' : 'documentos'} />
+                        {documentos.length > 0 ? <Cifra valor={`${leidos} de ${documentos.length}`} rotulo="leídos por Iurexia" /> : null}
+                        {expediente.avance !== null ? <Cifra valor={`${expediente.avance}%`} rotulo="de avance" /> : null}
+                        <Cifra valor={`Actualizada ${haceCuanto(expediente.updated_at)}`} />
                     </div>
-                    <button
-                        onClick={() => void eliminarCarpeta()}
-                        title="Eliminar la carpeta"
-                        className="rounded-lg p-2 text-charcoal-700/40 transition hover:bg-red-50 hover:text-red-600">
-                        <Trash2 className="h-4 w-4" />
-                    </button>
-                </div>
+                    <div className="mt-6 flex flex-wrap gap-2">
+                        <Link href={`/chat?carpeta=${id}`} className={BOTON_CLARO}>
+                            <SquarePen className="h-4 w-4" />
+                            Nueva consulta
+                        </Link>
+                        <button onClick={() => setRedactando(true)} disabled={leidos === 0} className={BOTON_CLARO_SUAVE}
+                            title={leidos === 0 ? 'Suba un documento primero' : 'Cuesta una consulta'}>
+                            <FileSignature className="h-4 w-4" />
+                            Redactar un escrito
+                        </button>
+                        <button onClick={() => pedirArchivo(gavetas[0]?.value ?? 'base')} disabled={subiendoEn !== null} className={BOTON_CLARO_SUAVE}>
+                            {subiendoEn !== null ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                            Subir documentos
+                        </button>
+                    </div>
+                </Portada>
 
                 {error ? (
-                    <div className="mb-6 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <div className="mt-6 flex items-start gap-2 rounded-2xl bg-red-50 px-4 py-3 text-[13px] text-red-800 ring-1 ring-red-200">
                         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                         <span className="flex-1 whitespace-pre-line">{error}</span>
                     </div>
                 ) : null}
 
+                <div className="mt-7 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+                <div className="min-w-0 space-y-6">
+
                 {/* ── El objetivo ──────────────────────────────────────────── */}
-                <section className="mb-6 rounded-xl border border-cream-400 bg-cream-100 p-5">
-                    <h2 className="mb-2 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-accent-brown">
-                        <Target className="h-4 w-4" />
-                        Objetivo
-                    </h2>
+                <Seccion
+                    id="objetivo"
+                    rotulo="El objetivo"
+                    titulo="Qué quiere lograr"
+                    acciones={!editandoObjetivo ? (
+                        <button
+                            onClick={() => {
+                                setBorradorObjetivo(expediente.objetivo ?? '')
+                                setEditandoObjetivo(true)
+                            }}
+                            className={BOTON_SUAVE}>
+                            <Pencil className="h-3.5 w-3.5" />
+                            {expediente.objetivo ? 'Editar' : 'Escribir el objetivo'}
+                        </button>
+                    ) : null}>
                     {editandoObjetivo ? (
                         <div className="space-y-3">
                             <textarea
                                 value={borradorObjetivo}
                                 onChange={(e) => setBorradorObjetivo(e.target.value)}
                                 rows={3}
+                                autoFocus
                                 placeholder={tipo.ejemploObjetivo}
-                                className="w-full resize-none rounded-lg border border-cream-400 bg-cream-50 px-3 py-2.5 text-sm outline-none focus:border-accent-gold"
+                                className="w-full resize-none rounded-xl border-0 bg-[#fbf8f1] px-4 py-3 text-[14px] leading-relaxed text-charcoal-900 outline-none ring-1 ring-charcoal-900/15 focus:ring-2 focus:ring-accent-gold"
                             />
                             <div className="flex gap-2">
-                                <button
-                                    onClick={() => void guardarObjetivo()}
-                                    className="rounded-lg bg-charcoal-900 px-4 py-2 text-sm font-semibold text-cream-50">
+                                <button onClick={() => void guardarObjetivo()} className={BOTON}>
                                     Guardar
                                 </button>
-                                <button
-                                    onClick={() => setEditandoObjetivo(false)}
-                                    className="rounded-lg border border-cream-400 px-4 py-2 text-sm font-semibold text-charcoal-700">
+                                <button onClick={() => setEditandoObjetivo(false)} className={BOTON_SUAVE}>
                                     Cancelar
                                 </button>
                             </div>
                         </div>
+                    ) : expediente.objetivo ? (
+                        <p className="border-l-2 border-accent-gold pl-4 text-[15.5px] leading-relaxed text-charcoal-900">
+                            {expediente.objetivo}
+                        </p>
                     ) : (
-                        <button
-                            onClick={() => {
-                                setBorradorObjetivo(expediente.objetivo ?? '')
-                                setEditandoObjetivo(true)
-                            }}
-                            className="w-full text-left">
-                            {expediente.objetivo ? (
-                                <p className="leading-relaxed text-charcoal-900">
-                                    {expediente.objetivo}
-                                </p>
-                            ) : (
-                                <p className="text-sm italic leading-relaxed text-charcoal-700/50">
-                                    Sin objetivo. Escríbelo y Iurexia podrá medir qué te falta para
-                                    llegar, en vez de sólo describirte lo que ya tienes.
-                                </p>
-                            )}
-                        </button>
+                        <p className="text-[13.5px] italic leading-relaxed text-piedra-500">
+                            Sin objetivo. Escríbalo y Iurexia podrá medir qué le falta para llegar, en vez de
+                            sólo describirle lo que ya tiene.
+                        </p>
                     )}
-                </section>
+                </Seccion>
 
                 {/* ── El análisis ──────────────────────────────────────────── */}
-                <section className="mb-8 rounded-xl border border-cream-400 bg-cream-100 p-5">
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                        <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-accent-brown">
-                            <Sparkles className="h-4 w-4" />
-                            Lo que ve Iurexia
-                        </h2>
-                        {expediente.avance !== null ? (
-                            <span className="rounded-full bg-accent-gold/20 px-3 py-1 text-sm font-bold text-accent-brown">
-                                {expediente.avance}% de avance
-                            </span>
-                        ) : null}
-                    </div>
-
+                <Seccion
+                    id="analisis"
+                    rotulo="El análisis"
+                    titulo="Lo que ve Iurexia"
+                    acciones={expediente.avance !== null ? (
+                        <span className="rounded-full bg-[#f3e8cc] px-3 py-1 text-[12px] font-semibold text-[#6b5530] ring-1 ring-[#c9a962]/40">
+                            {expediente.avance}% de avance
+                        </span>
+                    ) : null}>
                     {analizando ? (
-                        <div className="flex items-center gap-3 py-6 text-sm text-charcoal-700/70">
+                        <div className="flex items-center gap-3 rounded-xl bg-[#fbf8f1] px-4 py-5 text-[13.5px] text-piedra-700 ring-1 ring-charcoal-900/5">
                             <Loader2 className="h-5 w-5 animate-spin text-accent-brown" />
                             {progreso?.fase === 'leyendo'
                                 ? `Leyendo ${progreso.actual} de ${progreso.total}: ${progreso.documento}`
                                 : progreso?.fase === 'sintetizando'
-                                  ? 'Analizando el caso contra tu objetivo…'
+                                  ? 'Analizando el caso contra su objetivo…'
                                   : 'Preparando el análisis…'}
                         </div>
                     ) : expediente.resumen_ia ? (
                         <div className="space-y-5">
-                            {expediente.faltantes?.length ? (
-                                <Lista
-                                    titulo="Qué te falta"
-                                    puntos={expediente.faltantes}
-                                    tono="falta"
-                                />
-                            ) : null}
-                            {expediente.riesgos?.length ? (
-                                <Lista
-                                    titulo="Riesgos que quizá no viste"
-                                    puntos={expediente.riesgos}
-                                    tono="riesgo"
-                                />
+                            {expediente.faltantes?.length || expediente.riesgos?.length ? (
+                                <div className="space-y-4">
+                                    {expediente.faltantes?.length ? (
+                                        <Lista titulo="Qué le falta" puntos={expediente.faltantes} tono="falta" />
+                                    ) : null}
+                                    {expediente.riesgos?.length ? (
+                                        <Lista titulo="Riesgos que quizá no vio" puntos={expediente.riesgos} tono="riesgo" />
+                                    ) : null}
+                                </div>
                             ) : null}
 
-                            <details className="group">
-                                <summary className="flex cursor-pointer list-none items-center gap-1.5 text-sm font-semibold text-accent-brown">
-                                    <ChevronRight className="h-4 w-4 transition-transform group-open:rotate-90" />
+                            <details className="group rounded-xl ring-1 ring-charcoal-900/10">
+                                <summary className="flex cursor-pointer list-none items-center gap-1.5 px-4 py-3 text-[13px] font-semibold text-charcoal-900">
+                                    <ChevronRight className="h-4 w-4 text-accent-brown transition-transform group-open:rotate-90" />
                                     Ver el análisis completo
+                                    {expediente.resumen_at ? (
+                                        <span className="ml-auto text-[11.5px] font-normal text-piedra-500">
+                                            Hecho {haceCuanto(expediente.resumen_at)}
+                                        </span>
+                                    ) : null}
                                 </summary>
-                                <div className="mt-3 whitespace-pre-wrap rounded-lg border border-cream-400 bg-cream-50 p-4 text-sm leading-relaxed text-charcoal-700/90">
+                                <div className="whitespace-pre-wrap border-t border-charcoal-900/10 bg-[#fbf8f1] px-4 py-4 text-[13.5px] leading-relaxed text-piedra-800">
                                     {expediente.resumen_ia}
                                 </div>
                             </details>
 
-                            <button
-                                onClick={() => void analizar()}
-                                disabled={documentos.length === 0}
-                                className="rounded-lg border border-cream-400 px-4 py-2 text-sm font-semibold text-charcoal-700 transition hover:bg-cream-200 disabled:opacity-50">
-                                Actualizar análisis · 1 consulta
+                            <button onClick={() => void analizar()} disabled={documentos.length === 0} className={BOTON_SUAVE}>
+                                <Sparkles className="h-4 w-4 text-accent-brown" />
+                                Actualizar el análisis · 1 consulta
                             </button>
                         </div>
                     ) : (
                         <div>
-                            <p className="text-sm leading-relaxed text-charcoal-700/80">
-                                Sube los documentos y Iurexia los leerá para darte el resumen del
-                                caso, su estado, qué te falta y qué riesgos corres.
+                            <p className="text-[14px] leading-relaxed text-piedra-700">
+                                Suba los documentos e Iurexia los leerá para darle el resumen del caso, su
+                                estado, qué le falta y qué riesgos corre.
                             </p>
-                            <button
-                                onClick={() => void analizar()}
-                                disabled={documentos.length === 0}
-                                className="mt-4 flex items-center gap-2 rounded-lg bg-charcoal-900 px-5 py-2.5 text-sm font-semibold text-cream-50 transition hover:bg-charcoal-800 disabled:opacity-50">
-                                <Sparkles className="h-4 w-4" />
+                            <button onClick={() => void analizar()} disabled={documentos.length === 0} className={`${BOTON} mt-4`}>
+                                <Sparkles className="h-4 w-4 text-accent-gold" />
                                 {documentos.length === 0
-                                    ? 'Sube un documento primero'
+                                    ? 'Suba un documento primero'
                                     : 'Analizar la carpeta · 1 consulta'}
                             </button>
                         </div>
                     )}
 
                     {documentos.length > 0 && leidos < documentos.length && !analizando ? (
-                        <p className="mt-3 text-xs text-charcoal-700/50">
+                        <p className="mt-3 text-[12px] text-piedra-500">
                             {leidos} de {documentos.length} documentos ya fueron leídos por la IA.
                         </p>
                     ) : null}
-                </section>
+                </Seccion>
 
                 {/* ── Consultas de la carpeta ───────────────────────────────
                     Como un asunto en Astra for Law: la consulta que nace aquí
                     lleva al modelo el objetivo, el análisis y los documentos
                     leídos, y se queda guardada en la carpeta. */}
                 {consultas !== null ? (
-                    <section className="mb-8 rounded-xl border border-cream-400 bg-white p-5">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-accent-brown">
-                                <MessagesSquare className="h-4 w-4" />
-                                Consultas de esta carpeta
-                            </h2>
-                            <div className="flex flex-wrap gap-2">
-                                <Link
-                                    href={`/chat?carpeta=${id}&flujos=1`}
-                                    className="flex items-center gap-2 rounded-lg border border-cream-400 px-3.5 py-2 text-sm font-semibold text-charcoal-800 transition hover:bg-cream-100">
-                                    <Workflow className="h-4 w-4 text-accent-brown" />
-                                    Iniciar un flujo
-                                </Link>
-                                <Link
-                                    href={`/chat?carpeta=${id}`}
-                                    className="flex items-center gap-2 rounded-lg bg-charcoal-900 px-3.5 py-2 text-sm font-semibold text-cream-50 transition hover:bg-charcoal-800">
-                                    <SquarePen className="h-4 w-4 text-accent-gold" />
-                                    Nueva consulta
-                                </Link>
-                            </div>
-                        </div>
-                        <p className="mt-2.5 text-sm leading-relaxed text-charcoal-700/80">
-                            Lo que preguntes aquí, Iurexia lo responde con el objetivo, el análisis y los
+                    <Seccion
+                        id="consultas"
+                        rotulo="Consultas"
+                        titulo="Consultas de esta carpeta"
+                        acciones={<>
+                            <Link href={`/chat?carpeta=${id}&flujos=1`} className={BOTON_SUAVE}>
+                                <Workflow className="h-4 w-4 text-accent-brown" />
+                                Iniciar un flujo
+                            </Link>
+                            <Link href={`/chat?carpeta=${id}`} className={BOTON}>
+                                <SquarePen className="h-4 w-4 text-accent-gold" />
+                                Nueva consulta
+                            </Link>
+                        </>}>
+                        <p className="text-[13.5px] leading-relaxed text-piedra-700">
+                            Lo que pregunte aquí, Iurexia lo responde con el objetivo, el análisis y los
                             documentos leídos de esta carpeta, y la consulta se queda guardada en ella.
                         </p>
                         {consultas.length > 0 ? (
-                            <ul className="mt-4 divide-y divide-cream-400/70 overflow-hidden rounded-lg border border-cream-400">
+                            <ul className="mt-4 divide-y divide-[#ece6da] overflow-hidden rounded-xl bg-[#fffefa] ring-1 ring-[#e4ddcf]">
                                 {consultas.map((c) => {
                                     const flujo = flujoPorId(c.flujo)
                                     return (
                                         <li key={c.id}>
                                             <Link
                                                 href={`/chat?c=${c.id}`}
-                                                className="flex items-center gap-3 px-4 py-3 transition hover:bg-cream-100">
-                                                {flujo ? (
-                                                    <Workflow className="h-4 w-4 shrink-0 text-accent-brown" />
-                                                ) : (
-                                                    <MessagesSquare className="h-4 w-4 shrink-0 text-charcoal-700/40" />
-                                                )}
+                                                className="group flex items-center gap-3 px-4 py-3 transition hover:bg-[#faf6ee]">
+                                                <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${flujo ? 'bg-[#f3e8cc] text-[#6b5530]' : 'bg-[#f1efe9] text-piedra-600'}`}>
+                                                    {flujo ? <Workflow className="h-4 w-4" /> : <MessagesSquare className="h-4 w-4" />}
+                                                </span>
                                                 <span className="min-w-0 flex-1">
-                                                    <span className="block truncate text-sm font-medium text-charcoal-900">
+                                                    <span className="block truncate text-[13.5px] font-medium text-charcoal-900">
                                                         {tituloLimpio(c.title)}
                                                     </span>
-                                                    {flujo ? (
-                                                        <span className="block truncate text-xs text-charcoal-700/55">{flujo.nombre}</span>
-                                                    ) : null}
+                                                    <span className="block truncate text-[11.5px] text-piedra-500">
+                                                        {flujo ? `${flujo.nombre} · ` : ''}
+                                                        {new Date(c.updatedAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
+                                                    </span>
                                                 </span>
-                                                <span className="shrink-0 text-xs text-charcoal-700/45">
-                                                    {new Date(c.updatedAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
-                                                </span>
-                                                <ChevronRight className="h-4 w-4 shrink-0 text-charcoal-700/30" />
+                                                <ChevronRight className="h-4 w-4 shrink-0 text-piedra-400 transition-transform group-hover:translate-x-0.5" />
                                             </Link>
                                         </li>
                                     )
                                 })}
                             </ul>
                         ) : null}
-                    </section>
+                    </Seccion>
                 ) : null}
 
                 {/* ── Redactar ─────────────────────────────────────────────
@@ -565,26 +564,19 @@ function Detalle() {
                     recién creada ni lo mostraba y obligaba a analizar antes
                     —una consulta que no hacía falta—. Se vio probándolo en
                     producción, no leyendo el código. */}
-                <section className="mb-8 rounded-xl border border-cream-400 bg-white p-5">
-                    <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-accent-brown">
-                        <FileSignature className="h-4 w-4" />
-                        Redactar
-                    </h2>
-                    <p className="mt-2.5 text-sm leading-relaxed text-charcoal-700/80">
+                <Seccion id="redactar" rotulo="Escritos" titulo="Redactar con esta carpeta">
+                    <p className="text-[13.5px] leading-relaxed text-piedra-700">
                         Incidentes, medidas provisionales, contestación de vistas, apelaciones.
                         Iurexia los redacta con los documentos de esta carpeta y marca lo que
                         usted debe completar antes de presentarlos.
                     </p>
-                    <button
-                        onClick={() => setRedactando(true)}
-                        disabled={leidos === 0}
-                        className="mt-4 flex items-center gap-2 rounded-lg bg-charcoal-900 px-5 py-2.5 text-sm font-semibold text-cream-50 transition hover:bg-charcoal-800 disabled:opacity-50">
-                        <FileSignature className="h-4 w-4" />
+                    <button onClick={() => setRedactando(true)} disabled={leidos === 0} className={`${BOTON} mt-4`}>
+                        <FileSignature className="h-4 w-4 text-accent-gold" />
                         {leidos === 0
-                            ? 'Sube un documento primero'
+                            ? 'Suba un documento primero'
                             : 'Redactar un escrito · 1 consulta'}
                     </button>
-                </section>
+                </Seccion>
 
                 {/* ── Cronología del expediente (12-oct-2026, Platinum) ─────
                     Los PDF de la carpeta se leen donde ya están guardados: no
@@ -642,32 +634,23 @@ function Detalle() {
                 />
 
                 {/* ── Las gavetas ──────────────────────────────────────────── */}
-                <h2 className="mb-4 font-serif text-xl font-semibold text-charcoal-900">
-                    Documentos
-                </h2>
-                <div className="space-y-4">
+                <Seccion id="documentos" rotulo="El expediente" titulo="Documentos">
+                <div className="space-y-6">
                     {gavetas.map((g) => {
                         const suyos = documentos.filter((d) => d.categoria === g.value)
                         return (
-                            <section
-                                key={g.value}
-                                className="rounded-xl border border-cream-400 bg-cream-100 p-5">
-                                <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
-                                    <div>
-                                        <h3 className="font-semibold text-charcoal-900">
+                            <div key={g.value}>
+                                <div className="mb-2.5 flex flex-wrap items-end justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <h3 className="text-[14px] font-semibold text-charcoal-900">
                                             {g.label}
-                                            <span className="ml-2 text-sm font-normal text-charcoal-700/50">
+                                            <span className="ml-2 rounded-full bg-[#f1efe9] px-2 py-0.5 text-[11px] font-medium text-piedra-600">
                                                 {suyos.length}
                                             </span>
                                         </h3>
-                                        <p className="mt-0.5 text-xs text-charcoal-700/60">
-                                            {g.descripcion}
-                                        </p>
+                                        <p className="mt-0.5 text-[12px] text-piedra-500">{g.descripcion}</p>
                                     </div>
-                                    <button
-                                        onClick={() => pedirArchivo(g.value)}
-                                        disabled={subiendoEn !== null}
-                                        className="flex shrink-0 items-center gap-1.5 rounded-lg border border-cream-400 bg-cream-50 px-3 py-2 text-sm font-semibold text-charcoal-700 transition hover:bg-cream-200 disabled:opacity-50">
+                                    <button onClick={() => pedirArchivo(g.value)} disabled={subiendoEn !== null} className={BOTON_SUAVE}>
                                         {subiendoEn === g.value ? (
                                             <Loader2 className="h-4 w-4 animate-spin" />
                                         ) : (
@@ -682,54 +665,104 @@ function Detalle() {
                                 </div>
 
                                 {suyos.length === 0 ? (
-                                    <p className="py-3 text-sm italic text-charcoal-700/40">
+                                    <button
+                                        onClick={() => pedirArchivo(g.value)}
+                                        disabled={subiendoEn !== null}
+                                        className="w-full rounded-xl border border-dashed border-[#d6ccb8] bg-[#fbf8f1]/60 px-4 py-4 text-left text-[12.5px] italic text-piedra-500 transition hover:border-accent-brown hover:bg-[#fbf8f1]">
                                         Nada aquí todavía.
-                                    </p>
+                                    </button>
                                 ) : (
-                                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                                    <ul className="divide-y divide-[#ece6da] overflow-hidden rounded-xl bg-[#fffefa] ring-1 ring-[#e4ddcf]">
                                         {suyos.map((d) => (
-                                            <div
-                                                key={d.id}
-                                                className="group relative flex flex-col items-center rounded-lg border border-transparent p-3 text-center transition hover:border-cream-400 hover:bg-cream-50">
-                                                <button
-                                                    onClick={() => void abrir(d)}
-                                                    className="flex flex-col items-center">
-                                                    <ArchivoIcono nombre={d.nombre} tamano={48} />
-                                                    <span className="mt-2 line-clamp-2 text-xs leading-snug text-charcoal-900">
-                                                        {d.nombre}
+                                            <li key={d.id} className="group flex items-center gap-3 px-3 py-2.5 transition hover:bg-[#faf6ee]">
+                                                <button onClick={() => void abrir(d)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                                                    <span className="shrink-0"><ArchivoIcono nombre={d.nombre} tamano={26} /></span>
+                                                    <span className="min-w-0">
+                                                        <span className="block truncate text-[13.5px] font-medium text-charcoal-900">{d.nombre}</span>
+                                                        <span className="block text-[11.5px] text-piedra-500">
+                                                            {[haceCuanto(d.created_at), peso(d.tamano)].filter(Boolean).join(' · ')}
+                                                        </span>
                                                     </span>
                                                 </button>
                                                 {d.extracto ? (
-                                                    <span
-                                                        title="Iurexia ya leyó este documento"
-                                                        className="mt-1 text-[10px] font-semibold text-green-700">
+                                                    <span title="Iurexia ya leyó este documento"
+                                                        className="hidden shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10.5px] font-semibold text-emerald-800 ring-1 ring-emerald-700/15 sm:inline">
                                                         Leído
                                                     </span>
-                                                ) : null}
-                                                <div className="absolute right-1 top-1 hidden gap-1 group-hover:flex">
-                                                    <button
-                                                        onClick={() => void abrir(d)}
-                                                        title="Abrir"
-                                                        className="rounded p-1 text-charcoal-700/50 hover:bg-cream-300">
+                                                ) : (
+                                                    <span title="Iurexia todavía no lee este documento"
+                                                        className="hidden shrink-0 rounded-full bg-[#f1efe9] px-2 py-0.5 text-[10.5px] font-semibold text-piedra-600 sm:inline">
+                                                        Sin leer
+                                                    </span>
+                                                )}
+                                                <div className="flex shrink-0 gap-0.5 sm:opacity-0 sm:transition sm:group-hover:opacity-100 sm:focus-within:opacity-100">
+                                                    <button onClick={() => void abrir(d)} title="Abrir" aria-label={`Abrir ${d.nombre}`}
+                                                        className="grid h-8 w-8 place-items-center rounded-full text-piedra-500 hover:bg-white hover:text-charcoal-900">
                                                         <Download className="h-3.5 w-3.5" />
                                                     </button>
-                                                    <button
-                                                        onClick={() => void quitar(d)}
-                                                        title="Quitar"
-                                                        className="rounded p-1 text-charcoal-700/50 hover:bg-red-50 hover:text-red-600">
+                                                    <button onClick={() => void quitar(d)} title="Quitar" aria-label={`Quitar ${d.nombre}`}
+                                                        className="grid h-8 w-8 place-items-center rounded-full text-piedra-500 hover:bg-red-50 hover:text-red-700">
                                                         <Trash2 className="h-3.5 w-3.5" />
                                                     </button>
                                                 </div>
-                                            </div>
+                                            </li>
                                         ))}
-                                    </div>
+                                    </ul>
                                 )}
-                            </section>
+                            </div>
                         )
                     })}
                 </div>
+                </Seccion>
+                </div>
+
+                {/* ── La ficha: dónde está cada cosa y los atajos ─────────── */}
+                <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+                    <div className="rounded-2xl bg-white/90 p-5 ring-1 ring-charcoal-900/10">
+                        <div className="flex items-center gap-4">
+                            <Avance valor={expediente.avance} />
+                            <div className="min-w-0">
+                                <p className="text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent-brown">Ficha</p>
+                                <p className="mt-0.5 font-serif text-[18px] leading-tight text-charcoal-900">{tipo.label}</p>
+                                {materia ? <p className="text-[12px] text-piedra-500">{materia}</p> : null}
+                            </div>
+                        </div>
+                        <dl className="mt-4 space-y-1.5 border-t border-charcoal-900/10 pt-4 text-[12.5px]">
+                            {expediente.tipo === 'cliente' && expediente.cliente_nombre ? (
+                                <Dato termino="Cliente" valor={expediente.cliente_nombre} />
+                            ) : null}
+                            <Dato termino="Documentos" valor={`${documentos.length} · ${leidos} leídos`} />
+                            <Dato termino="Análisis" valor={expediente.resumen_at ? haceCuanto(expediente.resumen_at) : 'Sin hacer'} />
+                            <Dato termino="Creada" valor={haceCuanto(expediente.created_at)} />
+                        </dl>
+                    </div>
+
+                    <nav aria-label="En esta carpeta" className="rounded-2xl bg-white/90 p-2 ring-1 ring-charcoal-900/10">
+                        <p className="px-3 pb-1 pt-2 text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent-brown">En esta carpeta</p>
+                        <Indice href="#objetivo" icono={<Target className="h-4 w-4" />} texto="El objetivo" />
+                        <Indice href="#analisis" icono={<Sparkles className="h-4 w-4" />} texto="Lo que ve Iurexia" />
+                        {consultas !== null ? (
+                            <Indice href="#consultas" icono={<MessagesSquare className="h-4 w-4" />} texto="Consultas" cuenta={consultas.length} />
+                        ) : null}
+                        <Indice href="#redactar" icono={<FileSignature className="h-4 w-4" />} texto="Redactar" />
+                        <Indice href="#documentos" icono={<FolderOpen className="h-4 w-4" />} texto="Documentos" cuenta={documentos.length} />
+                    </nav>
+
+                    <div className="rounded-2xl bg-white/90 p-2 ring-1 ring-charcoal-900/10">
+                        <p className="px-3 pb-1 pt-2 text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent-brown">Atajos</p>
+                        <Indice href={`/chat?carpeta=${id}&flujos=1`} icono={<Workflow className="h-4 w-4" />} texto="Iniciar un flujo de trabajo" />
+                        <Indice href="/agenda?nuevo=1" icono={<CalendarDays className="h-4 w-4" />} texto="Agendar un término" />
+                        <button
+                            onClick={() => void eliminarCarpeta()}
+                            className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-[13px] text-red-700 transition hover:bg-red-50">
+                            <Trash2 className="h-4 w-4" />
+                            Eliminar la carpeta
+                        </button>
+                    </div>
+                </aside>
+                </div>
             </main>
-        </div>
+        </FondoMesa>
     )
 }
 
@@ -743,25 +776,81 @@ function Lista({
     puntos: string[]
     tono: 'falta' | 'riesgo'
 }) {
+    const riesgo = tono === 'riesgo'
+    // Tres a la vista y el resto a un clic: con seis párrafos largos por lista
+    // la sección se volvía una pared y nadie llegaba a los documentos.
+    const [todos, setTodos] = useState(false)
+    const vistos = todos ? puntos : puntos.slice(0, 3)
     return (
-        <div>
-            <h3
-                className={`mb-2 text-sm font-bold ${
-                    tono === 'riesgo' ? 'text-red-700' : 'text-charcoal-900'
-                }`}>
+        <div className={`rounded-xl p-4 ring-1 ${riesgo ? 'bg-red-50/70 ring-red-200/80' : 'bg-[#faf6ee] ring-[#e8dcc4]'}`}>
+            <h3 className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${riesgo ? 'text-red-800' : 'text-[#6b5530]'}`}>
                 {titulo}
             </h3>
-            <ul className="space-y-2">
-                {puntos.map((p, i) => (
-                    <li
-                        key={i}
-                        className={`rounded-lg border-l-[3px] bg-cream-50 px-3 py-2 text-sm leading-relaxed text-charcoal-700/90 ${
-                            tono === 'riesgo' ? 'border-red-400' : 'border-accent-gold'
-                        }`}>
-                        {p}
+            <ol className="mt-3 space-y-2.5">
+                {vistos.map((p, i) => (
+                    <li key={i} className="flex gap-3 text-[13.5px] leading-relaxed text-piedra-800">
+                        <span className={`mt-px w-5 shrink-0 font-serif text-[15px] ${riesgo ? 'text-red-700' : 'text-accent-brown'}`}>
+                            {i + 1}.
+                        </span>
+                        <span className="min-w-0">{p}</span>
                     </li>
                 ))}
-            </ul>
+            </ol>
+            {puntos.length > 3 ? (
+                <button
+                    onClick={() => setTodos(!todos)}
+                    className={`mt-3 pl-8 text-[12.5px] font-semibold underline-offset-4 hover:underline ${riesgo ? 'text-red-800' : 'text-[#6b5530]'}`}>
+                    {todos ? 'Ver sólo los tres primeros' : `Ver los ${puntos.length - 3} restantes`}
+                </button>
+            ) : null}
         </div>
     )
+}
+
+/** El avance como un sello: el anillo dorado que se llena. */
+function Avance({ valor }: { valor: number | null }) {
+    const r = 26
+    const largo = 2 * Math.PI * r
+    const lleno = valor === null ? 0 : Math.max(0, Math.min(100, valor)) / 100
+    return (
+        <div className="relative h-16 w-16 shrink-0" aria-label={valor === null ? 'Sin analizar' : `${valor}% de avance`}>
+            <svg viewBox="0 0 64 64" className="h-16 w-16 -rotate-90">
+                <circle cx="32" cy="32" r={r} fill="none" stroke="#ece6da" strokeWidth="5" />
+                <circle
+                    cx="32" cy="32" r={r} fill="none" stroke="#c9a962" strokeWidth="5" strokeLinecap="round"
+                    strokeDasharray={largo} strokeDashoffset={largo * (1 - lleno)}
+                    className="transition-[stroke-dashoffset] duration-700"
+                />
+            </svg>
+            <span className="absolute inset-0 grid place-items-center text-[13px] font-semibold tabular-nums text-charcoal-900">
+                {valor === null ? '—' : `${valor}%`}
+            </span>
+        </div>
+    )
+}
+
+function Dato({ termino, valor }: { termino: string; valor: string }) {
+    return (
+        <div className="flex justify-between gap-3">
+            <dt className="text-piedra-500">{termino}</dt>
+            <dd className="truncate text-right font-medium text-charcoal-900">{valor}</dd>
+        </div>
+    )
+}
+
+function Indice({ href, icono, texto, cuenta }: { href: string; icono: React.ReactNode; texto: string; cuenta?: number }) {
+    return (
+        <Link href={href} className="flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] text-charcoal-900 transition hover:bg-[#faf6ee]">
+            <span className="text-accent-brown">{icono}</span>
+            <span className="min-w-0 flex-1 truncate">{texto}</span>
+            {cuenta !== undefined ? <span className="text-[11.5px] tabular-nums text-piedra-500">{cuenta}</span> : null}
+        </Link>
+    )
+}
+
+/** «1.2 MB», «340 KB». */
+function peso(bytes: number | null): string {
+    if (!bytes) return ''
+    if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+    return `${Math.max(1, Math.round(bytes / 1024))} KB`
 }

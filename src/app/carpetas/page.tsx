@@ -1,22 +1,25 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Plus, Search, Zap, HardDrive, FolderOpen } from 'lucide-react'
+import { CalendarDays, FolderOpen, HardDrive, Plus, Search } from 'lucide-react'
 
 import Navbar from '@/components/Navbar'
 import SeguimientoPanel from '@/components/SeguimientoPanel'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import { CarpetaIcono } from '@/components/CarpetaIcono'
 import NuevaCarpetaModal from '@/components/NuevaCarpetaModal'
+import TarjetaCarpeta, { TarjetaNueva } from '@/components/carpetas/TarjetaCarpeta'
+import { BOTON_CLARO, BOTON_CLARO_SUAVE, Cifra, FondoMesa, Portada } from '@/components/carpetas/Mesa'
 import { useAuth } from '@/lib/useAuth'
 import {
     ExpedientesNoConfigurado,
+    TIPOS_CARPETA,
     getExpedientes,
     nombreCarpeta,
-    tipoCarpeta,
     usoAlmacenamiento,
     type Expediente,
+    type TipoCarpeta,
     type UsoAlmacenamiento,
 } from '@/lib/expedientes'
 
@@ -28,8 +31,12 @@ import {
  * con las mismas carpetas y el mismo avance. Comparten tabla, así que lo que
  * crea en un lado aparece en el otro.
  *
- * La cuadrícula de carpetas dibujadas no es nostalgia: es lo único que hace que
- * alguien entienda de un vistazo qué puede hacer aquí sin leer instrucciones.
+ * EL REDISEÑO (12-oct-2026). David: que el abogado «se sienta en un ambiente
+ * profesional», como en la Agenda y en las tarjetas de Connect. La portada es
+ * la de Connect (grabado del archivo, rótulo dorado, Playfair); cada carpeta es
+ * una tarjeta con su propio grabado, y el dibujo de la carpeta se queda dentro
+ * de ella: es lo que hace que alguien entienda de un vistazo qué puede hacer
+ * aquí sin leer instrucciones.
  */
 export default function CarpetasPage() {
     return (
@@ -38,6 +45,8 @@ export default function CarpetasPage() {
         </ProtectedRoute>
     )
 }
+
+type Orden = 'recientes' | 'avance' | 'nombre'
 
 function Escritorio() {
     const router = useRouter()
@@ -48,6 +57,8 @@ function Escritorio() {
     const [pestana, setPestana] = useState<'carpetas' | 'seguimiento'>('carpetas')
     const [error, setError] = useState<string | null>(null)
     const [busqueda, setBusqueda] = useState('')
+    const [filtro, setFiltro] = useState<TipoCarpeta | 'todas'>('todas')
+    const [orden, setOrden] = useState<Orden>('recientes')
     const [nuevaAbierta, setNuevaAbierta] = useState(false)
     const [uso, setUso] = useState<UsoAlmacenamiento | null>(null)
 
@@ -63,7 +74,7 @@ function Escritorio() {
             setError(
                 err instanceof ExpedientesNoConfigurado
                     ? err.message
-                    : 'No se pudo abrir tu escritorio. Recarga la página.'
+                    : 'No se pudo abrir su escritorio. Recargue la página.'
             )
         } finally {
             setCargando(false)
@@ -80,157 +91,176 @@ function Escritorio() {
 
     // Sin tutorial de bienvenida (David, 25-sep-2026): minimalismo.
 
+    const documentos = useMemo(() => carpetas.reduce((n, c) => n + (c.totalDocumentos ?? 0), 0), [carpetas])
+    const porTipo = useMemo(() => {
+        const cuenta = new Map<TipoCarpeta, number>()
+        for (const c of carpetas) cuenta.set(c.tipo, (cuenta.get(c.tipo) ?? 0) + 1)
+        return cuenta
+    }, [carpetas])
+
     const filtradas = useMemo(() => {
         const q = busqueda.trim().toLowerCase()
-        if (!q) return carpetas
-        return carpetas.filter((c) => {
+        const lista = carpetas.filter((c) => {
+            if (filtro !== 'todas' && c.tipo !== filtro) return false
+            if (!q) return true
             const campos = [nombreCarpeta(c), c.objetivo ?? '', c.materia ?? '']
             return campos.some((v) => v.toLowerCase().includes(q))
         })
-    }, [carpetas, busqueda])
+        if (orden === 'avance') return [...lista].sort((a, b) => (b.avance ?? -1) - (a.avance ?? -1))
+        if (orden === 'nombre') return [...lista].sort((a, b) => nombreCarpeta(a).localeCompare(nombreCarpeta(b), 'es'))
+        return [...lista].sort((a, b) => (b.updated_at ?? '').localeCompare(a.updated_at ?? ''))
+    }, [carpetas, busqueda, filtro, orden])
 
     return (
-        <div className="min-h-screen bg-cream-300">
+        <FondoMesa>
             <Navbar plataforma />
 
             <main className="mx-auto max-w-6xl px-4 pb-20 pt-20 sm:px-6">
+                {/* ── La portada ───────────────────────────────────────────── */}
+                <Portada
+                    arte="/web/arte/archivo.webp"
+                    rotulo="Iurexia · Mi trabajo"
+                    titulo={<>Mis carpetas <em>inteligentes</em></>}>
+                    <p className="mt-4 max-w-xl text-[14px] leading-relaxed text-[#d2cabe] sm:text-[15px]">
+                        Cada asunto con su objetivo, sus documentos leídos por Iurexia y lo que le falta
+                        para llegar. Lo que pregunte o redacte desde una carpeta se queda guardado en ella.
+                    </p>
+                    <div className="mt-5 flex flex-wrap gap-2">
+                        <Cifra valor={cargando ? '…' : carpetas.length} rotulo={carpetas.length === 1 ? 'carpeta' : 'carpetas'} />
+                        <Cifra valor={cargando ? '…' : documentos} rotulo={documentos === 1 ? 'documento' : 'documentos'} />
+                        {/* El contador vive aquí porque aquí es donde se gasta: analizar
+                            una carpeta y redactar un documento consumen una consulta
+                            cada uno, igual que preguntar en el chat. */}
+                        <Cifra valor={restantes} rotulo={restantes === 1 ? 'consulta disponible' : 'consultas disponibles'} alerta={restantes <= 3} />
+                    </div>
+                    <div className="mt-6 flex flex-wrap gap-2">
+                        <button type="button" onClick={() => setNuevaAbierta(true)} className={BOTON_CLARO}>
+                            <Plus className="h-4 w-4" /> Nueva carpeta
+                        </button>
+                        <Link href="/agenda" className={BOTON_CLARO_SUAVE}>
+                            <CalendarDays className="h-4 w-4" /> Mi agenda de términos
+                        </Link>
+                    </div>
+                </Portada>
+
                 {/*
                   Dos cosas distintas, y conviene que se noten distintas: las
                   carpetas son el archivo del despacho («¿qué tengo yo de este
                   asunto?») y el seguimiento es una vigilancia («¿qué ha hecho
                   el juzgado?»). Se vinculan, no se funden.
                 */}
-                <div role="tablist" className="mb-6 flex gap-1 border-b border-charcoal-900/[0.08]">
-                    {([['carpetas', 'Mis carpetas inteligentes'],
+                <div role="tablist" className="mt-7 flex flex-wrap gap-2">
+                    {([['carpetas', 'Mis carpetas'],
                        ['seguimiento', 'Seguimiento ante órganos jurisdiccionales']] as const).map(([clave, rotulo]) => (
                         <button
                             key={clave}
                             role="tab"
                             aria-selected={pestana === clave}
+                            aria-current={pestana === clave ? 'page' : undefined}
                             onClick={() => setPestana(clave)}
-                            className={`relative px-4 py-3 text-sm font-medium transition-colors ${
-                                pestana === clave
-                                    ? 'text-charcoal-900'
-                                    : 'text-charcoal-500 hover:text-charcoal-800'}`}
-                        >
+                            className={`relieve ${pestana === clave ? 'relieve-tinta' : 'relieve-papel'} px-4`}>
                             {rotulo}
-                            <span className={`absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-accent-gold transition-opacity ${
-                                pestana === clave ? 'opacity-100' : 'opacity-0'}`} />
                         </button>
                     ))}
                 </div>
 
-                {pestana === 'seguimiento' ? <SeguimientoPanel /> : <>
-
-                {/* ── Barra superior ───────────────────────────────────────── */}
-                <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-                    <div>
-                        <h1 className="font-serif text-3xl font-semibold text-charcoal-900">
-                            Mis carpetas inteligentes
-                        </h1>
-                        <p className="mt-1 text-sm text-charcoal-700/70">
-                            {cargando
-                                ? 'Abriendo tu escritorio…'
-                                : carpetas.length === 0
-                                  ? 'Tu escritorio está vacío'
-                                  : `${carpetas.length} ${carpetas.length === 1 ? 'carpeta' : 'carpetas'}`}
-                        </p>
+                {pestana === 'seguimiento' ? (
+                    <div className="mt-6">
+                        <SeguimientoPanel />
                     </div>
-
-                    <div className="flex items-center gap-2">
-                        {/*
-                          El contador vive aquí porque aquí es donde se gasta:
-                          analizar una carpeta y redactar un documento consumen
-                          una consulta cada uno, igual que preguntar en el chat.
-                        */}
-                        <div
-                            title={`Te quedan ${restantes} consultas de tu plan`}
-                            className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold ${
-                                restantes <= 3
-                                    ? 'border-red-200 bg-red-50 text-red-700'
-                                    : 'border-cream-400 bg-cream-100 text-charcoal-700'
-                            }`}>
-                            <Zap className="h-4 w-4 text-accent-brown" />
-                            {restantes}
-                        </div>
-
-                        <button
-                            onClick={() => setNuevaAbierta(true)}
-                            className="flex items-center gap-2 rounded-lg bg-charcoal-900 px-4 py-2 text-sm font-semibold text-cream-50 transition hover:bg-charcoal-800">
-                            <Plus className="h-4 w-4" />
-                            Nueva carpeta
-                        </button>
-                    </div>
-                </div>
-
-                {/* ── Buscador ─────────────────────────────────────────────── */}
-                {carpetas.length > 0 ? (
-                    <div className="relative mb-6">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-charcoal-700/40" />
-                        <input
-                            value={busqueda}
-                            onChange={(e) => setBusqueda(e.target.value)}
-                            placeholder="Buscar por nombre, objetivo o materia…"
-                            className="w-full rounded-lg border border-cream-400 bg-cream-100 py-2.5 pl-10 pr-4 text-sm text-charcoal-900 outline-none transition placeholder:text-charcoal-700/40 focus:border-accent-gold"
-                        />
-                    </div>
-                ) : null}
-
-                {/* ── Contenido ────────────────────────────────────────────── */}
-                {error ? (
-                    <Aviso titulo="No se pudo abrir tu escritorio" mensaje={error} />
-                ) : cargando ? (
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                        {Array.from({ length: 4 }).map((_, i) => (
-                            <div
-                                key={i}
-                                className="h-40 animate-pulse rounded-xl border border-cream-400 bg-cream-100"
-                            />
-                        ))}
-                    </div>
-                ) : carpetas.length === 0 ? (
-                    <Vacio onCrear={() => setNuevaAbierta(true)} />
-                ) : filtradas.length === 0 ? (
-                    <Aviso
-                        titulo="Ninguna carpeta coincide"
-                        mensaje={`No hay carpetas que digan «${busqueda}». Prueba con otra palabra.`}
-                    />
                 ) : (
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                        {filtradas.map((c) => (
-                            <Carpeta
-                                key={c.id}
-                                carpeta={c}
-                                onAbrir={() => router.push(`/carpetas/${c.id}`)}
-                            />
-                        ))}
-                    </div>
+                    <>
+                        {/* ── Buscar, filtrar, ordenar ─────────────────────── */}
+                        {carpetas.length > 0 ? (
+                            <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center">
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-piedra-500" />
+                                    <input
+                                        value={busqueda}
+                                        onChange={(e) => setBusqueda(e.target.value)}
+                                        placeholder="Buscar por nombre, objetivo o materia…"
+                                        className="w-full rounded-full border-0 bg-white/90 py-2.5 pl-11 pr-4 text-[14px] text-charcoal-900 shadow-sm outline-none ring-1 ring-charcoal-900/10 transition placeholder:text-piedra-500 focus:ring-2 focus:ring-accent-gold"
+                                    />
+                                </div>
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                    {porTipo.size > 1 ? (
+                                        <>
+                                            <Filtro activo={filtro === 'todas'} onClick={() => setFiltro('todas')}>
+                                                Todas · {carpetas.length}
+                                            </Filtro>
+                                            {TIPOS_CARPETA.filter((t) => porTipo.has(t.value)).map((t) => (
+                                                <Filtro key={t.value} activo={filtro === t.value} onClick={() => setFiltro(t.value)}>
+                                                    {t.label} · {porTipo.get(t.value)}
+                                                </Filtro>
+                                            ))}
+                                        </>
+                                    ) : null}
+                                    <label className="ml-1 flex items-center gap-2 text-[12px] text-piedra-600">
+                                        Ordenar
+                                        <select
+                                            value={orden}
+                                            onChange={(e) => setOrden(e.target.value as Orden)}
+                                            className="rounded-full border-0 bg-white/90 py-1.5 pl-3 pr-8 text-[12.5px] font-medium text-charcoal-900 ring-1 ring-charcoal-900/10 focus:ring-2 focus:ring-accent-gold">
+                                            <option value="recientes">Recientes</option>
+                                            <option value="avance">Más avanzadas</option>
+                                            <option value="nombre">Por nombre</option>
+                                        </select>
+                                    </label>
+                                </div>
+                            </div>
+                        ) : null}
+
+                        {/* ── Las carpetas ─────────────────────────────────── */}
+                        <div className="mt-6">
+                            {error ? (
+                                <Aviso titulo="No se pudo abrir su escritorio" mensaje={error} />
+                            ) : cargando ? (
+                                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                                    {Array.from({ length: 3 }).map((_, i) => (
+                                        <div key={i} className="h-[300px] animate-pulse rounded-xl bg-white/60 ring-1 ring-charcoal-900/5" />
+                                    ))}
+                                </div>
+                            ) : carpetas.length === 0 ? (
+                                <Vacio onCrear={() => setNuevaAbierta(true)} />
+                            ) : filtradas.length === 0 ? (
+                                <Aviso
+                                    titulo="Ninguna carpeta coincide"
+                                    mensaje={busqueda
+                                        ? `No hay carpetas que digan «${busqueda}». Pruebe con otra palabra.`
+                                        : 'No hay carpetas de este tipo.'}
+                                />
+                            ) : (
+                                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                                    {filtradas.map((c) => (
+                                        <TarjetaCarpeta key={c.id} carpeta={c} />
+                                    ))}
+                                    {!busqueda && filtro === 'todas' ? <TarjetaNueva onCrear={() => setNuevaAbierta(true)} /> : null}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ── Almacenamiento ───────────────────────────────── */}
+                        {uso && carpetas.length > 0 ? (
+                            <div className="mt-10 flex flex-col gap-3 rounded-2xl bg-white/80 px-5 py-4 ring-1 ring-charcoal-900/10 sm:flex-row sm:items-center">
+                                <span className="flex items-center gap-2 text-[13px] font-semibold text-charcoal-900">
+                                    <HardDrive className="h-4 w-4 text-accent-brown" />
+                                    Espacio de su plan
+                                </span>
+                                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#e7e0d2]">
+                                    <div
+                                        className={`h-full rounded-full transition-all ${
+                                            uso.proporcion > 0.9 ? 'bg-red-500' : 'bg-gradient-to-r from-accent-brown to-accent-gold'
+                                        }`}
+                                        style={{ width: `${Math.max(1, Math.round(uso.proporcion * 100))}%` }}
+                                    />
+                                </div>
+                                <span className="text-[12px] text-piedra-600">
+                                    {uso.usadoMB.toFixed(1)} de {uso.cuotaMB} MB
+                                </span>
+                            </div>
+                        ) : null}
+                    </>
                 )}
-
-                {/* ── Almacenamiento ───────────────────────────────────────── */}
-                {uso && carpetas.length > 0 ? (
-                    <div className="mt-10 rounded-xl border border-cream-400 bg-cream-100 p-4">
-                        <div className="mb-2 flex items-center justify-between text-sm">
-                            <span className="flex items-center gap-2 font-semibold text-charcoal-900">
-                                <HardDrive className="h-4 w-4 text-accent-brown" />
-                                Espacio de tu plan
-                            </span>
-                            <span className="text-charcoal-700/70">
-                                {uso.usadoMB.toFixed(1)} de {uso.cuotaMB} MB
-                            </span>
-                        </div>
-                        <div className="h-1.5 overflow-hidden rounded-full bg-cream-400">
-                            <div
-                                className={`h-full rounded-full transition-all ${
-                                    uso.proporcion > 0.9 ? 'bg-red-500' : 'bg-accent-gold'
-                                }`}
-                                style={{ width: `${Math.round(uso.proporcion * 100)}%` }}
-                            />
-                        </div>
-                    </div>
-                ) : null}
-                            </>}
-
             </main>
 
             <NuevaCarpetaModal
@@ -241,73 +271,57 @@ function Escritorio() {
                     router.push(`/carpetas/${exp.id}`)
                 }}
             />
-
-        </div>
+        </FondoMesa>
     )
 }
 
-/** Una carpeta del escritorio: el dibujo, su nombre y qué tanto avanzó. */
-function Carpeta({ carpeta, onAbrir }: { carpeta: Expediente; onAbrir: () => void }) {
-    const tipo = tipoCarpeta(carpeta.tipo)
-    const docs = carpeta.totalDocumentos ?? 0
-
+function Filtro({ activo, onClick, children }: { activo: boolean; onClick: () => void; children: React.ReactNode }) {
     return (
         <button
-            onClick={onAbrir}
-            className="group flex flex-col items-center rounded-xl border border-transparent p-4 text-center transition hover:border-cream-400 hover:bg-cream-100">
-            <div className="transition-transform group-hover:-translate-y-0.5">
-                <CarpetaIcono
-                    tipo={carpeta.tipo}
-                    tamano={88}
-                    documentos={docs}
-                    avance={carpeta.avance}
-                />
-            </div>
-
-            <p className="mt-3 line-clamp-2 text-sm font-semibold leading-snug text-charcoal-900">
-                {nombreCarpeta(carpeta)}
-            </p>
-            <p className="mt-0.5 text-xs text-charcoal-700/60">
-                {docs === 0 ? 'Vacía' : `${docs} ${docs === 1 ? 'documento' : 'documentos'}`}
-                {carpeta.avance !== null ? ` · ${carpeta.avance}%` : ''}
-            </p>
-            <p className="mt-0.5 text-[11px] uppercase tracking-wide text-charcoal-700/40">
-                {tipo.label}
-            </p>
+            type="button"
+            onClick={onClick}
+            aria-pressed={activo}
+            className={`rounded-full px-3 py-1.5 text-[12px] font-medium transition ${
+                activo
+                    ? 'bg-charcoal-900 text-white'
+                    : 'bg-white/80 text-piedra-700 ring-1 ring-charcoal-900/10 hover:bg-white'
+            }`}>
+            {children}
         </button>
     )
 }
 
 function Vacio({ onCrear }: { onCrear: () => void }) {
     return (
-        <div className="rounded-xl border border-dashed border-cream-500 bg-cream-100 px-6 py-16 text-center">
-            <div className="mx-auto mb-4 w-fit opacity-70">
-                <CarpetaIcono tipo="cliente" tamano={96} documentos={0} avance={null} />
+        <div className="overflow-hidden rounded-2xl bg-white/85 ring-1 ring-charcoal-900/10 sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/web/arte/escritorio.webp" alt="" className="h-44 w-full object-cover sm:h-full" />
+            <div className="p-6 sm:p-9">
+                <p className="text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent-brown">Su escritorio</p>
+                <h2 className="mt-1 font-serif text-[28px] font-normal leading-tight text-charcoal-900">Aquí vive su trabajo</h2>
+                <p className="mt-3 max-w-md text-[14px] leading-relaxed text-piedra-700">
+                    Una carpeta de Iurexia no guarda documentos: los lee. Usted le dice qué quiere lograr,
+                    le sube lo que tiene, y ella le dice qué le falta, qué riesgos ve y le redacta los
+                    escritos que hacen falta.
+                </p>
+                <button
+                    type="button"
+                    onClick={onCrear}
+                    className="mt-6 inline-flex items-center gap-2 rounded-full bg-charcoal-900 px-5 py-2.5 text-[13px] font-semibold text-white shadow-lg transition hover:bg-charcoal-800">
+                    <Plus className="h-4 w-4" />
+                    Crear mi primera carpeta
+                </button>
             </div>
-            <h2 className="font-serif text-xl font-semibold text-charcoal-900">
-                Aquí vive tu trabajo
-            </h2>
-            <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-charcoal-700/70">
-                Una carpeta de Iurexia no guarda documentos: los lee. Le dices qué quieres lograr,
-                le subes lo que tienes, y te dice qué te falta, qué riesgos ve y te redacta los
-                escritos que hacen falta.
-            </p>
-            <button
-                onClick={onCrear}
-                className="mx-auto mt-6 flex items-center gap-2 rounded-lg bg-charcoal-900 px-5 py-2.5 text-sm font-semibold text-cream-50 transition hover:bg-charcoal-800">
-                <Plus className="h-4 w-4" />
-                Crear mi primera carpeta
-            </button>
         </div>
     )
 }
 
 function Aviso({ titulo, mensaje }: { titulo: string; mensaje: string }) {
     return (
-        <div className="rounded-xl border border-cream-400 bg-cream-100 px-6 py-12 text-center">
-            <FolderOpen className="mx-auto mb-3 h-8 w-8 text-charcoal-700/30" />
-            <h2 className="font-semibold text-charcoal-900">{titulo}</h2>
-            <p className="mx-auto mt-1 max-w-md text-sm text-charcoal-700/70">{mensaje}</p>
+        <div className="rounded-2xl bg-white/80 px-6 py-12 text-center ring-1 ring-charcoal-900/10">
+            <FolderOpen className="mx-auto mb-3 h-8 w-8 text-piedra-400" />
+            <h2 className="font-serif text-[22px] font-normal text-charcoal-900">{titulo}</h2>
+            <p className="mx-auto mt-1 max-w-md text-[13px] text-piedra-600">{mensaje}</p>
         </div>
     )
 }
