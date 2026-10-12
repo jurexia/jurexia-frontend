@@ -107,7 +107,7 @@ export interface TablaRevision {
     pendientes: number
 }
 
-/** Un error de la API con su código («solo_platinum», «sin_saldo»…) y, si
+/** Un error de la API con su código («requiere_platinum», «saldo_insuficiente»…) y, si
  *  la cotización cambió, la nueva. */
 export class ErrorBoveda extends Error {
     constructor(

@@ -54,7 +54,7 @@ export default function SeccionBoveda({ carpetaId }: { carpetaId: string }) {
         try {
             setDatos(await leerBoveda(carpetaId))
         } catch (e) {
-            if (e instanceof ErrorBoveda && e.codigo === 'solo_platinum') return
+            if (e instanceof ErrorBoveda && e.codigo === 'requiere_platinum') return
             setError(e instanceof Error ? e.message : 'No se pudo leer la Bóveda.')
         }
     }, [carpetaId])
@@ -153,8 +153,8 @@ export default function SeccionBoveda({ carpetaId }: { carpetaId: string }) {
         try {
             await confirmarIngesta(carpetaId, datos.cotizacion.ids, datos.cotizacion.consultas)
         } catch (e) {
-            if (e instanceof ErrorBoveda && e.codigo === 'sin_saldo') {
-                setError(`${e.message} Te quedan ${e.datos?.disponibles ?? 0} y esto cuesta ${datos.cotizacion.consultas}.`)
+            if (e instanceof ErrorBoveda && e.codigo === 'saldo_insuficiente') {
+                setError(e.message)   // «hacen falta N y te quedan M»
             } else {
                 setError(e instanceof Error ? e.message : 'No se pudo confirmar.')
             }
