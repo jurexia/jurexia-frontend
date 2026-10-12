@@ -2825,3 +2825,59 @@ html.cajon-abierto .soporte-boton { display: none; }
     .barra-trabajo .bt-grupo { gap: 0.25rem; }
     .barra-trabajo .relieve { padding-left: 0.45rem; padding-right: 0.45rem; font-size: 0.75rem; }
 }
+
+/* ═══ EL BOTÓN CREMA SOBRE NEGRO TEXTURIZADO (12-oct-2026) ═══════════════
+   David, del aviso que invita a Platinum: «mete a Themis de la tarjeta
+   Platinum y el botón crema con negro texturizado». Es el botón de la
+   tarjeta de Platinum en /precios —crema y tinta— hecho pieza con el mismo
+   lenguaje de la barra de trabajo y del taller: bisel claro arriba, canto
+   oscuro abajo, sombra que lo despega del negro, y se hunde al pulsarlo.
+   Lleva grano de papel, como el negro de la `tarjeta-negra` sobre la que va,
+   para que se sienta antes de verse. En @layer components: el alto y el
+   ancho los pone Tailwind donde se usa. */
+@layer components {
+.boton-crema {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(15,14,13,0.6);
+    color: #0f0e0d;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    background-color: #f3ecdf;
+    background-image:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23p)' opacity='0.13'/></svg>"),
+        linear-gradient(180deg, #fcf8f0 0%, #f2eadb 52%, #e3d8c2 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.95),
+        inset 0 -1px 0 rgba(120,96,56,0.28),
+        0 1px 0 rgba(0,0,0,0.65),
+        0 12px 26px -12px rgba(0,0,0,0.95);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .08s ease, box-shadow .15s ease, background-image .15s ease;
+}
+.boton-crema:hover {
+    background-image:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23p)' opacity='0.13'/></svg>"),
+        linear-gradient(180deg, #fffcf6 0%, #f6efe2 52%, #e9dfca 100%);
+    box-shadow:
+        inset 0 1px 0 #fff,
+        inset 0 -1px 0 rgba(120,96,56,0.28),
+        0 1px 0 rgba(0,0,0,0.65),
+        0 16px 32px -12px rgba(201,169,98,0.38);
+}
+.boton-crema:active {
+    transform: translateY(1px);
+    background-image:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23p)' opacity='0.13'/></svg>"),
+        linear-gradient(180deg, #e4d9c4 0%, #eee6d6 100%);
+    box-shadow: inset 0 1px 3px rgba(15,14,13,0.28), 0 1px 0 rgba(0,0,0,0.65);
+}
+.boton-crema:focus-visible { outline: 2px solid rgba(201,169,98,0.85); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+    .boton-crema { transition: none; }
+    .boton-crema:active { transform: none; }
+}
+}
