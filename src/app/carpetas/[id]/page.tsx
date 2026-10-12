@@ -583,31 +583,37 @@ function Detalle() {
                     Los PDF de la carpeta se leen donde ya están guardados: no
                     se vuelven a subir. Cuesta una consulta por cada N páginas y
                     el panel lo dice antes de cobrar. */}
-                <section className="mb-8 rounded-xl border border-cream-400 bg-white p-5">
-                    <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-accent-brown">
-                        <GanttChartSquare className="h-4 w-4" />
-                        Cronología del expediente
-                        {!conCronologia && <span className="ml-1 flex items-center gap-1 rounded-full bg-charcoal-900 px-2 py-0.5 text-[10px] tracking-wider text-[#c9a962]"><Lock className="h-2.5 w-2.5" /> Platinum</span>}
-                    </h2>
-                    <p className="mt-2.5 text-sm leading-relaxed text-charcoal-700/80">
+                <Seccion
+                    id="cronologia"
+                    rotulo="Cronología"
+                    titulo="Cronología del expediente"
+                    acciones={!conCronologia ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-charcoal-900 px-2.5 py-1 text-[10.5px] font-semibold tracking-wider text-[#c9a962]">
+                            <Lock className="h-3 w-3" /> Platinum
+                        </span>
+                    ) : null}>
+                    <p className="text-[13.5px] leading-relaxed text-piedra-700">
                         Los hechos del expediente en orden, cada uno con la página donde consta; las
                         cuestiones en disputa y los plazos que corren, para Word y para su agenda.
                         Se cobra en proporción a las páginas, y se le dice cuánto antes de cobrar.
                     </p>
                     {cronologias.length > 0 && (
-                        <ul className="mt-3 divide-y divide-cream-300 rounded-lg border border-cream-300">
+                        <ul className="mt-4 divide-y divide-[#ece6da] overflow-hidden rounded-xl bg-[#fffefa] ring-1 ring-[#e4ddcf]">
                             {cronologias.slice(0, 5).map((c) => (
                                 <li key={c.id}>
                                     <button
                                         onClick={() => { setCronologiaDe(c.id); setCronologiaAbierta(true) }}
-                                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-cream-100">
-                                        <span className="min-w-0 flex-1 truncate">{c.titulo || 'Cronología'}</span>
-                                        <span className="flex-shrink-0 text-xs text-charcoal-700/60">
+                                        className="group flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-[#faf6ee]">
+                                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#f3e8cc] text-[#6b5530]">
+                                            <GanttChartSquare className="h-4 w-4" />
+                                        </span>
+                                        <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium text-charcoal-900">{c.titulo || 'Cronología'}</span>
+                                        <span className="flex-shrink-0 text-[11.5px] text-piedra-500">
                                             {c.paginas} págs. · {c.estado === 'lista'
                                                 ? new Date(c.created_at).toLocaleDateString('es-MX')
                                                 : c.estado === 'error' ? 'falló' : 'en proceso'}
                                         </span>
-                                        <ChevronRight className="h-4 w-4 flex-shrink-0 text-charcoal-700/40" />
+                                        <ChevronRight className="h-4 w-4 flex-shrink-0 text-piedra-400 transition-transform group-hover:translate-x-0.5" />
                                     </button>
                                 </li>
                             ))}
@@ -616,15 +622,15 @@ function Detalle() {
                     <button
                         onClick={() => { setCronologiaDe(null); setCronologiaAbierta(true) }}
                         disabled={conCronologia && documentos.length === 0}
-                        className="mt-4 flex items-center gap-2 rounded-lg bg-charcoal-900 px-5 py-2.5 text-sm font-semibold text-cream-50 transition hover:bg-charcoal-800 disabled:opacity-50">
-                        {conCronologia ? <GanttChartSquare className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                        className={`${BOTON} mt-4`}>
+                        {conCronologia ? <GanttChartSquare className="h-4 w-4 text-accent-gold" /> : <Lock className="h-4 w-4 text-accent-gold" />}
                         {!conCronologia
                             ? 'Disponible en Platinum'
                             : documentos.length === 0
-                                ? 'Sube un documento primero'
+                                ? 'Suba un documento primero'
                                 : 'Construir la cronología'}
                     </button>
-                </section>
+                </Seccion>
 
                 <PanelCronologia
                     abierto={cronologiaAbierta}
@@ -751,6 +757,7 @@ function Detalle() {
                             <Indice href="#consultas" icono={<MessagesSquare className="h-4 w-4" />} texto="Consultas" cuenta={consultas.length} />
                         ) : null}
                         <Indice href="#redactar" icono={<FileSignature className="h-4 w-4" />} texto="Redactar" />
+                        <Indice href="#cronologia" icono={<GanttChartSquare className="h-4 w-4" />} texto="Cronología" />
                         <Indice href="#boveda" icono={<Vault className="h-4 w-4" />} texto="Bóveda" />
                         <Indice href="#documentos" icono={<FolderOpen className="h-4 w-4" />} texto="Documentos" cuenta={documentos.length} />
                     </nav>
