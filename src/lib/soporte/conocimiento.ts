@@ -272,18 +272,23 @@ LA CAJA DE CONSULTA
 · Clip — UN documento por consulta: PDF o Word (.doc, .docx), hasta 25 MB.
   También se puede arrastrar a la ventana. Hojas que se leen: Gratuito 20,
   Básico 50, Pro 100, Platinum y Ultra 600. No acepta TXT.
-· «Desplegar herramientas» (o «Herramientas»), bajo la caja, abre cinco:
+· «Desplegar herramientas» (o «Herramientas»), bajo la caja, abre seis. Desde
+  el 12-oct-2026 todas, salvo Escrito legal, son del plan Platinum (y Ultra);
+  en Pro se ven con candado:
   - Escrito legal — formulario para Demanda, Amparo, Impugnación, Contrato,
     Petición u oficio y Denuncia disciplinaria. Todos los planes.
-  - Sentencia — audita una resolución AJENA (se arrastra o se pega) y entrega una
-    nota exportable a Word. Desde plan Pro.
+  - Sentencia — audita una resolución AJENA (se arrastra o se pega) frente a los
+    precedentes de su tribunal y entrega una nota exportable a Word. Platinum y
+    Ultra.
   - Precedentes — busca criterios del Poder Judicial de la Federación: SCJN,
-    Tribunales Colegiados o ambas; sala, circuito y tribunal. Desde plan Pro.
+    Tribunales Colegiados o ambas; sala, circuito y tribunal. Platinum y Ultra.
   - Jurimetría — sentido probable de un asunto (concede, niega, sobresee).
     Platinum y Ultra.
+  - Cronología — los hechos del expediente con la página de cada uno, las
+    cuestiones en disputa y los plazos que corren. Platinum y Ultra.
   - Toulmin — el constructor de demandas y recursos en cinco pasos (el caso,
     argumentos, redactar, revisar, Word). Los pasos de argumentar, redactar y
-    revisar cuentan una consulta cada uno.
+    revisar cuentan una consulta cada uno. Platinum y Ultra.
 
 LAS RESPUESTAS Y EL PANEL DOCUMENTO
 · Cada respuesta llega como tarjeta con sus fuentes por institución y, si cita,
@@ -336,10 +341,12 @@ Pro). El rayo (respuesta rápida) también se retiró.
 PLANES (precios en pesos; anual = cupo mensual igual, pagado por año)
 · Gratuito — $0. 5 consultas al mes; documentos de hasta 20 hojas.
 · Básico — $79 al mes o $790 al año. 70 consultas; 50 hojas.
-· Pro — $149 al mes o $1,490 al año. 140 consultas; 100 hojas; internet,
-  Precedentes, Sentencia y esfuerzo Pro; 30 flujos al mes.
+· Pro — $149 al mes o $1,490 al año. 140 consultas; 100 hojas; internet y
+  esfuerzo Pro; 30 flujos al mes. Desde el 12-oct-2026 NO incluye Sentencia,
+  Precedentes, Jurimetría, Cronología, Bóveda ni Toulmin.
 · Platinum — $599 al mes o $5,990 al año. 560 consultas; 600 hojas; todo lo de
-  Pro, Jurimetría y esfuerzo Platinum; 60 flujos.
+  Pro, esfuerzo Platinum y, en exclusiva, Sentencia, Precedentes por circuito,
+  Jurimetría, Cronología, Bóveda y Toulmin; 60 flujos.
 · Ultra Secretarios — $999 al mes. Lo de Platinum más el Redactor PJF con 40
   proyectos al mes.
 · Subir de plan es inmediato; bajar aplica en el siguiente ciclo. Se paga con

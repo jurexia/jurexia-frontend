@@ -31,7 +31,7 @@ const FUNCIONES: { id: string; nombre: string; texto: string; href: string; plan
     { id: 'agente-analisis', nombre: 'Análisis de documentos', texto: 'Demandas, sentencias y amparos: fortalezas, debilidades y mejoras con fundamento.', href: '/plataforma/carpetas#lo-que-ve-iurexia' },
     { id: 'esfuerzo-de-redaccion', nombre: 'Esfuerzo de redacción', texto: 'Básico, Pro o Platinum: cuánto razona Iurexia antes de escribir.', href: '/plataforma/redaccion#esfuerzo' },
     { id: 'flujos-de-trabajo', nombre: 'Flujos de trabajo', texto: 'Siete escritos guiados parte por parte, del encargo al documento.', href: '/plataforma/redaccion#flujos', plan: 'Pro y Platinum' },
-    { id: 'precedentes', nombre: 'Precedentes judiciales', texto: 'Más de 111,000 sentencias de Tribunales Colegiados, con su PDF.', href: '/plataforma/consulta#precedentes', plan: 'Pro y Platinum' },
+    { id: 'precedentes', nombre: 'Precedentes judiciales', texto: 'Más de 111,000 sentencias de Tribunales Colegiados, con su PDF.', href: '/plataforma/consulta#precedentes', plan: 'Platinum' },
     { id: 'jurimetria', nombre: 'Jurimetría', texto: 'El sentido probable de un amparo, argumento por argumento, a partir de los precedentes.', href: '/plataforma/consulta#precedentes', plan: 'Platinum' },
     { id: 'seguimiento', nombre: 'Seguimiento de expedientes', texto: 'Los portales oficiales revisados cada día hábil, lo nuevo a la vista.', href: '/plataforma/carpetas#seguimiento' },
 ];

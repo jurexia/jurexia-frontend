@@ -74,7 +74,7 @@ export default function ConsultaPage() {
                 },
                 {
                     id: 'precedentes',
-                    antetitulo: 'Pro y Platinum',
+                    antetitulo: 'Platinum',
                     titulo: 'Precedentes de los tribunales colegiados',
                     texto: 'Más de 111,000 sentencias de Tribunales Colegiados, buscables por materia, acto reclamado, tribunal y sentido del fallo, con el PDF de cada una. En Platinum, la jurimetría compara el acto reclamado y los conceptos de violación con esos precedentes y estima el sentido probable, argumento por argumento.',
                     visual: {

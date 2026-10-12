@@ -28,6 +28,7 @@ import SentenciaModal from './SentenciaModal';
 import JurimetriaModal from './JurimetriaModal';
 import PanelCronologia from './cronologia/PanelCronologia';
 import { puedeCronologia } from '@/lib/cronologia';
+import { HERRAMIENTAS_PLATINUM, tieneHerramientasPlatinum, type HerramientaPlatinum } from '@/lib/herramientas-platinum';
 import { enhanceText } from '@/lib/api';
 import { useAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
@@ -93,7 +94,7 @@ export default function ChatInput({
     const [showEnhanceModal, setShowEnhanceModal] = useState(false);
     const [showDraftModal, setShowDraftModal] = useState(false);
     const [showSentenciaModal, setShowSentenciaModal] = useState(false);
-    const [showUpgradeModal, setShowUpgradeModal] = useState<'pro' | 'platinum' | 'cronologia' | null>(null);
+    const [showUpgradeModal, setShowUpgradeModal] = useState<'pro' | HerramientaPlatinum | null>(null);
     const [showCronologia, setShowCronologia] = useState(false);
     const [showJurimetriaModal, setShowJurimetriaModal] = useState(false);
     const [attachedDocument, setAttachedDocument] = useState<{ file: File; fileName: string } | null>(null);
@@ -215,14 +216,19 @@ export default function ChatInput({
         '31°','32°',
     ];
     const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios' || profile?.can_access_sentencia === true;
-    const canAccessSentencia = profile?.subscription_type && !['gratuito', 'basico_monthly'].includes(profile.subscription_type);
+    /* SENTENCIA, PRECEDENTES, JURIMETRÍA, CRONOLOGÍA Y TOULMIN, SÓLO EN PLATINUM
+       (12-oct-2026). Antes Sentencia y Precedentes se abrían desde Pro y Toulmin
+       en cualquier plan. Ahora los cinco piden Platinum o Ultra; la
+       administración y los testers conservan todo (`tieneHerramientasPlatinum`). */
+    const conPlatinum = tieneHerramientasPlatinum(profile?.subscription_type, user?.email);
+    const canAccessSentencia = conPlatinum;
     const isFreeUser = !profile?.subscription_type || ['gratuito', 'basico_monthly'].includes(profile.subscription_type);
-    const _PRO_PLUS = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
-    const canAccessPrecedentes = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
-    const canAccessJurimetria  = isAdmin(user?.email) || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
+    const canAccessPrecedentes = conPlatinum;
+    const canAccessJurimetria = conPlatinum;
     // La Cronología del expediente (12-oct-2026) es de Platinum; la API lo
     // comprueba también, esto sólo decide si el mosaico va con candado.
     const canAccessCronologia = puedeCronologia(profile?.subscription_type, user?.email);
+    const canAccessToulmin = conPlatinum;
     // (El Secretario del PJF se mudó a la barra superior del chat; su
     //  comprobación de plan vive ahora en app/chat/page.tsx.)
 
@@ -838,8 +844,8 @@ ${draftRequest.descripcion}`;
 
                             <button
                                 data-guide="sentencia"
-                                onClick={() => canAccessSentencia ? handleModeClick('sentencia') : setShowUpgradeModal('pro')}
-                                title={!canAccessSentencia ? 'Plan Pro' : 'Revisa una sentencia'}
+                                onClick={() => canAccessSentencia ? handleModeClick('sentencia') : setShowUpgradeModal('sentencia')}
+                                title={!canAccessSentencia ? 'Sentencia · Plan Platinum' : 'Audita una sentencia frente a los precedentes de su tribunal'}
                                 className={`mosaico flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
                                     transition-all duration-200
                                     ${!canAccessSentencia
@@ -857,12 +863,12 @@ ${draftRequest.descripcion}`;
                             <button
                                 data-guide="precedentes"
                                 onClick={() => {
-                                    if (!canAccessPrecedentes) { setShowUpgradeModal('pro'); return; }
+                                    if (!canAccessPrecedentes) { setShowUpgradeModal('precedentes'); return; }
                                     const next = activeMode !== 'precedentes';
                                     setActiveMode(next ? 'precedentes' : 'search');
                                     if (!next) { setSelectedCircuit(null); setTribunalFilter(null); }
                                 }}
-                                title={!canAccessPrecedentes ? 'Plan Pro' : 'Precedentes federales'}
+                                title={!canAccessPrecedentes ? 'Precedentes · Plan Platinum' : 'Precedentes federales, por circuito'}
                                 className={`mosaico flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
                                     transition-all duration-200
                                     ${!canAccessPrecedentes
@@ -880,10 +886,10 @@ ${draftRequest.descripcion}`;
                             <button
                                 data-guide="jurimetria"
                                 onClick={() => {
-                                    if (!canAccessJurimetria) { setShowUpgradeModal('platinum'); return; }
+                                    if (!canAccessJurimetria) { setShowUpgradeModal('jurimetria'); return; }
                                     setShowJurimetriaModal(true);
                                 }}
-                                title={!canAccessJurimetria ? 'Plan Platinum' : 'Jurimetría'}
+                                title={!canAccessJurimetria ? 'Jurimetría · Plan Platinum' : 'Jurimetría'}
                                 className={`mosaico flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
                                     transition-all duration-200
                                     ${!canAccessJurimetria
@@ -899,7 +905,7 @@ ${draftRequest.descripcion}`;
                             <button
                                 data-guide="cronologia"
                                 onClick={() => canAccessCronologia ? setShowCronologia(true) : setShowUpgradeModal('cronologia')}
-                                title={!canAccessCronologia ? 'Plan Platinum' : 'Cronología del expediente: hechos con su página, cuestiones y plazos'}
+                                title={!canAccessCronologia ? 'Cronología · Plan Platinum' : 'Cronología del expediente: hechos con su página, cuestiones y plazos'}
                                 className={`mosaico flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
                                     transition-all duration-200
                                     ${!canAccessCronologia
@@ -916,20 +922,29 @@ ${draftRequest.descripcion}`;
                                 <button
                                     type="button"
                                     data-guide="toulmin"
-                                    onClick={() => onAbrirConstructor('toulmin')}
+                                    onClick={() => {
+                                        // Abierto, siempre se puede recoger; cerrado, pide Platinum.
+                                        if (!canAccessToulmin && !constructorAbierto) { setShowUpgradeModal('toulmin'); return; }
+                                        onAbrirConstructor('toulmin');
+                                    }}
                                     aria-pressed={constructorAbierto}
                                     title={constructorAbierto
                                         ? 'Recoger el constructor'
-                                        : 'Toulmin: construir una demanda o un recurso con argumentos citados y llevarlo a Word'}
+                                        : !canAccessToulmin
+                                            ? 'Toulmin · Plan Platinum'
+                                            : 'Toulmin: construir una demanda o un recurso con argumentos citados y llevarlo a Word'}
                                     className={`mosaico flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
                                         transition-all duration-200
-                                        ${constructorAbierto
-                                            ? 'bg-charcoal-900 text-white shadow-sm ring-2 ring-accent-gold/70'
-                                            : 'bg-charcoal-900/90 text-white/90 hover:bg-charcoal-900 hover:text-white'
+                                        ${!canAccessToulmin && !constructorAbierto
+                                            ? 'bg-gray-200 text-gray-400 cursor-pointer'
+                                            : constructorAbierto
+                                                ? 'bg-charcoal-900 text-white shadow-sm ring-2 ring-accent-gold/70'
+                                                : 'bg-charcoal-900/90 text-white/90 hover:bg-charcoal-900 hover:text-white'
                                         }`}
                                 >
-                                    <Network className="w-2.5 h-2.5 flex-shrink-0 text-accent-gold" />
+                                    <Network className={`w-2.5 h-2.5 flex-shrink-0 ${!canAccessToulmin && !constructorAbierto ? '' : 'text-accent-gold'}`} />
                                     <span className="truncate">Toulmin</span>
+                                    {!canAccessToulmin && !constructorAbierto && <Lock className="mosaico-candado w-2 h-2 flex-shrink-0 opacity-60" />}
                                 </button>
                             )}
 
@@ -1229,26 +1244,16 @@ ${draftRequest.descripcion}`;
                         <div className="mx-auto mb-4 w-11 h-11 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
                             <Lock className="w-5 h-5 text-[#c9a962]" />
                         </div>
-                        {/* Sólo lo abre el botón Jurimetría. Decía que Platinum
-                            incluía el «Redactor TCC Beta», pero el redactor es del
-                            plan Ultra Secretarios desde el 13-sep-2026, y la
-                            Jurimetría la tienen Platinum y Ultra (`canAccessJurimetria`). */}
-                        {showUpgradeModal === 'cronologia' ? (
+                        {/* Cada herramienta de Platinum dice qué es (12-oct-2026): el
+                            texto sale de `HERRAMIENTAS_PLATINUM`, el mismo de la tarjeta
+                            de Platinum en /precios. «pro» queda para lo que pide Pro. */}
+                        {showUpgradeModal !== 'pro' ? (
                             <>
                                 <p className="text-[10px] font-bold tracking-[0.18em] text-[#c9a962] uppercase mb-2">
-                                    Cronología · Plan Platinum
+                                    {HERRAMIENTAS_PLATINUM[showUpgradeModal].nombre} · Plan Platinum
                                 </p>
                                 <p className="text-white/80 text-sm leading-relaxed mb-6">
-                                    Suba un expediente completo y reciba la cronología de los hechos con la página exacta de cada uno, las cuestiones en disputa y los plazos que corren. Está en el plan <span className="text-white font-semibold">Platinum</span> de Iurexia.
-                                </p>
-                            </>
-                        ) : showUpgradeModal === 'platinum' ? (
-                            <>
-                                <p className="text-[10px] font-bold tracking-[0.18em] text-[#c9a962] uppercase mb-2">
-                                    Jurimetría · Plan Platinum
-                                </p>
-                                <p className="text-white/80 text-sm leading-relaxed mb-6">
-                                    La Jurimetría predice el sentido probable de un asunto a partir de los precedentes del circuito. Está en el plan <span className="text-white font-semibold">Platinum</span> de Iurexia y en Ultra Secretarios.
+                                    {HERRAMIENTAS_PLATINUM[showUpgradeModal].explicacion} Está en el plan <span className="text-white font-semibold">Platinum</span> de Iurexia y en Ultra Secretarios.
                                 </p>
                             </>
                         ) : (
