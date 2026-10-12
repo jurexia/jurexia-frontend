@@ -597,7 +597,7 @@ ${draftRequest.descripcion}`;
                 )}
 
                 {/* Main Input Container - Harvey Style */}
-                <div className="chat-input-container p-3">
+                <div className="chat-input-container p-3" data-sin-soporte>
                     {/* La materia ya no se elige aquí (25-sep-2026): se deduce de la
                         consulta. El selector Auto·Civil·Penal·Familiar·Admin salió a
                         petición de David — «que la selección de la materia vaya implícita». */}
@@ -785,6 +785,7 @@ ${draftRequest.descripcion}`;
                             data-guide="herramientas"
                             onClick={() => setPlegado((v) => !v)}
                             aria-expanded={!plegado}
+                            aria-label={plegado ? 'Desplegar herramientas' : 'Plegar herramientas'}
                             title={plegado
                                 ? 'Mostrar las herramientas'
                                 : 'Ocultar las herramientas y dejar la caja sencilla'}
@@ -798,7 +799,7 @@ ${draftRequest.descripcion}`;
                                 esfuerzo al lado la frase entera se salía del cuadro
                                 —en el teléfono y en el chat de 420 px junto al
                                 documento—. Ver `.fila-fuentes` en globals.css. */}
-                            <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wider">
+                            <span className="palabra-herramientas min-w-0 shrink-[0.2] truncate text-[10px] font-semibold uppercase tracking-wider">
                                 <span className="prefijo-plegar">{plegado ? 'Desplegar ' : 'Plegar '}</span>herramientas
                             </span>
                             {plegado && <span className="hidden min-w-0 truncate sm:inline">{resumenPlegado}</span>}

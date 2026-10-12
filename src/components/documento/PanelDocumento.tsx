@@ -469,7 +469,7 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
             </section>
 
             {/* ── EL PIE: qué hay y en qué estado ──────────────────────── */}
-            <footer className="flex h-9 shrink-0 items-center gap-3 border-t border-charcoal-900/10 bg-cream-100 px-4 text-[11.5px] text-charcoal-900/65">
+            <footer data-sin-soporte className="flex h-9 shrink-0 items-center gap-3 border-t border-charcoal-900/10 bg-cream-100 px-4 text-[11.5px] text-charcoal-900/65">
                 {paso && !palabras ? (
                     /* Aún no hay ni una palabra: se dice qué está pasando en vez
                        de «Escribiendo… 0 palabras», que era mentira y dejaba al

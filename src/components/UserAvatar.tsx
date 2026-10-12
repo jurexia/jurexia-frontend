@@ -112,13 +112,13 @@ export function UserAvatar() {
                     del plan sigue en el menú desplegable. */}
                 {nivelDePlan(plan) === 'platinum' ? (
                     <span
-                        className="hidden md:inline-flex items-center justify-center shrink-0"
+                        className="bt-insignia bt-insignia-gema hidden md:inline-flex items-center justify-center shrink-0"
                         title={`Plan ${planStyle.label}`}
                     >
                         <Insignia nivel="platinum" tam={26} animada />
                     </span>
                 ) : (
-                    <span className="hidden md:inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap pl-1.5 pr-3 py-1 rounded-full text-xs font-semibold bg-charcoal-900/5 text-charcoal-900 border border-cream-400">
+                    <span className="bt-insignia bt-insignia-pildora hidden md:inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap pl-1.5 pr-3 py-1 rounded-full text-xs font-semibold bg-charcoal-900/5 text-charcoal-900 border border-cream-400">
                         <Insignia nivel={nivelDePlan(plan)} tam={18} />
                         {planStyle.label}
                     </span>

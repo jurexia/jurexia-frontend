@@ -161,6 +161,7 @@ export default function MarcoTrabajo() {
 
     const enTrabajo = pathname === '/carpetas' || pathname.startsWith('/carpetas/');
     const enUltimo = pathname.startsWith('/ultimo');
+    const enAgenda = pathname.startsWith('/agenda');
     const enNormativa = pathname.startsWith('/normativa');
 
     return (
@@ -189,7 +190,9 @@ export default function MarcoTrabajo() {
                     {/* Con relieve y sin iconos, como el chat (7-oct-2026; ver
                         `.relieve` en globals.css). La herramienta en la que se
                         está queda pulsada y con su raya de oro. */}
-                    <nav aria-label="Herramientas" className="flex min-w-0 items-center gap-1.5">
+                    <nav aria-label="Herramientas" className="bt-grupo flex min-w-0 items-center gap-1.5">
+                        {/* Las herramientas, en su caja (ver `.bt-herramientas`). */}
+                        <div className="bt-herramientas bt-grupo flex min-w-0 items-center gap-1.5">
                         <Link
                             href="/carpetas"
                             aria-current={enTrabajo ? 'page' : undefined}
@@ -198,6 +201,17 @@ export default function MarcoTrabajo() {
                         >
                             Mi trabajo
                             {enTrabajo && <Activo />}
+                        </Link>
+                        {/* La Agenda (11-oct-2026), como en el chat: estaba en la
+                            barra del chat y faltaba en la de las demás páginas. */}
+                        <Link
+                            href="/agenda"
+                            aria-current={enAgenda ? 'page' : undefined}
+                            title="Agenda — sus términos y audiencias, con aviso a su correo"
+                            className="relieve relieve-papel bt-agenda px-2.5 sm:px-3"
+                        >
+                            Agenda
+                            {enAgenda && <Activo />}
                         </Link>
                         <Link
                             href="/ultimo"
@@ -225,6 +239,7 @@ export default function MarcoTrabajo() {
                             Redactor PJF
                             {!accesoPJF && <span className="relieve-plan">Ultra</span>}
                         </Link>
+                        </div>
 
                         {/* Lo que no cabe en el teléfono */}
                         <div className="bt-mas relative">
@@ -241,6 +256,13 @@ export default function MarcoTrabajo() {
                                 <>
                                     <div className="fixed inset-0 z-40" onClick={() => setMenuMas(false)} />
                                     <div className="lamina-relieve absolute left-0 top-10 z-50 w-56 overflow-hidden rounded-xl p-1.5">
+                                        <Link
+                                            href="/agenda"
+                                            onClick={() => setMenuMas(false)}
+                                            className="bt-menu-agenda rounded-lg px-3 py-2.5 text-[0.8125rem] font-medium text-charcoal-900 transition-colors hover:bg-charcoal-900/[0.045]"
+                                        >
+                                            Agenda
+                                        </Link>
                                         <Link
                                             href="/ultimo"
                                             onClick={() => setMenuMas(false)}
@@ -269,7 +291,7 @@ export default function MarcoTrabajo() {
                         </div>
                     </nav>
 
-                    <div className="flex min-w-0 items-center gap-1.5">
+                    <div className="bt-grupo flex flex-shrink-0 items-center gap-1.5">
                         <Link
                             href="/salvame"
                             title="Sálvame — ayuda urgente"

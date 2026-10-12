@@ -1649,7 +1649,10 @@ export default function ChatPage() {
                             (`.barra-trabajo` en globals.css): así funciona igual
                             con la lateral abierta o cerrada y con el constructor
                             acoplado, que antes pedía su propia regla. */}
-                        <div className="flex items-center gap-1.5 min-w-0">
+                        <div className="bt-grupo flex items-center gap-1.5 min-w-0">
+                            {/* Las herramientas, en su caja: si un día una nueva no
+                                cabe, se recorta aquí y no pisa a «Sálvame». */}
+                            <div className="bt-herramientas bt-grupo flex min-w-0 items-center gap-1.5">
                             <Link
                                 href="/carpetas"
                                 data-guide="mi-trabajo"
@@ -1664,7 +1667,7 @@ export default function ChatPage() {
                                 href="/agenda"
                                 data-guide="agenda"
                                 title="Agenda — sus términos y audiencias, con aviso a su correo"
-                                className="relieve relieve-papel px-2.5 sm:px-3"
+                                className="relieve relieve-papel bt-agenda px-2.5 sm:px-3"
                             >
                                 Agenda
                             </Link>
@@ -1704,6 +1707,7 @@ export default function ChatPage() {
                                 Redactor PJF
                                 {!canAccessSecretarioPJF && <span className="relieve-plan">Ultra</span>}
                             </button>
+                            </div>
 
                             {/* Lo que no cabe en móvil, ni junto al constructor */}
                             <div className="bt-mas relative">
@@ -1720,6 +1724,13 @@ export default function ChatPage() {
                                     <>
                                         <div className="fixed inset-0 z-40" onClick={() => setMenuMas(false)} />
                                         <div className="lamina-relieve absolute left-0 top-10 z-50 w-56 overflow-hidden rounded-xl p-1.5">
+                                            <Link
+                                                href="/agenda"
+                                                onClick={() => setMenuMas(false)}
+                                                className="bt-menu-agenda rounded-lg px-3 py-2.5 text-[0.8125rem] font-medium text-charcoal-900 transition-colors hover:bg-charcoal-900/[0.045]"
+                                            >
+                                                Agenda
+                                            </Link>
                                             <Link
                                                 href="/ultimo"
                                                 onClick={() => setMenuMas(false)}
@@ -1761,7 +1772,7 @@ export default function ChatPage() {
                         </div>
 
                         {/* ── Estado y cuenta ── */}
-                        <div className="flex items-center gap-1.5 min-w-0">
+                        <div className="bt-grupo flex flex-shrink-0 items-center gap-1.5">
                             <Link
                                 href="/salvame"
                                 title="Sálvame — ayuda urgente"

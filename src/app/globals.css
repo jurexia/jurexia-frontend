@@ -2119,17 +2119,67 @@ h6 {
   .herramientas .mosaico-largo { display: none; }
   .herramientas .mosaico-corto { display: inline; }
 }
+/* Seis mosaicos en una fila de menos de 460 px —el teléfono, o el chat junto
+   al documento— miden ~56 px y «Precedentes» ya no cabe (12-oct-2026). Ahí
+   pasan a dos filas de tres, simétricas, con el icono al lado de la palabra.
+   Con cinco (sin constructor) la fila única todavía cabe: 3 + 2 no sería
+   simétrico. */
+@container (max-width: 459px) {
+  .herramientas .grid-cols-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .herramientas .grid-cols-6 .mosaico { flex-direction: row; gap: 4px; padding-left: 4px; padding-right: 4px; }
+}
 
-/* La fila de «Fuentes», «Esfuerzo» y «Herramientas», con el mismo criterio:
-   se mide el compositor, no la pantalla. Estrecha, la fila dice
-   «Herramientas» en vez de «Desplegar herramientas»; más estrecha aún, el
-   desplegable del esfuerzo dice sólo el escalón. */
+/* La tarjeta «Escrito en el documento»: estrecha (el teléfono, o el chat junto
+   al documento), «Ver documento» baja a su propia fila a todo el ancho y las
+   fuentes por institución usan la tarjeta entera en vez de media. */
+.tarjeta-documento { container-type: inline-size; }
+@container (max-width: 559px) {
+  .tarjeta-documento .ver-documento { order: 99; flex-basis: 100%; margin-top: 0.25rem; }
+}
+
+/* La fila de «Fuentes», «Esfuerzo», «Plazos» y «Herramientas», con el mismo
+   criterio: se mide el compositor, no la pantalla.
+
+   MEDIDAS REHECHAS (12-oct-2026). «Plazos» (11-oct) entró sin entrar en las
+   cuentas y «Herramientas» se salía de la caja del compositor en el teléfono
+   y junto al documento (David, con la captura). Medido en el navegador:
+   Fuentes ≤155 con palabra (≤82 sólo con los emblemas, Internet incluido) ·
+   Esfuerzo 155 (102 sólo el escalón, «Platinum» el más largo) · Plazos 80 (34
+   sólo el reloj) · «Desplegar herramientas» ~172 («Herramientas» ~114; la
+   flecha sola, 22) · 8 px entre piezas. Cada umbral es la suma de lo que se
+   ve en ese tramo más ~10 px de holgura. Se recoge en este orden:
+   «Desplegar», la palabra «Esfuerzo», la palabra y la cuenta de Fuentes (lo
+   dicen los emblemas), la palabra «Plazos» (queda el reloj, con su nombre al
+   pasar el ratón) y, al final, «Herramientas» (queda la flecha). Antes las
+   palabras de Fuentes se escondían por el ancho de la PANTALLA (`sm:`) y
+   junto al documento se veían en una fila que no tenía sitio. */
 .fila-fuentes { container-type: inline-size; }
-@container (max-width: 480px) {
+.fila-fuentes .fuentes-palabra,
+.fila-fuentes .fuentes-cuenta { display: inline; }
+.fila-fuentes .fuentes-flecha { display: block; }
+@container (max-width: 599px) {
   .fila-fuentes .prefijo-plegar { display: none; }
 }
-@container (max-width: 400px) {
+@container (max-width: 539px) {
   .fila-fuentes .palabra-esfuerzo { display: none; }
+}
+@container (max-width: 489px) {
+  .fila-fuentes .fuentes-palabra,
+  .fila-fuentes .fuentes-cuenta,
+  .fila-fuentes .fuentes-flecha { display: none; }
+}
+@container (max-width: 409px) {
+  .fila-fuentes .palabra-plazos { display: none; }
+  .fila-fuentes .boton-plazos { padding-left: 0.5rem; padding-right: 0.5rem; }
+}
+@container (max-width: 379px) {
+  /* El hueco entre las piezas lo pone la propia fila, que es el contenedor y
+     no se puede tocar desde aquí: se ahorra dentro de las piezas. */
+  .fila-fuentes > button { gap: 4px; }
+  .fila-fuentes .boton-plazos { padding-left: 0.375rem; padding-right: 0.375rem; }
+}
+@container (max-width: 339px) {
+  .fila-fuentes .palabra-herramientas { display: none; }
 }
 
 
@@ -2698,43 +2748,78 @@ html.con-barra-trabajo .solo-publico {
    barra recoge en «Más» lo que no le cabe. Lo decide el ANCHO DE LA BARRA
    —con la lateral abierta o cerrada, con el constructor acoplado o en el
    teléfono—, no el de la pantalla. Fuera de @layer para mandar sobre
-   `.relieve`. Medidas tomadas de los botones reales (7-oct-2026):
-   las cuatro herramientas suman ~440 px (~380 en el tramo medio, con menos
-   relleno y sin la marca «Ultra», que sigue en el título del botón); Sálvame,
-   la entidad y la cuenta, ~250; el contador, ~110. A 1024 px con la lateral
-   abierta la barra mide ~736: caben las cuatro herramientas. */
+   `.relieve`.
+
+   MEDIDAS REHECHAS (12-oct-2026). «Agenda» (11-oct) entró en la barra sin
+   entrar en estas cuentas y la fila se encimaba: «Más» quedaba debajo de
+   «Sálvame» a 360 y a 580 px y el avatar se salía de la pantalla (David, con
+   la captura del chat junto al documento). Botones medidos en el navegador:
+   Mi trabajo 89 · Agenda 74 · Lo último 85 · Normativa 92 · Redactor PJF 110
+   (+40 con «Ultra») · Más 49 · Sálvame 88 · entidad ≤122 · contador ~125 ·
+   avatar 40 (+38 con el diamante de Platinum, +112 con la píldora del plan);
+   6 px entre botones y hasta 72 px de márgenes en el teléfono (56 a la
+   izquierda, por el botón de la lateral). Cada umbral es lo que se ve en ese
+   tramo, con la entidad más larga y el diamante, más algo de holgura; se
+   comprobó en el navegador de 320 a 1,600 px sin un solo choque. De ahí el orden
+   en que se recoge, de lo menos a lo más usado: la píldora del plan y la marca
+   «Ultra», el contador, Normativa y Redactor PJF, Lo último, la entidad y, al
+   final, Agenda. «Mi trabajo», «Más», «Sálvame» y el avatar no se van nunca.
+   La insignia del plan también se decide aquí (antes por `md:`, el ancho de
+   la PANTALLA, y junto al documento ocupaba un sitio que la barra no tenía).
+   Y si algún día un botón nuevo vuelve a no caber, las herramientas se
+   recortan en su caja (`.bt-herramientas`) en vez de pisar a Sálvame. */
 .barra-trabajo { container-type: inline-size; container-name: barra; }
 .barra-trabajo .bt-mas,
+.barra-trabajo .bt-menu-agenda,
 .barra-trabajo .bt-menu-ultimo,
 .barra-trabajo .bt-menu-entidad,
 .barra-trabajo .bt-cuenta,
-.barra-trabajo .bt-basica { display: none; }
+.barra-trabajo .bt-basica,
+.barra-trabajo .bt-insignia { display: none; }
 .barra-trabajo .bt-estado { max-width: 96px; }
-@container barra (max-width: 819px) {
-    .barra-trabajo .relieve { padding-left: 0.65rem; padding-right: 0.65rem; }
+.barra-trabajo .bt-herramientas { overflow-x: clip; margin: 0 -6px; padding: 0 6px; }
+@container barra (min-width: 1100px) {
+    .barra-trabajo .bt-insignia-pildora { display: inline-flex; }
+}
+@container barra (max-width: 1099px) {
     .barra-trabajo .bt-ancha .relieve-plan { display: none; }
 }
-@container barra (max-width: 699px) {
+@container barra (min-width: 990px) {
+    .barra-trabajo .bt-cuenta { display: flex; }
+    .barra-trabajo .bt-basica { display: inline-flex; }
+}
+@container barra (max-width: 819px) {
+    .barra-trabajo .relieve { padding-left: 0.65rem; padding-right: 0.65rem; }
+}
+@container barra (max-width: 799px) {
     .barra-trabajo .bt-ancha { display: none; }
     .barra-trabajo .bt-mas { display: block; }
 }
-@container barra (max-width: 559px) {
+@container barra (max-width: 689px) {
     .barra-trabajo .bt-ultimo { display: none; }
     .barra-trabajo .bt-menu-ultimo { display: flex; }
 }
-/* Teléfono: el chat deja 56 px al botón de la lateral; la entidad pasa a «Más». */
-@container barra (max-width: 439px) {
+@container barra (max-width: 599px) {
     .barra-trabajo .bt-entidad { display: none; }
     .barra-trabajo .bt-menu-entidad { display: flex; }
+}
+@container barra (max-width: 509px) {
     .barra-trabajo .relieve { padding-left: 0.6rem; padding-right: 0.6rem; }
+}
+@container barra (min-width: 480px) {
+    .barra-trabajo .bt-insignia-gema { display: inline-flex; }
+}
+@container barra (max-width: 429px) {
+    .barra-trabajo .bt-agenda { display: none; }
+    .barra-trabajo .bt-menu-agenda { display: flex; }
 }
 @container barra (max-width: 359px) {
     .barra-trabajo .relieve { padding-left: 0.5rem; padding-right: 0.5rem; }
     .barra-trabajo .relieve-rojo { letter-spacing: 0.02em; }
 }
-@container barra (min-width: 880px) {
-    .barra-trabajo .bt-cuenta { display: flex; }
-}
-@container barra (min-width: 960px) {
-    .barra-trabajo .bt-basica { display: inline-flex; }
+/* El teléfono de 320 px: menos aire entre botones y letra un punto menor,
+   para que «Mi trabajo», «Más», «Sálvame» y el avatar quepan sin tocarse. */
+@container barra (max-width: 339px) {
+    .barra-trabajo .bt-grupo { gap: 0.25rem; }
+    .barra-trabajo .relieve { padding-left: 0.45rem; padding-right: 0.45rem; font-size: 0.75rem; }
 }

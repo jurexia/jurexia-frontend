@@ -130,10 +130,11 @@ export default function CalculadoraPlazos({ conBoton = true }: { conBoton?: bool
                 <button
                     type="button"
                     onClick={() => abrirCon(null)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-charcoal-900/10 bg-white px-2.5 py-1 text-[12px] font-medium text-charcoal-900 hover:bg-cream-100"
+                    className="boton-plazos inline-flex h-7 flex-shrink-0 items-center gap-1.5 rounded-full border border-charcoal-900/10 bg-white px-2.5 text-[12px] font-medium text-charcoal-900 hover:bg-cream-100"
                     title="Calcular el vencimiento de un plazo procesal"
+                    aria-label="Plazos: calcular el vencimiento de un plazo procesal"
                 >
-                    <CalendarClock className="h-3.5 w-3.5 text-accent-brown" /> Plazos
+                    <CalendarClock className="h-3.5 w-3.5 flex-shrink-0 text-accent-brown" /> <span className="palabra-plazos">Plazos</span>
                 </button>
             )}
             {abierta && typeof document !== 'undefined' && createPortal(

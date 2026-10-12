@@ -91,6 +91,42 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
         return () => window.removeEventListener('resize', medir);
     }, [recortar]);
 
+    /* NUNCA ENCIMA DEL COMPOSITOR (12-oct-2026). En el teléfono, a 24 px de la
+       esquina, el botón caía sobre la fila de herramientas del chat y tapaba
+       «Herramientas»; junto al documento, sobre su barra de estado. Las zonas
+       que no se tapan llevan `data-sin-soporte`: si el botón quedaría encima,
+       sube lo justo para posarse sobre ellas. No se toca la posición que el
+       usuario eligió al arrastrarlo: es un alza que se suma y se recalcula
+       cuando el compositor crece (herramientas desplegadas) o cambia la
+       ventana. */
+    const [alza, setAlza] = useState(0);
+    const alzaRef = useRef(0);
+    alzaRef.current = alza;
+    useEffect(() => {
+        const calcular = () => {
+            if (arrastre.current) return;
+            const { ancho, alto } = tamBoton.current;
+            const p = posRef.current;
+            const derecha = window.innerWidth - p.derecha;
+            const izquierda = derecha - ancho;
+            let necesario = 0;
+            document.querySelectorAll<HTMLElement>('[data-sin-soporte]').forEach((zona) => {
+                const r = zona.getBoundingClientRect();
+                if (!r.width || !r.height || r.right <= izquierda || r.left >= derecha) return;
+                const fondo = window.innerHeight - p.abajo;
+                if (r.bottom <= fondo - alto || r.top >= fondo) return;
+                necesario = Math.max(necesario, window.innerHeight - r.top + 8);
+            });
+            const tope = window.innerHeight - alto - 8;
+            const nueva = necesario > p.abajo && necesario <= tope ? necesario - p.abajo : 0;
+            setAlza((a) => (a === nueva ? a : nueva));
+        };
+        calcular();
+        const reloj = window.setInterval(calcular, 700);
+        window.addEventListener('resize', calcular);
+        return () => { window.clearInterval(reloj); window.removeEventListener('resize', calcular); };
+    }, []);
+
     useEffect(() => {
         finRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }, [turnos, pensando]);
@@ -105,7 +141,8 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
     const alPresionar = (e: React.PointerEvent<HTMLElement>) => {
         if (e.button !== 0) return;
         if (e.currentTarget.tagName !== 'BUTTON' && (e.target as HTMLElement).closest('button, textarea')) return;
-        arrastre.current = { x: e.clientX, y: e.clientY, d: posRef.current.derecha, b: posRef.current.abajo, movido: false };
+        // Si estaba alzado sobre el compositor, se arrastra desde donde se ve.
+        arrastre.current = { x: e.clientX, y: e.clientY, d: posRef.current.derecha, b: posRef.current.abajo + alzaRef.current, movido: false };
         try { e.currentTarget.setPointerCapture(e.pointerId); } catch { }
     };
     const alArrastrar = (e: React.PointerEvent<HTMLElement>) => {
@@ -206,7 +243,7 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
                     title="Soporte — arrástrelo para moverlo"
                     className="soporte-boton fixed z-[90]"
                     data-arrastrando={arrastrando ? 'si' : undefined}
-                    style={{ right: pos.derecha, bottom: pos.abajo, touchAction: 'none' }}
+                    style={{ right: pos.derecha, bottom: pos.abajo + (arrastrando ? 0 : alza), touchAction: 'none' }}
                 >
                     Soporte
                 </button>

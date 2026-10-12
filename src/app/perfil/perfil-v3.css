@@ -288,8 +288,13 @@
   .perfil-v3-hero h1 { font-size: clamp(42px, 10vw, 58px); }
   .perfil-v3-identity { margin-top: 27px; }
   .perfil-v3-plan { margin-left: 57px; }
-  .perfil-v3-tabs { display: flex; overflow-x: auto; scrollbar-width: thin; }
-  .perfil-v3-tabs button { min-width: 145px; flex: 0 0 auto; padding: 16px 14px; }
+  /* En el teléfono, una cuadrícula de dos columnas en vez de una tira con
+     desplazamiento que enseñaba dos pestañas y media (12-oct-2026). Son 3, 4
+     o 5 según el plan: si quedan impares, la última ocupa el ancho entero. */
+  .perfil-v3-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: row; grid-auto-columns: auto; }
+  .perfil-v3-tabs button { padding: 15px 14px; border-bottom: 1px solid rgba(255, 255, 255, .075); }
+  .perfil-v3-tabs button:nth-child(2n) { border-right: 0; }
+  .perfil-v3-tabs button:last-child:nth-child(odd) { grid-column: 1 / -1; border-right: 0; }
   .perfil-v3-panel-art { display: none; }
   .perfil-v3-panel-heading { min-height: 0; }
 }

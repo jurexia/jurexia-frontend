@@ -236,13 +236,13 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                     {encendidas.map((f) => <Emblema key={f.clave} src={f.emblema} icono={f.icono} />)}
                     {internet && <EmblemaInternet />}
                 </span>
-                <span className="hidden text-[11px] font-semibold sm:inline">Fuentes</span>
+                <span className="fuentes-palabra hidden text-[11px] font-semibold sm:inline">Fuentes</span>
                 {!todas && (
-                    <span className="hidden rounded-full bg-charcoal-900 px-1.5 text-[10px] font-semibold leading-4 text-white tabular-nums sm:inline">
+                    <span className="fuentes-cuenta hidden rounded-full bg-charcoal-900 px-1.5 text-[10px] font-semibold leading-4 text-white tabular-nums sm:inline">
                         {elegidas.length}/{FUENTES.length}
                     </span>
                 )}
-                <ChevronDown className={`hidden h-3 w-3 flex-shrink-0 transition-transform sm:block ${abierto ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`fuentes-flecha hidden h-3 w-3 flex-shrink-0 transition-transform sm:block ${abierto ? 'rotate-180' : ''}`} />
             </button>
 
             {/* QUE QUEPA EN CUALQUIER PANTALLA (11-oct-2026). Con siete filas el panel

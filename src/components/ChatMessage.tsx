@@ -988,10 +988,13 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                             sello, las fuentes y las acciones siguen abajo, que se
                             calculan del texto y no de lo que se pinte. */}
                         {enDocumento && (
-                            <div className="px-5 py-4 sm:px-6">
-                                {/* `flex-wrap` y el botón con `basis-full` en teléfono: con
-                                    «Ver documento» en la misma fila, la columna de texto se
-                                    quedaba en 195 px y los emblemas salían como «C.. 3». */}
+                            <div className="tarjeta-documento px-5 py-4 sm:px-6">
+                                {/* `flex-wrap` y el botón a todo el ancho cuando la tarjeta es
+                                    estrecha: con «Ver documento» en la misma fila, la columna
+                                    de texto se quedaba en 195 px y los emblemas salían como
+                                    «C.. 3». Lo decide el ancho de la TARJETA (`.tarjeta-documento`
+                                    en globals.css), no el de la pantalla: junto al documento
+                                    abierto el chat mide 420 px en un monitor ancho (12-oct-2026). */}
                                 <div className="flex flex-wrap items-start gap-3 rounded-xl border border-cream-300 bg-cream-50 px-4 py-3">
                                     {isStreaming
                                         ? <Loader2 className="mt-0.5 h-4 w-4 flex-shrink-0 animate-spin text-accent-brown" />
@@ -1028,7 +1031,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                     </div>
                                     {onVerDocumento && (
                                         <button type="button" onClick={onVerDocumento}
-                                            className="inline-flex h-8 flex-shrink-0 items-center justify-center gap-1.5 rounded-lg bg-charcoal-900 px-3 text-xs font-semibold text-white transition-colors hover:bg-charcoal-800 max-sm:order-last max-sm:mt-1 max-sm:basis-full">
+                                            className="ver-documento inline-flex h-8 flex-shrink-0 items-center justify-center gap-1.5 rounded-lg bg-charcoal-900 px-3 text-xs font-semibold text-white transition-colors hover:bg-charcoal-800">
                                             Ver documento
                                         </button>
                                     )}
