@@ -225,12 +225,11 @@ export default function PreciosPage() {
                                 description={isAnnual ? 'Máximo poder para tu despacho, todo el año' : 'Para despachos y litigio de volumen'}
                                 savingsBadge={isAnnual ? 'Ahorras $1,198 MXN' : undefined}
                                 features={[
+                                    <span className="font-semibold text-white">Todo lo del Plan Pro, y además:</span>,
                                     <span className="font-semibold text-white">560 consultas/mes — cuatro veces el volumen de Pro</span>,
                                     <><span className="font-semibold text-white">60 flujos de trabajo/mes</span> <span className="text-white/45">· escritos completos paso a paso</span></>,
                                     <span className="font-semibold text-white">IA Jurídica de Élite (máxima precisión argumentativa)</span>,
-                                    "Análisis de documentos y auditoría",
                                     <><span className="font-semibold text-white">Redacción Platinum</span> <span className="text-white/45">· el motor más potente, escritos más extensos</span></>,
-                                    "Registra tu cédula para conectar clientes",
                                     "Consulta con el equipo legal de Iurexia",
                                     "Soporte VIP dedicado"
                                 ]}
@@ -240,13 +239,13 @@ export default function PreciosPage() {
                                    mismo texto que el aviso del candado en el chat
                                    (`HERRAMIENTAS_PLATINUM`). */
                                 exclusives={[
-                                    [HERRAMIENTAS_PLATINUM.sentencia.nombre, HERRAMIENTAS_PLATINUM.sentencia.explicacion],
-                                    ['Precedentes por circuito', HERRAMIENTAS_PLATINUM.precedentes.explicacion],
-                                    [HERRAMIENTAS_PLATINUM.jurimetria.nombre, HERRAMIENTAS_PLATINUM.jurimetria.explicacion],
-                                    [HERRAMIENTAS_PLATINUM.cronologia.nombre, HERRAMIENTAS_PLATINUM.cronologia.explicacion],
-                                    [HERRAMIENTAS_PLATINUM.boveda.nombre, HERRAMIENTAS_PLATINUM.boveda.explicacion],
-                                    [HERRAMIENTAS_PLATINUM.toulmin.nombre, HERRAMIENTAS_PLATINUM.toulmin.explicacion],
-                                    ['Expedientes completos', 'Hasta 600 hojas en un solo documento: el expediente entero, no un fragmento.'],
+                                    [HERRAMIENTAS_PLATINUM.sentencia.nombre, HERRAMIENTAS_PLATINUM.sentencia.breve],
+                                    ['Precedentes por circuito', HERRAMIENTAS_PLATINUM.precedentes.breve],
+                                    [HERRAMIENTAS_PLATINUM.jurimetria.nombre, HERRAMIENTAS_PLATINUM.jurimetria.breve],
+                                    [HERRAMIENTAS_PLATINUM.cronologia.nombre, HERRAMIENTAS_PLATINUM.cronologia.breve],
+                                    [HERRAMIENTAS_PLATINUM.boveda.nombre, HERRAMIENTAS_PLATINUM.boveda.breve],
+                                    [HERRAMIENTAS_PLATINUM.toulmin.nombre, HERRAMIENTAS_PLATINUM.toulmin.breve],
+                                    ['Expedientes completos', 'Hasta 600 hojas por documento'],
                                 ]}
                                 note={<>El mismo precio por consulta que Pro. Lo que cambia es el techo: estas herramientas y los expedientes de 600 hojas <span className="text-accent-gold font-semibold">no se venden en Pro a ningún precio</span>.</>}
                                 buttonText={isAnnual ? 'Elegir Platinum Anual' : 'Elegir Platinum'}

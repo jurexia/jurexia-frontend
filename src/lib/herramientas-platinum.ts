@@ -20,30 +20,38 @@ export function tieneHerramientasPlatinum(plan?: string | null, correo?: string 
 
 export type HerramientaPlatinum = 'sentencia' | 'precedentes' | 'jurimetria' | 'cronologia' | 'boveda' | 'toulmin'
 
-/** Qué es cada una, dicho una vez: lo leen la tarjeta de Platinum y el aviso del candado. */
-export const HERRAMIENTAS_PLATINUM: Record<HerramientaPlatinum, { nombre: string; explicacion: string }> = {
+/** Qué es cada una, dicho una vez. `breve` cabe en un renglón de la tarjeta de
+    Platinum en /precios (las cuatro tarjetas miden lo mismo: una larga estira la
+    fila entera); `explicacion` es la del aviso del candado en el chat. */
+export const HERRAMIENTAS_PLATINUM: Record<HerramientaPlatinum, { nombre: string; breve: string; explicacion: string }> = {
     sentencia: {
         nombre: 'Sentencia',
+        breve: 'Audita fallos con precedentes',
         explicacion: 'Audita una sentencia o un proyecto frente a los precedentes de su propio tribunal y entrega una nota editable, lista para Word.',
     },
     precedentes: {
         nombre: 'Precedentes',
+        breve: 'Filtra por circuito y tribunal',
         explicacion: 'Busca en las sentencias reales de los tribunales colegiados y filtra por circuito, tribunal, materia y sentido del fallo, con el PDF de cada una.',
     },
     jurimetria: {
         nombre: 'Jurimetría',
+        breve: 'Predice el sentido del fallo',
         explicacion: 'Estima el sentido probable de un asunto —concede, niega o sobresee— a partir de los precedentes del circuito, argumento por argumento.',
     },
     cronologia: {
         nombre: 'Cronología',
+        breve: 'Hechos, páginas y plazos',
         explicacion: 'Ordena los hechos del expediente con la página donde consta cada uno, las cuestiones en disputa y los plazos que corren.',
     },
     boveda: {
         nombre: 'Bóveda',
+        breve: '500 documentos, en tablas',
         explicacion: 'Hasta 500 documentos de un asunto para preguntarles a todos a la vez, con documento y página, y tablas de revisión que se exportan a Excel o Word.',
     },
     toulmin: {
         nombre: 'Toulmin',
+        breve: 'Arma demandas y recursos',
         explicacion: 'Construye la demanda o el recurso argumento por argumento —afirmación, hechos, regla, respaldo, fuerza y la objeción que hay que vencer—, citando sólo el acervo, y lo lleva a Word.',
     },
 }
