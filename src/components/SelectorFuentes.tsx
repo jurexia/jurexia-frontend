@@ -21,7 +21,6 @@
    en cada visita y sólo se enciende desde el plan Pro. */
 
 import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
 import { Check, ChevronDown, ClipboardCheck, Globe, Lock, MapPin, Vault, type LucideIcon } from 'lucide-react';
 import {
     EVENTO_FUENTES, EVENTO_INTERNET, FUENTES, type Fuente,
@@ -31,6 +30,7 @@ import { getEstadoLabel } from '@/lib/estados';
 import { EVENTO_BOVEDA, estadoBovedaChat, fijarBovedaEncendida } from '@/lib/boveda';
 import { useAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
+import AvisoPlan from './AvisoPlan';
 
 // Internet, desde el plan Pro: cuesta dinero en cada consulta. El servidor
 // vuelve a comprobarlo (`fuentes_web` sin plan Pro se ignora).
@@ -141,6 +141,8 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
         return () => window.removeEventListener(EVENTO_BOVEDA, sincronizar);
     }, []);
     const [abierto, setAbierto] = useState(false);
+    // Internet con candado abre el aviso de Pro (AvisoPlan), no /precios.
+    const [avisoInternet, setAvisoInternet] = useState(false);
     const caja = useRef<HTMLDivElement>(null);
     // CABE ENTRE EL BOTÓN Y LA BARRA SUPERIOR (11-oct-2026, segunda captura de
     // David): el máximo fijo dejaba la cabecera del panel bajo la barra de la
@@ -343,9 +345,10 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                                     </span>
                                 </button>
                             ) : (
-                                <Link
-                                    href="/precios"
+                                <button
+                                    type="button"
                                     role="menuitem"
+                                    onClick={() => { setAbierto(false); setAvisoInternet(true); }}
                                     title="Internet está disponible desde el plan Pro"
                                     className="flex w-full items-center gap-2.5 px-3.5 py-1.5 text-left transition-colors hover:bg-cream-100/70 focus-visible:bg-cream-100/70 focus-visible:outline-none"
                                 >
@@ -360,7 +363,7 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                                         <Lock className="h-2.5 w-2.5" />
                                         Plan Pro
                                     </span>
-                                </Link>
+                                </button>
                             )}
                         </li>
 
@@ -408,6 +411,7 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                     </p>
                 </div>
             )}
+            {avisoInternet && <AvisoPlan herramienta="internet" onCerrar={() => setAvisoInternet(false)} />}
         </div>
     );
 }

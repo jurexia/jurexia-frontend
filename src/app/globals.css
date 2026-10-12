@@ -2096,6 +2096,11 @@ h6 {
 .losa[disabled] { opacity: 0.45; cursor: not-allowed; }
 .losa[disabled]:hover { transform: none; border-color: rgba(255, 255, 255, 0.07); }
 .losa[disabled]:hover::after { opacity: 0; }
+/* Con candado pero tocable (12-oct-2026): se ve igual de apagada, y al tocarla
+   abre el aviso de su plan (AvisoPlan) en vez de quedarse muda. */
+.losa[data-candado='1'] { opacity: 0.45; cursor: pointer; }
+.losa[data-candado='1']:hover { transform: none; opacity: 0.6; }
+.losa[data-candado='1']:hover::after { opacity: 0; }
 
 @media (prefers-reduced-motion: reduce) {
     .losa, .losa::after, .filo { transition: none; }

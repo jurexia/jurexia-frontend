@@ -28,7 +28,8 @@ import SentenciaModal from './SentenciaModal';
 import JurimetriaModal from './JurimetriaModal';
 import PanelCronologia from './cronologia/PanelCronologia';
 import { puedeCronologia } from '@/lib/cronologia';
-import { tieneHerramientasPlatinum, type HerramientaPlatinum } from '@/lib/herramientas-platinum';
+import { tieneHerramientasPlatinum } from '@/lib/herramientas-platinum';
+import type { HerramientaConAviso } from '@/lib/avisos-plan';
 import AvisoPlan from './AvisoPlan';
 import { enhanceText } from '@/lib/api';
 import { useAuth } from '@/lib/useAuth';
@@ -95,7 +96,7 @@ export default function ChatInput({
     const [showEnhanceModal, setShowEnhanceModal] = useState(false);
     const [showDraftModal, setShowDraftModal] = useState(false);
     const [showSentenciaModal, setShowSentenciaModal] = useState(false);
-    const [showUpgradeModal, setShowUpgradeModal] = useState<'pro' | HerramientaPlatinum | null>(null);
+    const [showUpgradeModal, setShowUpgradeModal] = useState<HerramientaConAviso | null>(null);
     const [showCronologia, setShowCronologia] = useState(false);
     const [showJurimetriaModal, setShowJurimetriaModal] = useState(false);
     const [attachedDocument, setAttachedDocument] = useState<{ file: File; fileName: string } | null>(null);
@@ -679,7 +680,7 @@ ${draftRequest.descripcion}`;
                             <button
                                 type="button"
                                 data-guide="adjuntar"
-                                onClick={() => (basico ? tocoCandado() : handleModeClick('files'))}
+                                onClick={() => (basico ? (sinCuenta ? tocoCandado() : setShowUpgradeModal('documentos')) : handleModeClick('files'))}
                                 className={`p-2 rounded-full transition-all duration-200 flex-shrink-0 ${attachedDocument
                                     ? 'bg-blue-100 text-blue-600 border border-blue-200'
                                     : 'text-gray-400 hover:text-charcoal-700 hover:bg-gray-100 border border-transparent disabled:opacity-50'
@@ -763,11 +764,14 @@ ${draftRequest.descripcion}`;
                             <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
                                 Con un plan
                             </span>
-                            {['Flujos', 'Toulmin', 'Redacción', 'Jurimetría', 'Precedentes', 'Expedientes', 'Carpetas'].map((h) => (
+                            {/* Cada una abre el aviso de su plan (AvisoPlan): Pro, la
+                                tarjeta crema; Platinum, la de Themis. */}
+                            {([['Flujos', 'flujos'], ['Toulmin', 'toulmin'], ['Redacción', 'redaccion'], ['Jurimetría', 'jurimetria'],
+                               ['Precedentes', 'precedentes'], ['Expedientes', 'expedientes'], ['Carpetas', 'carpetas']] as [string, HerramientaConAviso][]).map(([h, aviso]) => (
                                 <button
                                     key={h}
                                     type="button"
-                                    onClick={tocoCandado}
+                                    onClick={() => setShowUpgradeModal(aviso)}
                                     title={`${h} está disponible en los planes de Iurexia`}
                                     className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-[10.5px] font-medium text-gray-400 transition-colors hover:border-[#c9a962]/60 hover:text-charcoal-700"
                                 >

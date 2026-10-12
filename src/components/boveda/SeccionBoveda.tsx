@@ -19,6 +19,7 @@ import {
 import { isAdmin } from '@/app/leyesestatales/adminGuard'
 import { BOTON, BOTON_SUAVE, Seccion } from '@/components/carpetas/Mesa'
 import { useAuth } from '@/lib/useAuth'
+import AvisoPlan from '@/components/AvisoPlan'
 import {
     ErrorBoveda, PLANES_PLATINUM, ROTULO_ESTADO, borrarDocumentoBoveda, columnasSugeridas,
     confirmarIngesta, crearTabla, abrirDocumento, documentosGuardados, leerBoveda, leerReglas, quitarDocumentos,
@@ -44,6 +45,8 @@ export default function SeccionBoveda({ carpetaId }: { carpetaId: string }) {
     const [error, setError] = useState<string | null>(null)
     const [subida, setSubida] = useState<ProgresoSubida | null>(null)
     const [ignorados, setIgnorados] = useState<string[]>([])
+    // Sin Platinum: el aviso de Platinum (AvisoPlan), como en el resto del chat.
+    const [avisoPlatinum, setAvisoPlatinum] = useState(false)
     const [cobrando, setCobrando] = useState(false)
     const [creandoTabla, setCreandoTabla] = useState(false)
     const [arrastrando, setArrastrando] = useState(false)
@@ -100,10 +103,11 @@ export default function SeccionBoveda({ carpetaId }: { carpetaId: string }) {
                     (partes, vigencias, penas convencionales, jurisdicción…) con la cita literal de cada
                     respuesta, y expórtalas a Excel o Word.
                 </p>
-                <Link href="/precios" className={`${BOTON} mt-4`}>
+                <button type="button" onClick={() => setAvisoPlatinum(true)} className={`${BOTON} mt-4`}>
                     <Lock className="h-4 w-4 text-accent-gold" />
-                    Ver el plan Platinum
-                </Link>
+                    Pásate a Platinum
+                </button>
+                {avisoPlatinum && <AvisoPlan herramienta="boveda" onCerrar={() => setAvisoPlatinum(false)} />}
                 {guardados > 0 ? (
                     <p className="mt-4 text-xs text-charcoal-700/70">
                         Esta carpeta conserva {guardados} documento(s) en su Bóveda.{' '}

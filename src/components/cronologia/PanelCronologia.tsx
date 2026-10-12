@@ -19,6 +19,7 @@ import {
     GanttChartSquare, History, Loader2, Lock, Upload, X,
 } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
+import AvisoPlan from '@/components/AvisoPlan';
 import { aWord } from '@/lib/documento/exportarDocx';
 import {
     contarPaginas, cotizar, crear, enviarPlazosAAgenda, ErrorCrono, estado as leerEstado, fechaCorta,
@@ -56,6 +57,8 @@ export default function PanelCronologia({
     const permitido = puedeCronologia(profile?.subscription_type, user?.email);
 
     const [paso, setPaso] = useState<Paso>('elegir');
+    // Sin Platinum: el aviso de Platinum (AvisoPlan), como en el resto del chat.
+    const [avisoPlatinum, setAvisoPlatinum] = useState(false);
     const [archivos, setArchivos] = useState<File[]>([]);
     const [paginasLocales, setPaginasLocales] = useState<number[]>([]);
     const [elegidosCarpeta, setElegidosCarpeta] = useState<string[]>([]);
@@ -297,10 +300,12 @@ export default function PanelCronologia({
                                 hechos con la página exacta de cada uno, la lista de cuestiones en disputa y los plazos que
                                 corren, listos para Word y para su agenda.
                             </p>
-                            <Link href="/precios" className="mt-5 inline-block rounded-xl px-6 py-2.5 text-sm font-bold text-charcoal-900"
+                            <button type="button" onClick={() => setAvisoPlatinum(true)}
+                                className="mt-5 inline-block rounded-xl px-6 py-2.5 text-sm font-bold text-charcoal-900"
                                 style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c56d)' }}>
-                                Ver plan Platinum
-                            </Link>
+                                Pásate a Platinum
+                            </button>
+                            {avisoPlatinum && <AvisoPlan herramienta="cronologia" onCerrar={() => setAvisoPlatinum(false)} />}
                         </div>
                     ) : paso === 'elegir' || paso === 'cotizando' ? (
                         <div className="space-y-4">

@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
 import { ArrowLeft, ArrowRight, FolderClosed, Loader2, Lock, Workflow, X } from 'lucide-react';
 import { FLUJOS, esObligatorio, type FlujoTrabajo } from '@/lib/flujos';
 import { nombreCarpeta, type Expediente } from '@/lib/expedientes';
+import AvisoPlan from './AvisoPlan';
 
 /* ═══ FLUJOS DE TRABAJO (25-sep-2026) ══════════════════════════════════════
    El «Workflow Studio» de Astra for Law, hecho para el derecho mexicano y
@@ -49,6 +49,8 @@ export default function FlujosDeTrabajo({
     const campoRef = useRef<HTMLTextAreaElement>(null);
     const [iniciando, setIniciando] = useState(false);
     const [rechazo, setRechazo] = useState<string | null>(null);
+    // Sin plan: el aviso de Pro (AvisoPlan), como en el resto del chat.
+    const [avisoPro, setAvisoPro] = useState(false);
     const conPlan = saldo.ilimitado || saldo.limite > 0;
     const sinSaldo = !saldo.ilimitado && saldo.limite > 0 && saldo.restantes <= 0;
 
@@ -344,12 +346,14 @@ export default function FlujosDeTrabajo({
                                             <Lock className="mt-0.5 h-4 w-4 shrink-0 text-[#a8863f]" />
                                             Los flujos de trabajo están en Pro (30 al mes) y Platinum (60 al mes).
                                         </p>
-                                        <Link
-                                            href="/precios"
+                                        <button
+                                            type="button"
+                                            onClick={() => setAvisoPro(true)}
                                             className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-charcoal-900 px-4 text-[13.5px] font-semibold text-white hover:bg-charcoal-800"
                                         >
-                                            Ver planes <ArrowRight className="h-4 w-4 text-[#c9a962]" />
-                                        </Link>
+                                            Pásate a Pro <ArrowRight className="h-4 w-4 text-[#c9a962]" />
+                                        </button>
+                                        {avisoPro && <AvisoPlan herramienta="flujos" onCerrar={() => setAvisoPro(false)} />}
                                     </div>
                                 )}
                             </div>

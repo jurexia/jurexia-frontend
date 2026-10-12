@@ -10,9 +10,9 @@
    Esto sólo dice con qué motor. Ver `@/lib/esfuerzo`. */
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import Link from 'next/link';
 import { Check, ChevronDown, Gem, Lock, PenLine, Sparkles } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
+import AvisoPlan from './AvisoPlan';
 import {
     EVENTO_ESFUERZO, ESFUERZOS, type Esfuerzo,
     esfuerzoVigente, fijarEnPantalla, guardarEsfuerzo, permitido, techoDelPlan,
@@ -65,6 +65,8 @@ export default function SelectorEsfuerzo({ disabled = false }: Props) {
     // mismo en el primer cuadro.
     const [elegido, setElegido] = useState<Esfuerzo>('basico');
     const [abierto, setAbierto] = useState(false);
+    // El escalón con candado abre el aviso de su plan (AvisoPlan), no /precios.
+    const [aviso, setAviso] = useState<'redaccion_pro' | 'redaccion_platinum' | null>(null);
     // Cuánto se corre el menú a la izquierda para no salirse de la pantalla:
     // «Fuentes» va pegado al borde, pero este botón no, y en el teléfono el
     // menú anclado a su izquierda asomaba 60 px por la derecha.
@@ -191,10 +193,11 @@ export default function SelectorEsfuerzo({ disabled = false }: Props) {
                                             {fila}
                                         </button>
                                     ) : (
-                                        <Link href="/precios" role="menuitem" className={clases}
-                                              title={`${f.nombre} está disponible en el ${f.plan}`}>
+                                        <button type="button" role="menuitem" className={clases}
+                                                title={`${f.nombre} está disponible en el ${f.plan}`}
+                                                onClick={() => { setAbierto(false); setAviso(clave === 'platinum' ? 'redaccion_platinum' : 'redaccion_pro'); }}>
                                             {fila}
-                                        </Link>
+                                        </button>
                                     )}
                                 </li>
                             );
@@ -206,6 +209,7 @@ export default function SelectorEsfuerzo({ disabled = false }: Props) {
                     </p>
                 </div>
             )}
+            {aviso && <AvisoPlan herramienta={aviso} onCerrar={() => setAviso(null)} />}
         </div>
     );
 }
