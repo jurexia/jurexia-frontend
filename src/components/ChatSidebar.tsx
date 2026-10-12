@@ -323,6 +323,14 @@ function ChatSidebar({
     }, [menu]);
 
     const cerrarMovil = () => setIsMobileOpen(false);
+    /* Con el cajón abierto en el teléfono, el botón flotante de Soporte (z-90)
+       quedaba encima del cajón, pegado a «Regala Iurexia». Se avisa a la página
+       y globals.css lo retira mientras el cajón está abierto (12-oct-2026). */
+    useEffect(() => {
+        const raiz = document.documentElement;
+        raiz.classList.toggle('cajon-abierto', isMobileOpen);
+        return () => raiz.classList.remove('cajon-abierto');
+    }, [isMobileOpen]);
 
     // ── Qué consulta va en qué carpeta ──
     const idsCarpeta = useMemo(() => new Set((carpetas ?? []).map((c) => c.id)), [carpetas]);

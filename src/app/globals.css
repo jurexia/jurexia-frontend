@@ -2707,6 +2707,8 @@ html.con-barra-trabajo .solo-publico {
         0 18px 34px -10px rgba(0,0,0,0.55);
 }
 .soporte-boton:focus-visible { outline: 2px solid rgba(201,169,98,0.75); outline-offset: 3px; }
+/* El cajón de la lateral, abierto en el teléfono, no comparte la esquina con Soporte. */
+html.cajon-abierto .soporte-boton { display: none; }
 
 /* Los controles del panel de soporte, en letra y con relieve oscuro. */
 .soporte-control {
