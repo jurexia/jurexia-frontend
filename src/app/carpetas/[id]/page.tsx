@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 
 import GenerarEscrito from '@/components/GenerarEscrito'
+import SeccionBoveda from '@/components/boveda/SeccionBoveda'
 import Navbar from '@/components/Navbar'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { ArchivoIcono, CarpetaIcono } from '@/components/CarpetaIcono'
@@ -540,6 +541,11 @@ function Detalle() {
                         ) : null}
                     </section>
                 ) : null}
+
+                {/* ── La Bóveda (oct-2026) ─────────────────────────────────
+                    Cientos de documentos para preguntarles juntos y en tabla.
+                    Platinum; para los demás, la sección con candado. */}
+                <SeccionBoveda carpetaId={id} />
 
                 {/* ── Redactar ─────────────────────────────────────────────
                     Sección propia y no un botón dentro del análisis: para

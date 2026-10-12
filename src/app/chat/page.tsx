@@ -57,6 +57,7 @@ import FlujosDeTrabajo, { type InicioDeFlujo } from '@/components/FlujosDeTrabaj
 import ContextoConsulta from '@/components/ContextoConsulta';
 import NuevaCarpetaModal from '@/components/NuevaCarpetaModal';
 import { getExpedientes, type Expediente } from '@/lib/expedientes';
+import { PLANES_PLATINUM, fijarCarpetaConBoveda, leerBoveda } from '@/lib/boveda';
 import { getVinculos, vincularConsulta, type Vinculos } from '@/lib/consultas-carpeta';
 import { flujoPorId, instruccionDeParte, mensajeDeFlujo, mensajeDeParte } from '@/lib/flujos';
 import AgenteFlujo from '@/components/AgenteFlujo';
@@ -506,6 +507,19 @@ export default function ChatPage() {
     const carpetaDeActiva = activeConversationId ? (vinculos[activeConversationId]?.expedienteId ?? null) : carpetaNueva;
     // Una carpeta borrada deja de contar aunque el vínculo siga en memoria.
     const carpetaActivaId = carpetaDeActiva && carpetas?.some(c => c.id === carpetaDeActiva) ? carpetaDeActiva : null;
+    // LA BÓVEDA COMO FUENTE (oct-2026): si la consulta vive en una carpeta con
+    // documentos listos en su Bóveda y el plan es Platinum, «Fuentes» suma la
+    // fila «Bóveda» (encendida al entrar). La API lo vuelve a comprobar.
+    const esPlatinumBoveda = isAdmin(user?.email) || PLANES_PLATINUM.includes(profile?.subscription_type ?? '');
+    useEffect(() => {
+        if (!carpetaActivaId || !esPlatinumBoveda) { fijarCarpetaConBoveda(null); return; }
+        let vigente = true;
+        leerBoveda(carpetaActivaId)
+            .then((b) => { if (vigente) fijarCarpetaConBoveda({ id: carpetaActivaId, documentos: b.resumen.listos }); })
+            .catch(() => { if (vigente) fijarCarpetaConBoveda(null); });
+        return () => { vigente = false; };
+    }, [carpetaActivaId, esPlatinumBoveda]);
+    useEffect(() => () => fijarCarpetaConBoveda(null), []);
     const flujoActivo = activeConversationId ? (vinculos[activeConversationId]?.flujo ?? null) : flujoNuevo;
     consultaCtxRef.current = { expedienteId: carpetaActivaId };
     // Lo que se le pondrá a la consulta cuando nazca (se lee dentro de

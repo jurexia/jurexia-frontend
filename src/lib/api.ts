@@ -5,6 +5,7 @@
 import { fuentesElegidas, fuentesParaEnviar, FUENTES } from './fuentes';
 import { esfuerzoParaEnviar } from './esfuerzo';
 import { clasificarFallo, type DatosReintento } from './fallosChat';
+import { bovedaParaEnviar } from './boveda';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1390';
 
@@ -193,6 +194,9 @@ async function* streamChatInternal(
             ...(esfuerzoParaEnviar() ? { esfuerzo: esfuerzoParaEnviar() } : {}),
             ...(fuentesVerificadas().length ? { fuentes_previas: fuentesVerificadas() } : {}),
             ...(fuero ? { fuero } : {}),
+            // La Bóveda de la carpeta (oct-2026): la API la vuelve a comprobar
+            // con el token —Platinum y carpeta propia— antes de leerla.
+            ...(bovedaParaEnviar() ? { boveda_carpeta_id: bovedaParaEnviar() } : {}),
             ...(extra?.reintento ? { reintento: extra.reintento } : {}),
         }),
     });

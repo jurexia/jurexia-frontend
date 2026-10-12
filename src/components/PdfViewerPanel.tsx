@@ -2,6 +2,7 @@
 
 import { TesisVerificada } from '@/components/TesisVerificada';
 import { VisorArticulo } from '@/components/VisorArticulo';
+import { VisorBoveda } from '@/components/boveda/VisorBoveda';
 import { AccionesPdf } from '@/components/documento/AccionesPdf';
 import { FranjaVigencia, VolverATesis } from '@/components/VigenciaTesis';
 
@@ -37,6 +38,8 @@ interface PdfSource extends CamposCoidh, CamposDoctrina, CamposVigencia {
     instancia?: string | null;
     materia?: string | null;
     reemplazo?: PdfSource | null;
+    /** La Bóveda (oct-2026): el documento del abogado que se abre con su sesión. */
+    boveda_doc_id?: string | null;
 }
 
 interface PdfViewerPanelProps {
@@ -999,6 +1002,32 @@ function SentenciaCoidhView({ source, urlParaVisor }: SentenciaCoidhViewProps) {
 // CITA y la obra en su repositorio oficial, nunca nuestro texto —derecho de
 // cita, art. 148 fr. I LFDA—. Lo que se lee es el PDF de la UNAM.
 
+/** La Bóveda: el archivo del abogado (URL firmada, sin proxy) en la página
+ *  citada, con el fragmento resaltado. */
+function BovedaView({ source }: { source: PdfSource }) {
+    return (
+        <div className="p-5 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-accent-gold/15 text-accent-brown border border-accent-gold/30 leading-tight">
+                    Bóveda
+                </span>
+                {source.pagina ? (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold bg-charcoal-900 text-white border border-charcoal-800 leading-tight">
+                        p. {source.pagina}
+                    </span>
+                ) : null}
+            </div>
+            <p className="text-sm font-semibold text-charcoal-900 leading-snug">{source.ref || source.origen}</p>
+            <p className="rounded-xl border border-cream-400 bg-cream-200 px-4 py-2.5 text-[11.5px] leading-snug text-charcoal-700">
+                Documento de tu Bóveda, abierto en la página citada. Sólo tú puedes verlo.
+            </p>
+            <div className="rounded-xl overflow-hidden border border-cream-400 bg-cream-200">
+                <VisorBoveda docId={String(source.boveda_doc_id)} pagina={source.pagina ?? 1} pasaje={source.texto || null} alto={480} />
+            </div>
+        </div>
+    );
+}
+
 function DoctrinaView({ source, urlParaVisor }: { source: PdfSource; urlParaVisor: string | null }) {
     const { autor, obra, anio } = fichaDoctrina(source);
     const lugar = lugarDoctrina(source);
@@ -1208,7 +1237,7 @@ export default function PdfViewerPanel({ isOpen, onClose, source: fuenteAbierta,
         if (!source) return null;
         // Una sentencia de la Corte IDH no es una tesis, aunque su `tipo`
         // viaje como `tipo_criterio` («sentencia_coidh»). La doctrina tampoco.
-        if (esCoidh(source) || esDoctrina(source)) return null;
+        if (esCoidh(source) || esDoctrina(source) || source.silo === 'boveda') return null;
         // Match actual backend silo values + fallback text detection
         const isTesisSilo = source.silo === 'jurisprudencia_nacional'
             || source.silo === 'jurisprudencia_nacional_v2'
@@ -1299,7 +1328,10 @@ export default function PdfViewerPanel({ isOpen, onClose, source: fuenteAbierta,
         );
     const coidh = esCoidh(source);
     const doctrina = esDoctrina(source);
-    const leyLabel = coidh
+    const boveda = source.silo === 'boveda' && Boolean(source.boveda_doc_id);
+    const leyLabel = boveda
+        ? (source.origen || 'Bóveda')
+        : coidh
         ? rotuloCoidh(source)
         : doctrina
         ? rotuloDoctrina(source)
@@ -1561,6 +1593,9 @@ export default function PdfViewerPanel({ isOpen, onClose, source: fuenteAbierta,
                                 </div>
                             )}
                         </div>
+                    ) : boveda ? (
+                        /* ════════════ BÓVEDA: EL DOCUMENTO DEL ABOGADO EN SU PÁGINA ════════════ */
+                        <BovedaView source={source} />
                     ) : coidh ? (
                         /* ════════════ CORTE IDH: LA SENTENCIA EN SU PÁRRAFO ════════════ */
                         <SentenciaCoidhView source={source} urlParaVisor={urlParaVisor} />

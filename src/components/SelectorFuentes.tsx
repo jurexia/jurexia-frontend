@@ -22,12 +22,13 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Check, ChevronDown, ClipboardCheck, Globe, Lock, MapPin, type LucideIcon } from 'lucide-react';
+import { Check, ChevronDown, ClipboardCheck, Globe, Lock, MapPin, Vault, type LucideIcon } from 'lucide-react';
 import {
     EVENTO_FUENTES, EVENTO_INTERNET, FUENTES, type Fuente,
     escudoDe, fijarInternet, fuentesElegidas, guardarFuentes, internetEncendido, todasLasFuentes,
 } from '@/lib/fuentes';
 import { getEstadoLabel } from '@/lib/estados';
+import { EVENTO_BOVEDA, estadoBovedaChat, fijarBovedaEncendida } from '@/lib/boveda';
 import { useAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
 
@@ -130,6 +131,15 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
     // lo mismo en el primer cuadro.
     const [elegidas, setElegidas] = useState<Fuente[]>([...FUENTES]);
     const [internet, setInternet] = useState(false);
+    // La Bóveda de la carpeta (oct-2026): sólo aparece dentro de una carpeta
+    // con documentos listos; la pantalla del chat la fija (`@/lib/boveda`).
+    const [boveda, setBoveda] = useState(estadoBovedaChat());
+    useEffect(() => {
+        const sincronizar = () => setBoveda(estadoBovedaChat());
+        sincronizar();
+        window.addEventListener(EVENTO_BOVEDA, sincronizar);
+        return () => window.removeEventListener(EVENTO_BOVEDA, sincronizar);
+    }, []);
     const [abierto, setAbierto] = useState(false);
     const caja = useRef<HTMLDivElement>(null);
     // CABE ENTRE EL BOTÓN Y LA BARRA SUPERIOR (11-oct-2026, segunda captura de
@@ -353,6 +363,40 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                                 </Link>
                             )}
                         </li>
+
+                        {/* BÓVEDA: los documentos del propio abogado en esta
+                            carpeta. Sólo Platinum y sólo dentro de una carpeta
+                            con Bóveda; el servidor lo vuelve a comprobar. */}
+                        {boveda.disponible ? (
+                            <li className="mt-1.5 border-t border-charcoal-900/10 pt-1.5">
+                                <button
+                                    type="button"
+                                    role="menuitemcheckbox"
+                                    aria-checked={boveda.encendida}
+                                    onClick={() => fijarBovedaEncendida(!boveda.encendida)}
+                                    className="flex w-full items-center gap-2.5 px-3.5 py-1.5 text-left transition-colors hover:bg-cream-100/70 focus-visible:bg-cream-100/70 focus-visible:outline-none"
+                                >
+                                    <span className={`grid h-8 w-8 flex-shrink-0 place-items-center rounded-full ring-1 ring-charcoal-900/10 ${boveda.encendida ? 'bg-accent-gold/20' : 'bg-gray-50'}`}>
+                                        <Vault className={`h-4 w-4 ${boveda.encendida ? 'text-accent-brown' : 'text-gray-400'}`} />
+                                    </span>
+                                    <span className="min-w-0 flex-1">
+                                        <span className={`block text-[12.5px] font-semibold leading-tight ${boveda.encendida ? 'text-charcoal-900' : 'text-gray-500'}`}>
+                                            Bóveda de la carpeta
+                                        </span>
+                                        <span className="block text-[11.5px] leading-snug text-gray-500">
+                                            {boveda.documentos.toLocaleString('es-MX')} {boveda.documentos === 1 ? 'documento tuyo' : 'documentos tuyos'}, citados por página
+                                        </span>
+                                    </span>
+                                    <span
+                                        aria-hidden="true"
+                                        className={`grid h-5 w-5 flex-shrink-0 place-items-center rounded-md border transition-colors
+                                            ${boveda.encendida ? 'border-charcoal-900 bg-charcoal-900 text-white' : 'border-charcoal-900/25 bg-white text-transparent'}`}
+                                    >
+                                        <Check className="h-3 w-3" strokeWidth={3} />
+                                    </span>
+                                </button>
+                            </li>
+                        ) : null}
                     </ul>
 
                     <p className="flex-shrink-0 border-t border-charcoal-900/10 bg-cream-100/50 px-4 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] text-[11px] leading-snug text-gray-600">
