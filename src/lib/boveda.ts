@@ -156,6 +156,8 @@ export const confirmarIngesta = (carpetaId: string, ids: string[], consultas: nu
         `/boveda/carpeta/${carpetaId}/confirmar`, { metodo: 'POST', cuerpo: { ids, consultas_esperadas: consultas } })
 export const borrarDocumentoBoveda = (docId: string) =>
     pedir<{ borrado: boolean }>(`/boveda/documento/${docId}`, { metodo: 'DELETE' })
+export const quitarDocumentos = (carpetaId: string, ids: string[]) =>
+    pedir<{ borrados: number }>(`/boveda/carpeta/${carpetaId}/quitar`, { metodo: 'POST', cuerpo: { ids } })
 export const vaciarBoveda = (carpetaId: string) =>
     pedir<{ borrados: number }>(`/boveda/carpeta/${carpetaId}`, { metodo: 'DELETE' })
 export const abrirDocumento = (docId: string) =>
@@ -330,4 +332,15 @@ export function textoCotizacion(c: Pick<Cotizacion, 'documentos' | 'paginas' | '
     const ocr = c.paginas_ocr ? ` (${c.paginas_ocr.toLocaleString('es-MX')} escaneadas)` : ''
     const cons = `${c.consultas} ${c.consultas === 1 ? 'consulta' : 'consultas'}`
     return `${docs} · ${pags}${ocr} → ${cons}`
+}
+
+/** Cuántos documentos tiene la Bóveda de una carpeta, leído con la sesión
+ *  (RLS: sólo los propios). Sirve a quien YA NO es Platinum para ver que
+ *  dejó documentos y poder borrarlos: borrar lo suyo nunca exige plan. */
+export async function documentosGuardados(carpetaId: string): Promise<number> {
+    const { count, error } = await supabase
+        .from('boveda_documentos')
+        .select('id', { count: 'exact', head: true })
+        .eq('expediente_id', carpetaId)
+    return error ? 0 : count ?? 0
 }

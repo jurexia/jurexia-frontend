@@ -20,8 +20,8 @@ import { isAdmin } from '@/app/leyesestatales/adminGuard'
 import { useAuth } from '@/lib/useAuth'
 import {
     ErrorBoveda, PLANES_PLATINUM, ROTULO_ESTADO, borrarDocumentoBoveda, columnasSugeridas,
-    confirmarIngesta, crearTabla, abrirDocumento, leerBoveda, leerReglas, separarArchivos,
-    subirArchivos, textoCotizacion, vaciarBoveda,
+    confirmarIngesta, crearTabla, abrirDocumento, documentosGuardados, leerBoveda, leerReglas, quitarDocumentos,
+    separarArchivos, subirArchivos, textoCotizacion, vaciarBoveda,
     type BovedaCarpeta, type DocumentoBoveda, type ProgresoSubida, type Reglas,
 } from '@/lib/boveda'
 
@@ -46,6 +46,7 @@ export default function SeccionBoveda({ carpetaId }: { carpetaId: string }) {
     const [cobrando, setCobrando] = useState(false)
     const [creandoTabla, setCreandoTabla] = useState(false)
     const [arrastrando, setArrastrando] = useState(false)
+    const [guardados, setGuardados] = useState(0)
     const entradaArchivos = useRef<HTMLInputElement>(null)
     const entradaCarpeta = useRef<HTMLInputElement>(null)
 
@@ -65,7 +66,9 @@ export default function SeccionBoveda({ carpetaId }: { carpetaId: string }) {
 
     useEffect(() => {
         if (reglas?.platinum) void cargar()
-    }, [reglas?.platinum, cargar])
+        // Quien dejó de ser Platinum conserva el derecho a borrar lo que subió.
+        else if (reglas && !reglas.platinum) documentosGuardados(carpetaId).then(setGuardados).catch(() => {})
+    }, [reglas, cargar, carpetaId])
 
     // Mientras haya algo contando páginas o leyéndose, se pregunta cada 3 s.
     const ocupada = Boolean(datos && (datos.resumen.por_revisar > 0 || datos.resumen.en_proceso > 0))
@@ -105,6 +108,19 @@ export default function SeccionBoveda({ carpetaId }: { carpetaId: string }) {
                     <Lock className="h-4 w-4 text-accent-gold" />
                     Ver el plan Platinum
                 </Link>
+                {guardados > 0 ? (
+                    <p className="mt-4 text-xs text-charcoal-700/70">
+                        Esta carpeta conserva {guardados} documento(s) en su Bóveda.{' '}
+                        <button
+                            onClick={async () => {
+                                if (!confirm('¿Borrar los documentos de la Bóveda de esta carpeta, con su índice y sus tablas?')) return
+                                try { await vaciarBoveda(carpetaId); setGuardados(0) } catch { /* sigue */ }
+                            }}
+                            className="font-semibold text-red-700 underline">
+                            Borrarlos
+                        </button>
+                    </p>
+                ) : null}
             </section>
         )
     }
@@ -151,8 +167,10 @@ export default function SeccionBoveda({ carpetaId }: { carpetaId: string }) {
     async function descartarPendientes() {
         if (!datos?.cotizacion) return
         if (!confirm(`¿Quitar los ${datos.cotizacion.documentos} documentos sin indexar? No se cobra nada.`)) return
-        for (const id of datos.cotizacion.ids) {
-            try { await borrarDocumentoBoveda(id) } catch { /* sigue */ }
+        try {
+            await quitarDocumentos(carpetaId, datos.cotizacion.ids)
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'No se pudieron quitar.')
         }
         await cargar()
     }
