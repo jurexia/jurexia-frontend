@@ -118,8 +118,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender
 // los campos que viajan, las llamadas al API y el flujo quedan como estaban.
 //
 // Tres grabados propios en /web/arte, hechos con la técnica de la casa (tinta
-// sepia sobre negro, luz dorada): `vigilia` (Themis a la cabecera de un
-// paciente), `asclepio` (la vara de Asclepio sobre el libro de la ley) y
+// sepia sobre negro, luz dorada): `cabecera` (una anciana grave y la joven
+// que la acompaña junto a la cama; David quitó a Themis de la portada),
+// `asclepio` (la vara de Asclepio sobre el libro de la ley) y
 // `espera` (el pasillo del hospital). Originales y prompts en
 // IUREXIA-MAC/arte-web-originales/salvame.
 //
@@ -211,6 +212,68 @@ const PrinterIcon = ({ size = 16 }: { size?: number }) => (
         <polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" />
     </svg>
 );
+
+/* LA PRIMERA HOJA DEL ESCRITO (12-oct-2026). Donde había tres barras grises
+   («Buscando jurisprudencia…») que no mostraban nada, va el arranque real de la
+   demanda: el encabezado y los ocho apartados que exige SALVAME_SYSTEM_PROMPT
+   en el API (main.py), con la suspensión de plano y sus 4 tesis verificadas. */
+const APARTADOS = [
+    'Nombre y domicilio de la persona quejosa',
+    'Persona tercera interesada',
+    'Autoridades responsables',
+    'Acto reclamado',
+    'Hechos, bajo protesta de decir verdad',
+    'Preceptos constitucionales violados',
+    'Conceptos de violación',
+    'Suspensión de oficio y de plano',
+];
+const ROMANOS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+
+function MuestraEscrito() {
+    const tinta = '#2a251e';
+    const gris = '#8a7d66';
+    return (
+        <figure style={{ margin: 0, justifySelf: 'center', width: '100%', maxWidth: 470 }}>
+            <div className="result-text" style={{ maxHeight: 'none', overflow: 'visible', padding: '34px 34px 30px', fontSize: 12.5, lineHeight: 1.55, whiteSpace: 'normal', transform: 'rotate(-0.6deg)' }}>
+                <div style={{ textAlign: 'right', fontWeight: 700, letterSpacing: '0.08em', color: '#9a2a20', fontSize: 11.5 }}>
+                    EXTREMA URGENCIA<br />AMPARO INDIRECTO
+                </div>
+                <div style={{ margin: '14px 0 12px', color: tinta }}>
+                    <div><strong>QUEJOSO:</strong> <span style={{ color: gris }}>[nombre del paciente]</span></div>
+                    <div><strong>PROMOVENTE:</strong> <span style={{ color: gris }}>[su nombre]</span>, en términos del artículo 15 de la Ley de Amparo.</div>
+                    <div style={{ marginTop: 6 }}><strong>ASUNTO:</strong> SE PROMUEVE DEMANDA DE AMPARO INDIRECTO Y SE SOLICITA SUSPENSIÓN DE OFICIO Y DE PLANO.</div>
+                </div>
+                <div style={{ fontWeight: 700, color: tinta, fontSize: 11.5 }}>
+                    C. JUEZ DE DISTRITO EN MATERIA DE AMPARO CIVIL, ADMINISTRATIVO Y DE TRABAJO Y DE JUICIOS FEDERALES EN TURNO<br />P R E S E N T E.
+                </div>
+                <div style={{ height: 1, background: '#d8cfbd', margin: '14px 0 10px' }} />
+                <ol style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                    {APARTADOS.map((t, i) => {
+                        const clave = i === APARTADOS.length - 1;
+                        return (
+                            <li key={t} style={{
+                                display: 'flex', gap: 8, alignItems: 'baseline', padding: clave ? '6px 8px' : '2.5px 0',
+                                margin: clave ? '6px -8px 0' : 0, borderRadius: 4,
+                                background: clave ? 'rgba(201,169,98,0.22)' : 'transparent',
+                                color: tinta, fontWeight: clave ? 700 : 400,
+                            }}>
+                                <span style={{ minWidth: 30, color: clave ? tinta : gris, fontWeight: 700 }}>{ROMANOS[i]}.</span>
+                                <span>{t}{clave && <span style={{ display: 'block', fontWeight: 400, fontSize: 11.5, color: '#5b5142' }}>Con 4 tesis verificadas, citadas textualmente (art. 126 LA)</span>}</span>
+                            </li>
+                        );
+                    })}
+                </ol>
+                <div style={{ height: 1, background: '#d8cfbd', margin: '12px 0 8px' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: gris, fontSize: 11, letterSpacing: '0.04em' }}>
+                    <span>PUNTOS PETITORIOS</span><span>PROTESTO LO NECESARIO</span>
+                </div>
+            </div>
+            <figcaption style={{ marginTop: 16, fontSize: 12.5, color: '#7d7466', textAlign: 'center', lineHeight: 1.5 }}>
+                Así empieza el escrito que entrega Sálvame: la estructura que pide el juez de distrito.
+            </figcaption>
+        </figure>
+    );
+}
 
 // ═══════════════════════════════════════════════════════════════════
 // STEP LABELS
@@ -579,10 +642,10 @@ export default function SalvamePage() {
             {phase === 'intro' && (
                 <div style={{ animation: 'fadeIn 0.8s ease-out' }}>
 
-                    {/* Portada: Themis a la cabecera del paciente */}
+                    {/* Portada: la anciana grave y la joven que la acompaña */}
                     <section className="sv-hero">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="/web/arte/vigilia.webp" alt="" className="sv-hero-arte" />
+                        <img src="/web/arte/cabecera.webp" alt="" className="sv-hero-arte" />
                         <div className="sv-hero-velo" />
                         <div className="sv-hero-contenido">
                             <div className="sv-hero-columna">
@@ -680,18 +743,7 @@ export default function SalvamePage() {
                     {/* Respaldo y tecnología legal */}
                     <section style={{ padding: '0 24px 96px' }}>
                         <div className="sv-dos" style={{ maxWidth: 1100, margin: '0 auto' }}>
-                            <div className="tarjeta-negra sv-panel" style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 14 }}>
-                                {[
-                                    { t: 'Buscando jurisprudencia…', w: '80%', c: ORO },
-                                    { t: 'Redactando suspensión de plano…', w: '60%', c: CARMIN },
-                                    { t: 'Fundamentando agravios…', w: '90%', c: '#b9ad98' },
-                                ].map((p) => (
-                                    <div key={p.t} style={{ background: 'rgba(255,255,255,0.03)', padding: 16, borderRadius: 10, borderLeft: `3px solid ${p.c}` }}>
-                                        <div style={{ fontSize: 12.5, color: '#9d927f', marginBottom: 8 }}>{p.t}</div>
-                                        <div style={{ width: p.w, height: 6, background: 'rgba(227,201,148,0.14)', borderRadius: 4 }} />
-                                    </div>
-                                ))}
-                            </div>
+                            <MuestraEscrito />
                             <div>
                                 <p className="sv-rotulo" style={{ margin: '0 0 14px' }}>El motor de Iurexia</p>
                                 <h3 className="sv-serif" style={{ fontSize: 'clamp(1.9rem, 3.4vw, 2.5rem)', margin: '0 0 22px', color: '#f3e4c8', lineHeight: 1.15 }}>Respaldo y tecnología legal</h3>
@@ -699,7 +751,7 @@ export default function SalvamePage() {
                                     SÁLVAME utiliza el motor de inteligencia artificial jurídica más avanzado de México (<span style={{ color: ORO }}>Iurexia Legal AI</span>). La demanda que generas cuenta con los más altos estándares técnicos.
                                 </p>
                                 <p style={{ fontSize: '1.0625rem', color: '#b9ad98', margin: 0, lineHeight: 1.75 }}>
-                                    El sistema fundamenta automáticamente tu demanda con los <span style={{ color: '#f3e4c8', fontWeight: 600 }}>artículos 1 y 4 de la Constitución</span>, y busca jurisprudencia en tiempo real para hacer valer tu derecho a la salud.
+                                    El sistema fundamenta tu demanda con los <span style={{ color: '#f3e4c8', fontWeight: 600 }}>artículos 1, 4 y 22 de la Constitución</span> y la Ley de Amparo, y cita textualmente <span style={{ color: '#f3e4c8', fontWeight: 600 }}>cuatro tesis verificadas</span> sobre la suspensión de oficio y de plano. Nunca inventa jurisprudencia.
                                 </p>
                             </div>
                         </div>
@@ -742,7 +794,7 @@ export default function SalvamePage() {
             {phase === 'form' && step === 0 && (
                 <section className="sv-banda" style={{ padding: '56px 24px 36px', animation: 'fadeIn 0.6s ease-out' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/web/arte/vigilia.webp" alt="" className="sv-banda-arte" style={{ opacity: 0.38, objectPosition: '75% 30%' }} />
+                    <img src="/web/arte/cabecera.webp" alt="" className="sv-banda-arte" style={{ opacity: 0.4, objectPosition: '80% 40%' }} />
                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, #0f0e0d 0%, rgba(15,14,13,0.8) 45%, rgba(15,14,13,0.35) 100%), linear-gradient(180deg, rgba(15,14,13,0) 55%, #0f0e0d 100%)' }} />
                     <div style={{ position: 'relative', maxWidth: 640, margin: '0 auto' }}>
                         <p className="sv-rotulo" style={{ margin: '0 0 12px' }}>Amparo de emergencia por salud</p>
