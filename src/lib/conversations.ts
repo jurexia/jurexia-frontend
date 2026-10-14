@@ -271,7 +271,11 @@ export async function getConversation(id: string): Promise<Conversation | null> 
 }
 
 // Create a new conversation (with soft enforcement: max 200)
-export async function createConversation(estado?: string): Promise<Conversation | null> {
+/* `id` lo puede poner quien llama (14-oct-2026): así la consulta sabe a qué
+   conversación pertenece ANTES de que Supabase conteste, y la API guarda su
+   copia de la respuesta ligada a ella. Si la creación falla, la recuperación
+   la vuelve a crear con ese mismo id (ver `./respuestas-servidor`). */
+export async function createConversation(estado?: string, id?: string): Promise<Conversation | null> {
     const userId = await getCurrentUserId();
     if (!userId) {
         console.error('Cannot create conversation: no user logged in');
@@ -288,15 +292,25 @@ export async function createConversation(estado?: string): Promise<Conversation 
         const currentCount = existingCount ?? 0;
 
         // ── Clean up empty conversations first (no messages = wasted slots) ──
+        /* SÓLO LAS VACÍAS DE MÁS DE UNA HORA (14-oct-2026). Una conversación
+           está vacía MIENTRAS se escribe su primera respuesta —el historial se
+           guarda al terminar, 40-90 s después— y también mientras un flujo
+           espera las respuestas del abogado. Esta limpieza las borraba si en
+           ese rato se abría otra consulta, en esta pestaña o en cualquier otra:
+           la respuesta llegaba a una conversación que ya no existía. Así se
+           fueron las de Roberto del 13/14-oct (7348bd5e, cd71a19f, c94c1160,
+           84c269e3). Una hora sobra para cualquier respuesta. */
         if (!countError && currentCount > 0) {
             const { data: allConvs } = await supabase
                 .from('conversations')
-                .select('id, messages(count)')
+                .select('id, created_at, messages(count)')
                 .eq('user_id', userId);
 
             if (allConvs) {
+                const haceUnaHora = Date.now() - 60 * 60 * 1000;
                 const emptyConvIds = allConvs
                     .filter((c: any) => (c.messages?.[0]?.count ?? 0) === 0)
+                    .filter((c: any) => !c.created_at || new Date(c.created_at).getTime() < haceUnaHora)
                     .map((c: any) => c.id);
 
                 if (emptyConvIds.length > 0) {
@@ -342,6 +356,7 @@ export async function createConversation(estado?: string): Promise<Conversation 
         const { data: dbConv, error } = await supabase
             .from('conversations')
             .insert({
+                ...(id ? { id } : {}),
                 user_id: userId,
                 title: 'Nueva conversación',
                 estado: estado || null,

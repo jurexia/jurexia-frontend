@@ -52,6 +52,7 @@ import {
     generateTitle,
     updateConversationTitle
 } from '@/lib/conversations';
+import { avisarTraba, nuevoId, reclamarRespuesta, recuperarRespuestas } from '@/lib/respuestas-servidor';
 /* Carpetas y flujos de trabajo en el chat (25-sep-2026): ver ChatSidebar. */
 import FlujosDeTrabajo, { type InicioDeFlujo } from '@/components/FlujosDeTrabajo';
 import ContextoConsulta from '@/components/ContextoConsulta';
@@ -468,6 +469,25 @@ export default function ChatPage() {
     const mainRef = useRef<HTMLElement>(null);
     const messagesRef = useRef(messages);
     messagesRef.current = messages;
+    /* LOS MENSAJES VIGENTES, SIN QUEDARSE ESPERANDO (14-oct-2026). Se leían
+       con una promesa que sólo se cumple cuando React vuelve a pintar este
+       componente: si la página ya no está montada o no vuelve a pintar, el
+       guardado se quedaba esperando para siempre y la respuesta no llegaba
+       al historial. Ahora, si React no contesta en 3 s, vale lo último que
+       se pintó. */
+    const estadoDeMensajes = useCallback(() => new Promise<Message[]>((resolve) => {
+        let hecho = false;
+        const reloj = setTimeout(() => {
+            if (hecho) return;
+            hecho = true;
+            avisarTraba('guardado', 3_000);
+            resolve([...messagesRef.current]);
+        }, 3_000);
+        setMessages((current) => {
+            if (!hecho) { hecho = true; clearTimeout(reloj); resolve([...current]); }
+            return current;
+        });
+    }), [setMessages]);
     const constructorAbiertoRef = useRef(constructorAbierto);
     constructorAbiertoRef.current = constructorAbierto;
     const pieRef = useRef<HTMLDivElement>(null);
@@ -591,6 +611,37 @@ export default function ChatPage() {
         };
         loadConversations();
     }, [authLoading, isAuthenticated]);
+
+    /* LAS RESPUESTAS QUE EL SERVIDOR TERMINÓ Y NADIE GUARDÓ (14-oct-2026).
+       Al entrar y cada vez que se vuelve a esta pestaña (como mucho una vez
+       por minuto): lo que la API respaldó y ninguna pestaña pasó al historial
+       se guarda ahora, en su conversación. Ver `@/lib/respuestas-servidor`.
+       No detiene la carga de la barra: corre aparte. */
+    const ocupadoRef = useRef(false);
+    ocupadoRef.current = isLoading || isDocumentAnalyzing || analisisEnVuelo;
+    const activaRef = useRef<string | null>(null);
+    activaRef.current = activeConversationId;
+    useEffect(() => {
+        if (authLoading || !isAuthenticated) return;
+        let ultima = 0;
+        const recuperar = async () => {
+            if (Date.now() - ultima < 60_000) return;
+            ultima = Date.now();
+            const tocadas = await recuperarRespuestas();
+            if (!tocadas.length) return;
+            setConversations(await getConversations());
+            // La abierta se recarga, salvo que esté escribiendo una respuesta.
+            const activa = activaRef.current;
+            if (activa && tocadas.includes(activa) && !ocupadoRef.current) {
+                const conv = await getConversation(activa);
+                if (conv && activaRef.current === activa && !ocupadoRef.current) setMessages(conv.messages);
+            }
+        };
+        void recuperar();
+        const alVolver = () => { if (document.visibilityState === 'visible') void recuperar(); };
+        document.addEventListener('visibilitychange', alVolver);
+        return () => document.removeEventListener('visibilitychange', alVolver);
+    }, [authLoading, isAuthenticated, setMessages]);
 
     // "Ensure conversation exists" useEffect REMOVED — was a race condition source
     // Conversations are now created lazily in handleSendMessage/handleDocumentSubmit only
@@ -763,9 +814,16 @@ export default function ChatPage() {
            creada», el panel del documento no se cierra al recibirlo. */
         let convId = activeConversationId;
         let creacion: Promise<string | null> | null = null;
+        /* EL ID DE LA CONVERSACIÓN NACE AQUÍ (14-oct-2026), no en Supabase: la
+           consulta sale ya sabiendo a qué conversación pertenece, y la API
+           guarda su copia de la respuesta ligada a ella. Si la creación
+           fallara, la recuperación la crea después con este mismo id. */
+        const peticionId = nuevoId();
+        let convIdNuevo: string | null = null;
         if (!convId && !creatingConvRef.current) {
             creatingConvRef.current = true;
-            creacion = createConversation(selectedEstado || undefined)
+            convIdNuevo = nuevoId();
+            creacion = createConversation(selectedEstado || undefined, convIdNuevo)
                 .then((newConv) => {
                     if (!newConv) return null;
                     vincularNueva(newConv.id);
@@ -795,7 +853,11 @@ export default function ChatPage() {
         if (!constructorAbiertoRef.current) setDocumentoAbierto(true);
         // Send the message (streaming). Devuelve el texto final de la
         // respuesta: es la fuente de verdad para el historial.
-        const respuesta = await sendMessage(content, enableReasoning);
+        const respuesta = await sendMessage(content, enableReasoning, {
+            peticionId,
+            conversationId: convId ?? convIdNuevo,
+            expedienteId: consultaCtxRef.current.expedienteId,
+        });
         if (creacion) convId = await creacion;
 
         // ── DIRECT SAVE: Save user+assistant pair AFTER streaming completes ──
@@ -804,15 +866,17 @@ export default function ChatPage() {
         // which was stale (captured at useCallback creation time, not after streaming).
         if (convId) {
             try {
-                // Read the ACTUAL current state via a Promise that resolves inside
-                // React's setState callback — this guarantees we see the latest messages
-                // including the assistant's streaming response.
-                const latestMessages = await new Promise<Message[]>(resolve => {
-                    setMessages(current => {
-                        resolve([...current]);
-                        return current; // Don't modify state
-                    });
-                });
+                /* ¿LA GUARDÓ YA OTRA PESTAÑA? La API guardó su copia de esta
+                   respuesta; quien la reclama primero es quien la pasa al
+                   historial. Si la recuperación (otra pestaña, o ésta al volver)
+                   se adelantó, aquí no se guarda dos veces. Sin copia en el
+                   servidor, se guarda como siempre. */
+                if ((await reclamarRespuesta(peticionId)) === 'ajena') {
+                    setConversations(await getConversations());
+                    lastSentUserMsgRef.current = null;
+                    return;
+                }
+                const latestMessages = await estadoDeMensajes();
 
                 // EL HISTORIAL SE GUARDA CON LO QUE DEVOLVIÓ EL STREAM, no con
                 // lo que quede en el estado (2-sep-2026).
@@ -855,7 +919,7 @@ export default function ChatPage() {
 
         lastSentUserMsgRef.current = null;
     }, [user, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed,
-        modoBasico, enviarBasico, profile?.subscription_type, vincularNueva]);
+        modoBasico, enviarBasico, profile?.subscription_type, vincularNueva, estadoDeMensajes]);
 
     /* LA PREGUNTA QUE TRAEN DE LA PORTADA (8-oct-2026). La portada deja
        escribir la consulta antes de entrar (`PREGUNTA_PORTADA`, en
@@ -1153,12 +1217,7 @@ export default function ChatPage() {
             // FIX 2026-05-22: Same Promise-based state reading as handleSendMessage
             if (docConvId) {
                 try {
-                    const latestMessages = await new Promise<Message[]>(resolve => {
-                        setMessages(current => {
-                            resolve([...current]);
-                            return current;
-                        });
-                    });
+                    const latestMessages = await estadoDeMensajes();
 
                     const lastMsg = latestMessages[latestMessages.length - 1];
                     if (lastMsg && lastMsg.role === 'assistant' && lastMsg.content.trim().length > 0) {
@@ -1188,7 +1247,7 @@ export default function ChatPage() {
                 } catch {}
             }
         }
-    }, [user, activeConversationId, selectedEstado, queriesLimit, queriesUsed, setMessages, vincularNueva]);
+    }, [user, activeConversationId, selectedEstado, queriesLimit, queriesUsed, setMessages, vincularNueva, estadoDeMensajes]);
 
     /* ═══ CONTINUAR EN UNA CONVERSACIÓN NUEVA (7-oct-2026) ═══════════════
        El botón del aviso de memoria llena (`AvisoMemoriaLlena`). El API

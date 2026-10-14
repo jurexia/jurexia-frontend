@@ -6,6 +6,29 @@ import { unirRecorrido } from '@/lib/fuentes';
 import { getSession } from '@/lib/supabase';
 import { checkCanQuery, getSubscriptionInfo } from '@/lib/supabase';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
+import { avisarTraba, esperaConAviso, sesionDelAlmacen } from '@/lib/respuestas-servidor';
+
+/** Lo que identifica un envío ante la API, que guarda su propia copia de la
+ *  respuesta con esto (14-oct-2026). Ver `@/lib/respuestas-servidor`. */
+export interface DatosEnvio {
+    peticionId: string;
+    conversationId?: string | null;
+    expedienteId?: string | null;
+}
+
+/* CUÁNTO SE ESPERA ANTES DE SALIR SIN ESO (14-oct-2026). Antes del fetch hay
+   tres esperas y ninguna tenía tope: si una se colgaba, la consulta no salía
+   nunca y la pantalla se quedaba en «Leyendo la consulta…» (Roberto, 05:10 y
+   05:16 UTC: conversación creada, cero peticiones a la API). Ahora, pasado el
+   tope, se avisa a la API dónde se atoró y la consulta sale igual: sin la
+   sesión del candado (se lee la guardada), sin la comprobación de cuota (el
+   servidor la vuelve a hacer y es el que cobra) o sin la carpeta (como cuando
+   armarla falla). */
+const TOPE_SESION_MS = 8_000;
+const TOPE_CUOTA_MS = 8_000;
+const TOPE_CONTEXTO_MS = 15_000;
+/** Sin un solo trozo durante esto, la lectura se da por atorada (sólo se avisa). */
+const TOPE_LECTURA_MS = 120_000;
 
 interface UseChatOptions {
     estado?: string;
@@ -38,7 +61,7 @@ interface UseChatReturn {
      *  el estado después del stream dependía de que el último mensaje fuera
      *  exactamente el del asistente, y cuando no lo era el historial se
      *  quedaba con la pregunta y sin la respuesta. */
-    sendMessage: (content: string, enableReasoning?: boolean) => Promise<string | null>;
+    sendMessage: (content: string, enableReasoning?: boolean, envio?: DatosEnvio) => Promise<string | null>;
     stopGeneration: () => void;
     clearMessages: () => void;
     setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
@@ -201,7 +224,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         abortControllerRef.current?.abort();
     }, []);
 
-    const sendMessage = useCallback(async (content: string, _enableReasoning = true): Promise<string | null> => {
+    const sendMessage = useCallback(async (content: string, _enableReasoning = true, envio?: DatosEnvio): Promise<string | null> => {
         // El texto que acabe teniendo la respuesta. Se devuelve al final pase
         // lo que pase: si el stream se corta a medias, quien guarda decide qué
         // hacer con lo que hubiera, en vez de perderlo.
@@ -234,17 +257,22 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         setMessages(updatedMessages);
 
         let assistantMessageAdded = false;
+        let vigilaLectura: ReturnType<typeof setInterval> | null = null;
         try {
+            const aviso = { peticionId: envio?.peticionId };
             // Get Supabase session for auth token
-            const session = await getSession();
+            const session = (await esperaConAviso(getSession(), TOPE_SESION_MS, null, 'sesion', aviso))
+                ?? sesionDelAlmacen();
             const accessToken = session?.access_token;
             const sinCobro = options.sinCobro?.() ?? false;
             const userId = sinCobro ? undefined : session?.user?.id;
+            const avisoUsuario = { ...aviso, userId: session?.user?.id };
 
             // ── Quota enforcement ──
             const isAdminUser = isAdmin(session?.user?.email);
             if (userId && !isAdminUser) {
-                const { canQuery, remaining } = await checkCanQuery(userId);
+                const { canQuery, remaining } = await esperaConAviso(
+                    checkCanQuery(userId), TOPE_CUOTA_MS, { canQuery: true, remaining: 1 }, 'cuota', avisoUsuario);
                 if (!canQuery) {
                     // Remove the user message we just added
                     setMessages(messages);
@@ -281,12 +309,26 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             let paraEnviar: Message[] = updatedMessages;
             if (options.contextoSistema) {
                 try {
-                    const contexto = await options.contextoSistema(!messages.some(m => m.role === 'assistant'));
+                    const contexto = await esperaConAviso(
+                        options.contextoSistema(!messages.some(m => m.role === 'assistant')),
+                        TOPE_CONTEXTO_MS, null, 'contexto', avisoUsuario);
                     if (contexto) paraEnviar = [{ role: 'system', content: contexto }, ...updatedMessages];
                 } catch (errCtx) {
                     console.warn('[useChat] contexto de carpeta omitido:', errCtx);
                 }
             }
+
+            /* La lectura atorada sólo se AVISA: cortarla perdería lo que aún
+               pueda llegar. Si la página nunca la termina, la copia del
+               servidor queda para la recuperación. */
+            let ultimoTrozo = Date.now();
+            let lecturaAvisada = false;
+            vigilaLectura = setInterval(() => {
+                if (!lecturaAvisada && Date.now() - ultimoTrozo > TOPE_LECTURA_MS) {
+                    lecturaAvisada = true;
+                    avisarTraba('lectura', Date.now() - ultimoTrozo, avisoUsuario);
+                }
+            }, 30_000);
 
             for await (let chunk of streamChat(
                 paraEnviar,
@@ -298,8 +340,14 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 options.fuero?.length ? options.fuero.join(',') : undefined,
                 options.genioIds,
                 signal,
-                { todoElAcervo: options.todoElAcervo?.() ?? false },
+                {
+                    todoElAcervo: options.todoElAcervo?.() ?? false,
+                    peticionId: envio?.peticionId,
+                    conversationId: envio?.conversationId,
+                    expedienteId: envio?.expedienteId,
+                },
             )) {
+                ultimoTrozo = Date.now();
                 // Filter keepalive heartbeat from backend (<!--PING-->)
                 // This is sent immediately to prevent mobile carriers from
                 // closing the TCP connection when no data flows for >15s.
@@ -554,15 +602,13 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             respuestaFinal = assistantMessageAdded ? finalLimpio : null;
 
             // ── Sync UI counter with real DB values (backend already consumed the query) ──
+            // SIN ESPERARLO (14-oct-2026): el contador no es motivo para
+            // retrasar el guardado. En las tres respuestas que perdió Roberto,
+            // esta lectura fue lo ÚLTIMO que hizo la página antes de no guardar.
             if (userId && !isAdminUser) {
-                try {
-                    const info = await getSubscriptionInfo(userId);
-                    if (info) {
-                        options.onQueryCompleted?.(info.queriesUsed, info.queriesLimit);
-                    }
-                } catch (err) {
-                    console.error('Failed to sync query counter:', err);
-                }
+                void getSubscriptionInfo(userId)
+                    .then((info) => { if (info) options.onQueryCompleted?.(info.queriesUsed, info.queriesLimit); })
+                    .catch((err) => console.error('Failed to sync query counter:', err));
             }
         } catch (err) {
             // User stopped the generation — clean exit, no error shown
@@ -593,6 +639,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 });
             }
         } finally {
+            if (vigilaLectura) clearInterval(vigilaLectura);
             setIsLoading(false);
             sendingRef.current = false;
         }

@@ -7,7 +7,7 @@ import { esfuerzoParaEnviar } from './esfuerzo';
 import { clasificarFallo, type DatosReintento } from './fallosChat';
 import { bovedaParaEnviar } from './boveda';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1390';
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1390';
 
 export interface Message {
     role: 'user' | 'assistant' | 'system';
@@ -141,6 +141,12 @@ export interface OpcionesEnvio {
     /** Lo pone `streamChat` en un reintento: por qué falló el intento anterior.
      *  El servidor lo apunta en sus registros (ver `./fallosChat`). */
     reintento?: DatosReintento;
+    /** La API guarda su propia copia de la respuesta con estos datos (14-oct-2026),
+     *  para recuperarla si esta página no alcanza a guardarla. Ver
+     *  `./respuestas-servidor`. El mismo `peticionId` en los reintentos. */
+    peticionId?: string;
+    conversationId?: string | null;
+    expedienteId?: string | null;
 }
 
 async function* streamChatInternal(
@@ -198,6 +204,9 @@ async function* streamChatInternal(
             // con el token —Platinum y carpeta propia— antes de leerla.
             ...(bovedaParaEnviar() ? { boveda_carpeta_id: bovedaParaEnviar() } : {}),
             ...(extra?.reintento ? { reintento: extra.reintento } : {}),
+            ...(extra?.peticionId ? { peticion_id: extra.peticionId } : {}),
+            ...(extra?.conversationId ? { conversation_id: extra.conversationId } : {}),
+            ...(extra?.expedienteId ? { expediente_id: extra.expedienteId } : {}),
         }),
     });
 
