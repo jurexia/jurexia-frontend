@@ -1,19 +1,22 @@
 import { createClient } from '@supabase/supabase-js'
-import { candadoDeSesion } from '@/lib/candado-sesion'
+import { candadoDeSesion, fetchDeSesion } from '@/lib/candado-sesion'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const CLAVE_SESION = 'iurexia-auth'
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
         detectSessionInUrl: true,
         persistSession: true,
         autoRefreshToken: true,
-        storageKey: 'iurexia-auth', // Consistent storage key
+        storageKey: CLAVE_SESION, // Consistent storage key
         flowType: 'pkce', // More secure auth flow
-        // Una pestaña congelada ya no deja la sesión inservible (8-oct-2026).
+        // Cada pestaña con su candado: ninguna espera a otra (14-oct-2026).
         lock: candadoDeSesion,
-    }
+    },
+    // Sólo la renovación del token se hace de una pestaña a la vez.
+    global: { fetch: fetchDeSesion(CLAVE_SESION) },
 })
 
 // Auth helper functions
