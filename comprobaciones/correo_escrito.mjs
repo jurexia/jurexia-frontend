@@ -349,6 +349,15 @@ for (const [nombre, cuerpo, esperado] of malos) {
     const r = await F.enviarEscrito(ABOGADA, { ...sinAdj, copia_para_mi: false, expediente_id: null }, d);
     comprueba(r.status === 200 && !reg.envios[0].correo.attachments && !reg.envios[0].correo.cc && reg.reservas[0].adjunto_nombre === null, 'sin adjunto ni copia: sólo el mensaje');
 }
+{
+    // LA VISTA PREVIA ES LO QUE SALE: el diálogo arma el HTML con lo tecleado
+    // (y el asunto limpio); el servidor, con lo que valida. Deben coincidir.
+    const tecleado = { asunto: '  Demanda   de divorcio\t— revisión  ', mensaje: 'Estimado:\r\n\r\n\r\n\r\nLe envío   la demanda.  \r\nSaludos' };
+    const previa = E.armarCorreo({ firma: E.nombreDeFirma(ABOGADA.nombre, ABOGADA.correo), asunto: E.limpiarAsunto(tecleado.asunto), mensaje: tecleado.mensaje, adjunto: { nombre: 'Demanda.docx', bytes: 2048 } });
+    const { d, reg } = deps();
+    await F.enviarEscrito(ABOGADA, { ...pedido, ...tecleado, adjunto: { nombre: 'Demanda.docx', base64: b64 } }, d);
+    comprueba(reg.envios[0]?.correo.html === previa.html && reg.envios[0]?.correo.text === previa.texto, 'la vista previa del diálogo es, byte a byte, el correo que sale (asunto y saltos sucios incluidos)');
+}
 const g = F.datosDeEnvio({ ...ABOGADA, plan: 'gratuito' }, null, null);
 comprueba(!g.disponible && g.mensaje === 'Enviar escritos por correo desde Iurexia está disponible desde el plan Básico.', 'GET, gratuito: no disponible, con el texto de mensajeLimite');
 const p = F.datosDeEnvio(ABOGADA, null, 3);

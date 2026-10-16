@@ -14,7 +14,7 @@ import { escalonDe, mensajeLimite, type Escalon } from '@/lib/uso-funciones-conf
 import {
     MAX_ADJUNTO_BYTES, MAX_ASUNTO, MAX_DESTINATARIOS, MAX_MENSAJE, armarCorreo, clasificarDirecciones,
     destinatariosFinales, esCorreoValido, extractoDelEscrito, nombreDeFirma, normalizarCorreo, remitenteDe,
-    separarDirecciones, tamanoLegible, validarAsunto, validarDestinatarios, validarMensaje,
+    limpiarAsunto, separarDirecciones, tamanoLegible, validarAsunto, validarDestinatarios, validarMensaje,
 } from '@/lib/correo/escrito';
 
 /**
@@ -487,7 +487,9 @@ function DialogoCorreo({ obtenerDocx, obtenerTexto, titulo, carpeta, borrador, s
     const conAdjunto = adjuntar && !!docx;
     const { to, cc } = destinatariosFinales(para, copia && !!responderA, responderA);
     const vista = paso === 'revisar'
-        ? armarCorreo({ firma, asunto, mensaje, adjunto: conAdjunto && docx ? { nombre: docx.nombre, bytes: docx.bytes } : null })
+        // El asunto como lo deja el servidor (en un renglón, sin dobles
+        // espacios): si no, el <title> de la vista previa no sería el que sale.
+        ? armarCorreo({ firma, asunto: limpiarAsunto(asunto), mensaje, adjunto: conAdjunto && docx ? { nombre: docx.nombre, bytes: docx.bytes } : null })
         : null;
 
     const restantes = datos && datos.usados !== null && datos.limite > 0 ? Math.max(0, datos.limite - datos.usados) : null;
@@ -746,7 +748,7 @@ function DialogoCorreo({ obtenerDocx, obtenerTexto, titulo, carpeta, borrador, s
                                             {responderA && <Fila nombre="Responder a">{responderA}</Fila>}
                                             <Fila nombre="Para">{to.join(', ')}</Fila>
                                             {cc.length > 0 && <Fila nombre="CC">{cc.join(', ')}</Fila>}
-                                            <Fila nombre="Asunto"><span className="font-semibold text-charcoal-900">{asunto.trim()}</span></Fila>
+                                            <Fila nombre="Asunto"><span className="font-semibold text-charcoal-900">{limpiarAsunto(asunto)}</span></Fila>
                                         </dl>
                                         <VistaDelCorreo html={vista.html} />
                                         {conAdjunto && docx && (
