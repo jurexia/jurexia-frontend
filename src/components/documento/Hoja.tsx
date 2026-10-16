@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { escapar } from '@/lib/documento/marcado';
 import { TextoRevelado } from './TextoRevelado';
+import { MenuRedaccion } from './MenuRedaccion';
 
 /**
  * LA HOJA: el editor de texto enriquecido del constructor de demanda.
@@ -307,6 +308,9 @@ export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, 
                     )}
                 </div>
             </div>
+            {/* «Cambiar redacción» sobre lo seleccionado (16-oct-2026). Se pinta
+                en un portal: aquí sólo se monta, para que viva con la hoja. */}
+            {!soloLectura && !bloqueada && <MenuRedaccion hoja={hoja} onCambio={avisar} />}
         </div>
     );
 });

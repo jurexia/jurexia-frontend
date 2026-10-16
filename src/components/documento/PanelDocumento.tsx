@@ -3,7 +3,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowDownToLine, ArrowRight, Check, ChevronLeft, FileText, Loader2, Lock, Printer, X } from 'lucide-react';
 import { Hoja, type HojaAPI } from './Hoja';
-import { aWord, imprimir, type Papel } from '@/lib/documento/exportarDocx';
+import { aWord, bloquesDe, construirDocx, imprimir, type Papel } from '@/lib/documento/exportarDocx';
+import { avisoCambiosPendientes, cambiosPendientes } from '@/lib/documento/cambios';
+import { EnviarPorCorreo } from './acciones/EnviarPorCorreo';
 import {
     fuenteDeCita, htmlDeDocumento, htmlDeDossier, metaDeDossier, palabrasDe, referenciaAPA,
     type FuenteCita,
@@ -327,6 +329,8 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
     async function descargarWord() {
         const raiz = hoja.current?.raiz();
         if (!raiz || hoja.current?.vacia()) { mostrarAviso('El documento está vacío.'); return; }
+        const pendientes = cambiosPendientes(raiz);
+        if (pendientes) { mostrarAviso(avisoCambiosPendientes(pendientes)); return; }
         setExportando(true);
         try {
             const referencias = new Map(orden.map((id) => [id, referenciaAPA(fuenteDeCita(meta, id))]));
@@ -337,7 +341,18 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
     function mandarAImprimir() {
         const raiz = hoja.current?.raiz();
         if (!raiz || hoja.current?.vacia()) { mostrarAviso('El documento está vacío.'); return; }
+        const pendientes = cambiosPendientes(raiz);
+        if (pendientes) { mostrarAviso(avisoCambiosPendientes(pendientes)); return; }
         if (!imprimir(raiz, tituloEfectivo, papel)) mostrarAviso('El navegador bloqueó la ventana de impresión.');
+    }
+    /* EL MISMO WORD QUE SE DESCARGA, como Blob: para adjuntarlo al correo. */
+    async function docxActual(): Promise<Blob | null> {
+        const raiz = hoja.current?.raiz();
+        if (!raiz || hoja.current?.vacia()) { mostrarAviso('El documento está vacío.'); return null; }
+        const pendientes = cambiosPendientes(raiz);
+        if (pendientes) { mostrarAviso(avisoCambiosPendientes(pendientes)); return null; }
+        const referencias = new Map(orden.map((id) => [id, referenciaAPA(fuenteDeCita(meta, id))]));
+        return construirDocx(bloquesDe(raiz), papel, referencias);
     }
 
     const fecha = (t: number) => new Date(t).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -421,6 +436,14 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                         </>
                     ) : (
                         <>
+                            <EnviarPorCorreo
+                                obtenerDocx={docxActual}
+                                obtenerTexto={() => hoja.current?.raiz()?.textContent ?? ''}
+                                titulo={tituloEfectivo}
+                                carpeta={null}
+                                deshabilitado={enVivo}
+                                avisar={mostrarAviso}
+                            />
                             <button type="button" onClick={mandarAImprimir} title="Imprimir o guardar como PDF" disabled={enVivo}
                                 className="grid h-9 w-9 place-items-center rounded-lg border border-charcoal-900/15 bg-white text-charcoal-900 transition-colors hover:border-charcoal-900/35 disabled:opacity-40">
                                 <Printer className="h-4 w-4" />

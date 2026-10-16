@@ -3,7 +3,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowDownToLine, Check, ChevronLeft, Loader2, Printer } from 'lucide-react';
 import { Hoja, type HojaAPI } from '@/components/documento/Hoja';
-import { aWord, imprimir, type Papel } from '@/lib/documento/exportarDocx';
+import { aWord, bloquesDe, construirDocx, imprimir, type Papel } from '@/lib/documento/exportarDocx';
+import { avisoCambiosPendientes, cambiosPendientes } from '@/lib/documento/cambios';
+import type { CarpetaDelEscrito } from '@/lib/documento/carpeta-del-escrito';
+import { EnviarPorCorreo } from './acciones/EnviarPorCorreo';
+import { GuardarEnCarpeta } from './acciones/GuardarEnCarpeta';
 
 /**
  * EL ESCRITO SUELTO: cualquier respuesta de Iurexia, abierta como un Word.
@@ -45,9 +49,13 @@ export interface EscritoEnEdicion {
 interface Props {
     escrito: EscritoEnEdicion | null;
     onCerrar: () => void;
+    /** Si el escrito se abrió desde una carpeta (p. ej. desde una plantilla). */
+    carpeta?: CarpetaDelEscrito | null;
+    /** Rótulo del botón de volver: «Volver al chat» por omisión. */
+    rotuloVolver?: string;
 }
 
-export default function EditorEscrito({ escrito, onCerrar }: Props) {
+export default function EditorEscrito({ escrito, onCerrar, carpeta = null, rotuloVolver = 'Volver al chat' }: Props) {
     const hoja = useRef<HojaAPI | null>(null);
     const raizRef = useRef<HTMLDivElement | null>(null);
     const focoPrevio = useRef<HTMLElement | null>(null);
@@ -124,6 +132,8 @@ export default function EditorEscrito({ escrito, onCerrar }: Props) {
     async function descargarWord() {
         const raiz = hoja.current?.raiz();
         if (!raiz || hoja.current?.vacia()) { mostrarAviso('El documento está vacío.'); return; }
+        const pendientes = cambiosPendientes(raiz);
+        if (pendientes) { mostrarAviso(avisoCambiosPendientes(pendientes)); return; }
         setExportando(true);
         try { await aWord(raiz, tituloEfectivo, papel); }
         catch { mostrarAviso('No se pudo generar el Word. Vuelve a intentarlo.'); }
@@ -132,7 +142,17 @@ export default function EditorEscrito({ escrito, onCerrar }: Props) {
     function mandarAImprimir() {
         const raiz = hoja.current?.raiz();
         if (!raiz || hoja.current?.vacia()) { mostrarAviso('El documento está vacío.'); return; }
+        const pendientes = cambiosPendientes(raiz);
+        if (pendientes) { mostrarAviso(avisoCambiosPendientes(pendientes)); return; }
         if (!imprimir(raiz, tituloEfectivo, papel)) mostrarAviso('El navegador bloqueó la ventana de impresión.');
+    }
+    /* EL MISMO WORD QUE SE DESCARGA, como Blob: para la carpeta y el correo. */
+    async function docxActual(): Promise<Blob | null> {
+        const raiz = hoja.current?.raiz();
+        if (!raiz || hoja.current?.vacia()) { mostrarAviso('El documento está vacío.'); return null; }
+        const pendientes = cambiosPendientes(raiz);
+        if (pendientes) { mostrarAviso(avisoCambiosPendientes(pendientes)); return null; }
+        return construirDocx(bloquesDe(raiz), papel);
     }
 
     // Mientras no se haya abierto ninguna vez no hay nada que montar.
@@ -153,7 +173,7 @@ export default function EditorEscrito({ escrito, onCerrar }: Props) {
                 <button type="button" onClick={onCerrar} data-foco-inicial
                     className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-[13px] font-medium text-charcoal-900/75 transition-colors hover:bg-charcoal-900/5 hover:text-charcoal-900">
                     <ChevronLeft className="h-4 w-4" />
-                    <span className="hidden sm:inline">Volver al chat</span><span className="sm:hidden">Chat</span>
+                    <span className="hidden sm:inline">{rotuloVolver}</span><span className="sm:hidden">Volver</span>
                 </button>
                 <div className="flex min-w-0 items-center justify-center gap-2">
                     <span className="hidden font-serif text-[15px] font-semibold text-charcoal-900 md:inline">Iurex<span className="text-accent-gold">ia</span></span>
@@ -172,6 +192,14 @@ export default function EditorEscrito({ escrito, onCerrar }: Props) {
                         <option value="carta">Carta</option>
                         <option value="oficio">Oficio</option>
                     </select>
+                    <GuardarEnCarpeta obtenerDocx={docxActual} titulo={tituloEfectivo} carpeta={carpeta} avisar={mostrarAviso} />
+                    <EnviarPorCorreo
+                        obtenerDocx={docxActual}
+                        obtenerTexto={() => hoja.current?.raiz()?.textContent ?? ''}
+                        titulo={tituloEfectivo}
+                        carpeta={carpeta}
+                        avisar={mostrarAviso}
+                    />
                     <button type="button" onClick={mandarAImprimir} title="Imprimir o guardar como PDF"
                         className="grid h-9 w-9 place-items-center rounded-lg border border-charcoal-900/15 bg-white text-charcoal-900 transition-colors hover:border-charcoal-900/35">
                         <Printer className="h-4 w-4" />
