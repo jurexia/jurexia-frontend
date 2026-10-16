@@ -1559,6 +1559,13 @@ export default function ChatPage() {
         }
         return tituloDeRespuesta(sinMarcadoresDeUsuario(primera.content));
     }, [messages]);
+    /* LA CARPETA DEL DOCUMENTO (16-oct-2026): si la consulta vive en una
+       carpeta, «Enviar» propone a su cliente como destinatario y el envío
+       queda anotado en esa carpeta. */
+    const carpetaDelDocumento = useMemo(() => {
+        const c = carpetaActivaId ? carpetas?.find((x) => x.id === carpetaActivaId) : null;
+        return c ? { id: c.id, titulo: nombreCarpeta(c), clienteNombre: c.cliente_nombre || null, clienteCorreo: c.cliente_correo || null } : null;
+    }, [carpetaActivaId, carpetas]);
 
     /* DESARROLLAR A PARTIR DE ESTE FUNDAMENTO (19-sep-2026)
        David: «una ventana de texto en la que el usuario pueda ingresar su
@@ -2284,6 +2291,7 @@ export default function ChatPage() {
                 onCerrar={() => setDocumentoAbierto(false)}
                 onCita={handleCitationClick}
                 bloqueo={sinCuenta ? 'sin-cuenta' : gratuitoAgotado ? 'agotado' : null}
+                carpeta={carpetaDelDocumento}
             />
             <PdfViewerPanel isOpen={activePdfSource !== null} onClose={() => setActivePdfSource(null)} source={activePdfSource} />
 

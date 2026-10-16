@@ -5,6 +5,7 @@ import { ArrowDownToLine, ArrowRight, Check, ChevronLeft, FileText, Loader2, Loc
 import { Hoja, type HojaAPI } from './Hoja';
 import { aWord, bloquesDe, construirDocx, imprimir, type Papel } from '@/lib/documento/exportarDocx';
 import { avisoCambiosPendientes, cambiosPendientes } from '@/lib/documento/cambios';
+import type { CarpetaDelEscrito } from '@/lib/documento/carpeta-del-escrito';
 import { EnviarPorCorreo } from './acciones/EnviarPorCorreo';
 import {
     fuenteDeCita, htmlDeDocumento, htmlDeDossier, metaDeDossier, palabrasDe, referenciaAPA,
@@ -79,6 +80,8 @@ interface Props {
      *  descarga ni se imprime: «esto les mostrará cómo trabajarían». Sin cuenta
      *  el aviso lleva a registrarse; con la cuenta gratuita agotada, a los planes. */
     bloqueo?: 'sin-cuenta' | 'agotado' | null;
+    /** La carpeta de la consulta, si vive en una: «Enviar» propone a su cliente. */
+    carpeta?: CarpetaDelEscrito | null;
 }
 
 /* El aviso, con las palabras de David (8-oct-2026). Cada promesa está comprobada
@@ -101,7 +104,7 @@ const AVISO_BLOQUEO = {
     },
 } as const;
 
-export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, paso, versiones, onCerrar, onCita, bloqueo = null }: Props) {
+export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, paso, versiones, onCerrar, onCita, bloqueo = null, carpeta = null }: Props) {
     const hoja = useRef<HojaAPI | null>(null);
     const raizRef = useRef<HTMLDivElement | null>(null);
     const [nombre, setNombre] = useState('');
@@ -443,7 +446,7 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                                 obtenerDocx={docxActual}
                                 obtenerTexto={() => hoja.current?.raiz()?.innerText ?? ''}
                                 titulo={tituloEfectivo}
-                                carpeta={null}
+                                carpeta={carpeta}
                                 deshabilitado={enVivo}
                                 avisar={mostrarAviso}
                             />
