@@ -37,6 +37,7 @@ const TIPOS_CON_MACROS = [
     'application/vnd.ms-word.document.macroEnabled.main+xml',
     'application/vnd.ms-word.template.macroEnabledTemplate.main+xml',
 ]
+const TIPO_COMENTARIOS = 'application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml'
 const TIPOS_PARTE: Record<string, TipoParte> = {
     'application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml': 'encabezado',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml': 'pie',
@@ -71,6 +72,9 @@ export interface DocxAbierto {
     rutas: { ruta: string; tipo: TipoParte }[]
     /** Era una plantilla de Word (.dotx) y se guardó como documento. */
     eraDotx: boolean
+    /** Los comentarios de Word: no llevan campos, pero docxtemplater también
+        los lee, así que sus llaves sueltas se neutralizan igual. */
+    comentarios: string[]
 }
 
 const aBytes = (d: Uint8Array | ArrayBuffer) => (d instanceof Uint8Array ? d : new Uint8Array(d))
@@ -153,7 +157,8 @@ export function abrirDocx(datos: Uint8Array | ArrayBuffer): DocxAbierto {
         const xml = zip.file(r.ruta)?.asText() ?? ''
         if (xml.length > MAX_XML_PARTE) throw new PlantillaInvalida('El documento es demasiado grande por dentro para procesarlo.')
     }
-    return { zip, principal, rutas, eraDotx }
+    const comentarios = partes.filter((p) => p.tipo === TIPO_COMENTARIOS && zip.file(p.ruta)).map((p) => p.ruta)
+    return { zip, principal, rutas, eraDotx, comentarios }
 }
 
 function porNumero(a: { ruta: string }, b: { ruta: string }) {
@@ -246,6 +251,11 @@ export function marcar(original: Uint8Array | ArrayBuffer, campos: readonly Camp
             if (!p.respaldo) for (const a of aps) apariciones.set(a.clave, (apariciones.get(a.clave) ?? 0) + 1)
         }
         if (ediciones.length) doc.zip.file(r.ruta, aplicarEdiciones(xml, ediciones))
+    }
+    for (const ruta of doc.comentarios) {
+        const xml = doc.zip.file(ruta)?.asText() ?? ''
+        const ediciones = leerParrafos(xml).flatMap((p) => edicionesDe(p, llavesSueltas(p.texto, [])))
+        if (ediciones.length) doc.zip.file(ruta, aplicarEdiciones(xml, ediciones))
     }
     const docx = doc.zip.generate({ type: 'uint8array', compression: 'DEFLATE' })
     // La prueba de fuego: si docxtemplater no lo puede compilar, no se guarda.

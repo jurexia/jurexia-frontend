@@ -82,10 +82,12 @@ const CUERPO = [
     p(r('PROTESTO LO NECESARIO'), '<w:jc w:val="center"/>'),
 ].join('');
 
-function armarDocx({ cuerpo = CUERPO, tipoPrincipal = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml', sinCuerpo = false, macros = false } = {}) {
+function armarDocx({ cuerpo = CUERPO, tipoPrincipal = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml', sinCuerpo = false, macros = false, comentario = false } = {}) {
     const zip = new PizZip();
     zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="${tipoPrincipal}"/><Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>`);
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="${tipoPrincipal}"/><Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/>${comentario ? '<Override PartName="/word/comments.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml"/>' : ''}</Types>`);
+    if (comentario) zip.file('word/comments.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:comments ${W}><w:comment w:id="0" w:author="Lic"><w:p><w:r><w:t xml:space="preserve">Revisar {{ esto }} y {{ lo otro</w:t></w:r></w:p></w:comment></w:comments>`);
     zip.file('_rels/.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
     zip.file('word/_rels/document.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -222,6 +224,16 @@ const html = await V.htmlDeDocx(mammoth, { buffer: Buffer.from(LLENO) });
 comprueba(html.includes('<p style="text-align: center"><strong>C. JUEZ PRIMERO DE LO CIVIL</strong></p>'), 'mammoth lo abre, con la alineación centrada viajando', html.slice(0, 120));
 comprueba(!/<img|<a\b|javascript:/i.test(html), 'la vista previa va sin imágenes ni enlaces');
 comprueba(D.llenar(MARCADO, {}).length > 0, 'sin ningún valor también se llena (todo «__________»)');
+{
+    const conComentario = D.marcar(armarDocx({ comentario: true }), det.campos).docx;
+    let bien = true, detalle = '';
+    try {
+        const z = new PizZip(D.llenar(conComentario, VALORES));
+        detalle = (z.file('word/comments.xml').asText().match(/<w:t[^>]*>([^<]*)<\/w:t>/)?.[1] ?? '').replace(/\u200b/g, '');
+        bien = detalle === 'Revisar {{ esto }} y {{ lo otro';
+    } catch (e) { bien = false; detalle = e.message; }
+    comprueba(bien, 'las llaves sueltas de un comentario de Word no impiden llenar', detalle.slice(0, 80));
+}
 comprueba(C.valorDeOrigen('carpeta.materia', { materia: 'administrativo' }) === 'administrativa'
     && C.valorDeOrigen('fecha_hoy.mes', null, new Date('2026-10-16T18:00:00Z')) === 'octubre'
     && C.valorDeOrigen('fecha_hoy.dia', null, new Date('2026-10-17T03:00:00Z')) === '16', 'orígenes: materia en minúscula, mes, y el día en la hora de México');
