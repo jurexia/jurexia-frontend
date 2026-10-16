@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { CalendarDays, FolderOpen, HardDrive, Plus, Search } from 'lucide-react'
+import { CalendarDays, FolderOpen, HardDrive, LayoutTemplate, Plus, Search } from 'lucide-react'
 
 import Navbar from '@/components/Navbar'
 import SeguimientoPanel from '@/components/SeguimientoPanel'
@@ -139,6 +139,10 @@ function Escritorio() {
                         </button>
                         <Link href="/agenda" className={BOTON_CLARO_SUAVE}>
                             <CalendarDays className="h-4 w-4" /> Mi agenda de términos
+                        </Link>
+                        {/* Los formatos de Word del despacho (16-oct-2026). */}
+                        <Link href="/plantillas" className={BOTON_CLARO_SUAVE}>
+                            <LayoutTemplate className="h-4 w-4" /> Mis plantillas
                         </Link>
                     </div>
                 </Portada>
