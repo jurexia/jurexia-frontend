@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
-import { User, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool, FileSignature, Wand2, CornerDownLeft, X, Workflow } from 'lucide-react';
+import { CirculoBasico, CirculoPlatinum, CirculoPro } from '@/components/CirculosEsfuerzo';
+import { User, FileText, FileDown, Printer, Loader2, Copy, Check, FolderPlus, FileSignature, Wand2, CornerDownLeft, X, Workflow } from 'lucide-react';
 import { AvatarIurexia } from '@/components/AvatarIurexia';
 import { citasSinFuente, conFichas, resumenDeCitas, useFichasDeCitas } from '@/lib/documento/fichas';
 import { GuardarEnCarpetaModal, type ContenidoParaCarpeta } from '@/components/GuardarEnCarpeta';
@@ -951,10 +952,10 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                enciende ambas banderas y aquí gana la que corrió. */
                             <div className="mx-5 sm:mx-6 mt-4 inline-flex items-center gap-1.5 rounded-full border border-cream-400/70 bg-cream-100 px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-charcoal-700">
                                 {message.isPlatinum
-                                    ? <Gem className="w-3 h-3 text-charcoal-900" />
+                                    ? <CirculoPlatinum className="w-3 h-3" />
                                     : message.isPro
-                                        ? <Sparkles className="w-3 h-3 text-accent-gold" />
-                                        : <PenTool className="w-3 h-3 text-charcoal-500" />}
+                                        ? <CirculoPro className="w-3 h-3" />
+                                        : <CirculoBasico className="w-3 h-3" />}
                                 <span>{message.isPlatinum ? 'Redacción Platinum' : message.isPro ? 'Redacción Pro' : 'Redacción Básica'}</span>
                             </div>
                         )}
