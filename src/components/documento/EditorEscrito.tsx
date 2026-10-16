@@ -195,7 +195,7 @@ export default function EditorEscrito({ escrito, onCerrar, carpeta = null, rotul
                     <GuardarEnCarpeta obtenerDocx={docxActual} titulo={tituloEfectivo} carpeta={carpeta} avisar={mostrarAviso} />
                     <EnviarPorCorreo
                         obtenerDocx={docxActual}
-                        obtenerTexto={() => hoja.current?.raiz()?.textContent ?? ''}
+                        obtenerTexto={() => hoja.current?.raiz()?.innerText ?? ''}
                         titulo={tituloEfectivo}
                         carpeta={carpeta}
                         avisar={mostrarAviso}

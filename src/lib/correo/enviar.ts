@@ -15,6 +15,7 @@ import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { cabecerasBaja, urlBaja } from './baja';
+import { consumoDelCupo, cupoDeCampanias } from './cupo';
 
 // La lista vive en `@/lib/admins`, que no depende de nada. Se importa y se
 // reexporta porque varios módulos ya la traen desde aquí.
@@ -45,42 +46,33 @@ const PAUSA_MS = 600;
 // Ojo: con plan de pago el techo real deja de ser Resend y pasa a ser el
 // tiempo. La función del cron vive 300 s y aquí se manda uno cada 0.6 s, así
 // que una corrida no pasa de unos 300 correos. Por eso existe `plazoHasta`.
-export const LIMITE_DIARIO = Number(process.env.RESEND_LIMITE_DIARIO || 100);
-export const LIMITE_MENSUAL = Number(process.env.RESEND_LIMITE_MENSUAL || 3000);
-export const RESERVA_TRANSACCIONAL = 30;
+//
+// LOS ESCRITOS DE LOS ABOGADOS (16-oct-2026) salen de la misma cuenta. Las
+// cuentas viven ahora en `cupo.ts`, compartidas con /api/correo/escrito: las
+// campañas descuentan también lo que enviaron los abogados y les dejan una
+// reserva propia (`RESEND_RESERVA_ESCRITOS`, 20 por omisión), así que el
+// bloque de campaña baja de 70 a 50 en cuanto exista la tabla de escritos. La
+// reserva de 30 no cambia. El día es el UTC de Resend (en Vercel ya lo era).
+export { LIMITE_DIARIO, LIMITE_MENSUAL, RESERVA_TRANSACCIONAL, RESERVA_ESCRITOS } from './cupo';
 
-/** Cuántos correos de campaña caben hoy sin tocar la reserva. */
+/** Cuántos correos de campaña caben hoy sin tocar ninguna reserva. */
 export async function cupoDisponibleHoy(): Promise<{
     cupo: number;
     enviados_hoy: number;
     enviados_mes: number;
     tope_diario: number;
+    escritos_hoy: number;
 }> {
-    const hoy = new Date();
-    const inicioDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()).toISOString();
-    const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString();
-
-    const cliente = admin();
-    const [dia, mes] = await Promise.all([
-        cliente.from('correo_envios').select('id', { count: 'exact', head: true })
-            .eq('estado', 'enviado').gte('enviado_at', inicioDia),
-        cliente.from('correo_envios').select('id', { count: 'exact', head: true })
-            .eq('estado', 'enviado').gte('enviado_at', inicioMes),
-    ]);
-
-    const enviados_hoy = dia.count ?? 0;
-    const enviados_mes = mes.count ?? 0;
-    const tope_diario = LIMITE_DIARIO - RESERVA_TRANSACCIONAL;
-
+    const consumo = await consumoDelCupo(admin());
     // El tope mensual también manda: 70 diarios por 30 días son 2,100, que
     // caben, pero si algún día se sube el bloque hay que seguir respetándolo.
-    const margenMes = LIMITE_MENSUAL - RESERVA_TRANSACCIONAL * 30 - enviados_mes;
-
+    const { cupo, tope_diario } = cupoDeCampanias(consumo);
     return {
-        cupo: Math.max(0, Math.min(tope_diario - enviados_hoy, margenMes)),
-        enviados_hoy,
-        enviados_mes,
+        cupo,
+        enviados_hoy: consumo.campaniasHoy,
+        enviados_mes: consumo.campaniasMes,
         tope_diario,
+        escritos_hoy: consumo.escritosHoy,
     };
 }
 
