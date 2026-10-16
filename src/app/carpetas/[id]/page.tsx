@@ -15,6 +15,7 @@ import {
     Sparkles,
     FileSignature,
     GanttChartSquare,
+    LayoutTemplate,
     Lock,
     Target,
     Trash2,
@@ -22,6 +23,7 @@ import {
 } from 'lucide-react'
 
 import GenerarEscrito from '@/components/GenerarEscrito'
+import UsarPlantilla from '@/components/plantillas/UsarPlantilla'
 import PanelCronologia from '@/components/cronologia/PanelCronologia'
 import SeccionBoveda from '@/components/boveda/SeccionBoveda'
 import Navbar from '@/components/Navbar'
@@ -52,6 +54,7 @@ import {
 import { consultasDeCarpeta, tituloLimpio, type ConsultaDeCarpeta } from '@/lib/consultas-carpeta'
 import { flujoPorId } from '@/lib/flujos'
 import { lista as listarCronologias, puedeCronologia, type TrabajoCrono } from '@/lib/cronologia'
+import { EVENTO_DOCUMENTO_EN_CARPETA, type DetalleDocumentoEnCarpeta } from '@/lib/plantillas/en-carpeta'
 
 /**
  * Dentro de una carpeta.
@@ -90,6 +93,8 @@ function Detalle() {
     const [error, setError] = useState<string | null>(null)
     const [subiendoEn, setSubiendoEn] = useState<CategoriaDocumento | null>(null)
     const [redactando, setRedactando] = useState(false)
+    // Desde una plantilla del despacho (16-oct-2026).
+    const [usandoPlantilla, setUsandoPlantilla] = useState(false)
     const [editandoObjetivo, setEditandoObjetivo] = useState(false)
     const [borradorObjetivo, setBorradorObjetivo] = useState('')
     /* Las consultas que viven en esta carpeta (25-sep-2026). `null`: la base
@@ -115,6 +120,18 @@ function Detalle() {
         listarCronologias(id).then((c) => { if (vigente) setCronologias(c) }).catch(() => {})
         return () => { vigente = false }
     }, [id, conCronologia, cronologiaAbierta])
+
+    /* Lo que se guarda en esta carpeta desde una plantilla o desde el editor
+       («A la carpeta») entra a la lista sin recargar. */
+    useEffect(() => {
+        const alGuardar = (e: Event) => {
+            const d = (e as CustomEvent<DetalleDocumentoEnCarpeta>).detail
+            if (!d || d.expedienteId !== id) return
+            setDocumentos((prev) => (prev.some((x) => x.id === d.documento.id) ? prev : [d.documento, ...prev]))
+        }
+        window.addEventListener(EVENTO_DOCUMENTO_EN_CARPETA, alGuardar)
+        return () => window.removeEventListener(EVENTO_DOCUMENTO_EN_CARPETA, alGuardar)
+    }, [id])
 
     const entradaArchivo = useRef<HTMLInputElement>(null)
     const gavetaDestino = useRef<CategoriaDocumento>('base')
@@ -332,6 +349,10 @@ function Detalle() {
                     onCerrar={() => setRedactando(false)}
                     onGuardado={(doc) => setDocumentos((prev) => [doc, ...prev])}
                 />
+            ) : null}
+
+            {usandoPlantilla ? (
+                <UsarPlantilla carpeta={expediente} onCerrar={() => setUsandoPlantilla(false)} />
             ) : null}
 
             <main className="mx-auto max-w-6xl px-4 pb-20 pt-20 sm:px-6">
@@ -566,17 +587,42 @@ function Detalle() {
                     —una consulta que no hacía falta—. Se vio probándolo en
                     producción, no leyendo el código. */}
                 <Seccion id="redactar" rotulo="Escritos" titulo="Redactar con esta carpeta">
-                    <p className="text-[13.5px] leading-relaxed text-piedra-700">
-                        Incidentes, medidas provisionales, contestación de vistas, apelaciones.
-                        Iurexia los redacta con los documentos de esta carpeta y marca lo que
-                        usted debe completar antes de presentarlos.
-                    </p>
-                    <button onClick={() => setRedactando(true)} disabled={leidos === 0} className={`${BOTON} mt-4`}>
-                        <FileSignature className="h-4 w-4 text-accent-gold" />
-                        {leidos === 0
-                            ? 'Suba un documento primero'
-                            : 'Redactar un escrito · 1 consulta'}
-                    </button>
+                    {/* Dos caminos, uno al lado del otro: que Iurexia redacte con
+                        los documentos, o llenar un formato del despacho con los
+                        datos de la carpeta (16-oct-2026). */}
+                    <div className="grid gap-3 md:grid-cols-2">
+                        <div className="flex flex-col rounded-xl bg-[#fbf8f1] p-4 ring-1 ring-charcoal-900/10">
+                            <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-accent-brown">Lo redacta Iurexia</p>
+                            <p className="mt-1.5 flex-1 text-[13.5px] leading-relaxed text-piedra-700">
+                                Incidentes, medidas provisionales, contestación de vistas, apelaciones.
+                                Iurexia los redacta con los documentos de esta carpeta y marca lo que
+                                usted debe completar antes de presentarlos.
+                            </p>
+                            <button onClick={() => setRedactando(true)} disabled={leidos === 0} className={`${BOTON} mt-4 self-start`}>
+                                <FileSignature className="h-4 w-4 text-accent-gold" />
+                                {leidos === 0
+                                    ? 'Suba un documento primero'
+                                    : 'Redactar un escrito · 1 consulta'}
+                            </button>
+                        </div>
+                        <div className="flex flex-col rounded-xl bg-[#fbf8f1] p-4 ring-1 ring-charcoal-900/10">
+                            <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-accent-brown">Desde una plantilla del despacho</p>
+                            <p className="mt-1.5 flex-1 text-[13.5px] leading-relaxed text-piedra-700">
+                                El formato de Word del despacho con los datos de esta carpeta ya puestos
+                                —cliente, domicilio, materia y la fecha de hoy—, con su membrete y su
+                                formato, listo para revisar y guardar aquí.
+                            </p>
+                            <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+                                <button onClick={() => setUsandoPlantilla(true)} className={BOTON}>
+                                    <LayoutTemplate className="h-4 w-4 text-accent-gold" />
+                                    Desde una plantilla
+                                </button>
+                                <Link href="/plantillas" className="text-[12.5px] font-semibold text-accent-brown underline-offset-4 hover:underline">
+                                    Mis plantillas
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
                 </Seccion>
 
                 {/* ── Cronología del expediente (12-oct-2026, Platinum) ─────
@@ -766,6 +812,12 @@ function Detalle() {
                         <p className="px-3 pb-1 pt-2 text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent-brown">Atajos</p>
                         <Indice href={`/chat?carpeta=${id}&flujos=1`} icono={<Workflow className="h-4 w-4" />} texto="Iniciar un flujo de trabajo" />
                         <Indice href="/agenda?nuevo=1" icono={<CalendarDays className="h-4 w-4" />} texto="Agendar un término" />
+                        <button
+                            onClick={() => setUsandoPlantilla(true)}
+                            className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-[13px] text-charcoal-900 transition hover:bg-[#faf6ee]">
+                            <span className="text-accent-brown"><LayoutTemplate className="h-4 w-4" /></span>
+                            <span className="min-w-0 flex-1 truncate">Usar una plantilla</span>
+                        </button>
                         <button
                             onClick={() => void eliminarCarpeta()}
                             className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-[13px] text-red-700 transition hover:bg-red-50">

@@ -27,6 +27,7 @@ import {
     ArrowUpRight,
     Check,
     GraduationCap,
+    LayoutTemplate,
 } from 'lucide-react';
 import { Conversation } from '@/lib/conversations';
 import { nombreCarpeta, type Expediente } from '@/lib/expedientes';
@@ -272,6 +273,7 @@ function ChatSidebar({
     const ruta = usePathname() ?? '';
     const enCarpetas = ruta === '/carpetas' || ruta.startsWith('/carpetas/');
     const enEstudiar = ruta === '/estudiar' || ruta.startsWith('/estudiar/');
+    const enPlantillas = ruta === '/plantillas' || ruta.startsWith('/plantillas/');
 
     // El estado de colapso vive en localStorage y se publica como variable CSS
     // (--sidebar-w) para que el encabezado, el pie y el área de mensajes del
@@ -505,6 +507,14 @@ function ChatSidebar({
                     <FolderOpen className="h-[18px] w-[18px]" />
                 </Link>
                 <Link
+                    href="/plantillas"
+                    title="Mis plantillas"
+                    aria-label="Mis plantillas"
+                    className={`grid h-9 w-9 place-items-center rounded-lg transition-colors hover:bg-white/[0.07] hover:text-white ${enPlantillas ? 'bg-white/[0.085] text-white' : 'text-white/60'}`}
+                >
+                    <LayoutTemplate className="h-[18px] w-[18px]" />
+                </Link>
+                <Link
                     href="/estudiar"
                     title="Estudiar y pensar"
                     aria-label="Estudiar y pensar"
@@ -607,6 +617,17 @@ function ChatSidebar({
                         {hayCarpetas && carpetas!.length > 0 && (
                             <span className="ml-auto text-[11px] text-white/35">{carpetas!.length}</span>
                         )}
+                    </Link>
+                    {/* Los formatos de Word del despacho, que se llenan con los
+                        datos de una carpeta (16-oct-2026). */}
+                    <Link
+                        href="/plantillas"
+                        onClick={cerrarMovil}
+                        aria-current={enPlantillas ? 'page' : undefined}
+                        className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-[13px] transition-colors hover:bg-white/[0.05] hover:text-white ${enPlantillas ? 'bg-white/[0.085] text-white' : 'text-white/80'}`}
+                    >
+                        <LayoutTemplate className={`h-4 w-4 flex-shrink-0 ${enPlantillas ? 'text-[#c9a962]' : 'text-white/50'}`} />
+                        Mis plantillas
                     </Link>
                     {/* Las lecciones del canal de YouTube, con su lectura (3-oct-2026). */}
                     <Link
