@@ -10,7 +10,8 @@
    Esto sólo dice con qué motor. Ver `@/lib/esfuerzo`. */
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Check, ChevronDown, Gem, Lock, PenLine, Sparkles } from 'lucide-react';
+import { Check, ChevronDown, Lock } from 'lucide-react';
+import { CirculoBasico, CirculoPlatinum, CirculoPro } from '@/components/CirculosEsfuerzo';
 import { useAuth } from '@/lib/useAuth';
 import AvisoPlan from './AvisoPlan';
 import {
@@ -23,7 +24,7 @@ interface Ficha {
     nombre: string;
     detalle: string;
     plan: string;
-    Icono: typeof PenLine;
+    Icono: typeof CirculoBasico;
     tinta: string;
 }
 
@@ -33,7 +34,7 @@ const FICHAS: Record<Esfuerzo, Ficha> = {
         nombre: 'Básico',
         detalle: 'Escrito completo, ágil y bien estructurado.',
         plan: 'Todos los planes',
-        Icono: PenLine,
+        Icono: CirculoBasico,
         tinta: 'text-charcoal-600',
     },
     pro: {
@@ -41,7 +42,7 @@ const FICHAS: Record<Esfuerzo, Ficha> = {
         nombre: 'Pro',
         detalle: 'Razona a fondo cada argumento antes de escribir.',
         plan: 'Plan Pro',
-        Icono: Sparkles,
+        Icono: CirculoPro,
         tinta: 'text-accent-gold',
     },
     platinum: {
@@ -49,7 +50,7 @@ const FICHAS: Record<Esfuerzo, Ficha> = {
         nombre: 'Platinum',
         detalle: 'El motor más potente: escritos más extensos y argumentos en capas.',
         plan: 'Plan Platinum',
-        Icono: Gem,
+        Icono: CirculoPlatinum,
         tinta: 'text-slate-700',
     },
 };
