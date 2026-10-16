@@ -4,8 +4,8 @@
  *
  * Por omisión `google/gemini-2.5-flash`: buen español jurídico, rápido y
  * barato. Se cambia sin desplegar código con `IUREXIA_MODELO_DESPACHO`.
- * No razona: cambiar redacción y proponer un correo no lo necesitan, y el
- * razonamiento triplicaría el costo y la espera.
+ * No razona (se apaga explícitamente abajo): cambiar redacción y proponer un
+ * correo no lo necesitan, y el razonamiento triplicaría el costo y la espera.
  */
 
 const MODELO_POR_OMISION = 'google/gemini-2.5-flash';
@@ -44,6 +44,12 @@ export async function completar(e: Encargo): Promise<string> {
                 model: process.env.IUREXIA_MODELO_DESPACHO || MODELO_POR_OMISION,
                 temperature: e.temperatura ?? 0.3,
                 max_tokens: e.maxTokens ?? 2000,
+                /* APAGADO DE FORMA EXPLÍCITA. Medido el 16-oct-2026: hoy Gemini 2.5
+                   Flash por OpenRouter no razona aunque se omita (0 tokens de
+                   razonamiento, 0.00016 USD por cambio de redacción), pero omitir el
+                   parámetro deja la decisión al proveedor — la lección de DeepSeek v4,
+                   donde omitirlo era encenderlo. */
+                reasoning: { enabled: false },
                 ...(e.json ? { response_format: { type: 'json_object' } } : {}),
                 messages: [
                     { role: 'system', content: e.sistema },
