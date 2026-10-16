@@ -1941,6 +1941,86 @@ h6 {
 .hoja-escrito .citation-badge:hover { background: rgba(201, 169, 98, 0.38); color: #1a1a1a; }
 .hoja-escrito hr { border: 0; border-top: 1px solid #d9d4c7; margin: 1.8em 0; }
 
+/* ═══ CAMBIAR REDACCIÓN: EL CAMBIO PROPUESTO DENTRO DE LA HOJA (16-oct-2026) ═══
+   Como un control de cambios de Word, con los colores de la casa: lo original
+   tachado en un rojo ladrillo apagado, lo propuesto subrayado en oro con la
+   letra en un verde de tinta. Ninguno de los dos depende sólo del color —el
+   tachado y el subrayado se leen igual en blanco y negro y al imprimir— ni
+   del fondo, que la impresora no pinta. La estructura la arma
+   `@/lib/redaccion/dom`: una envoltura `[data-cambio]` con `del.cambio-del` e
+   `ins.cambio-ins` dentro de los párrafos, nunca un párrafo dentro de ellos.
+
+   EL FILETE EN EL MARGEN dice «esto está en revisión» sin tapar texto: es un
+   pseudo-elemento en la sangría izquierda de la página, no un borde (un borde
+   movería el texto al aparecer). */
+.hoja-escrito .cambio-propuesto { position: relative; cursor: default; }
+.hoja-escrito .cambio-propuesto::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  top: 0.15em;
+  bottom: 0.15em;
+  width: 3px;
+  border-radius: 2px;
+  background: #c9a962;
+}
+.hoja-escrito .cambio-del {
+  color: #9a4234;
+  text-decoration-line: line-through;
+  text-decoration-color: rgba(154, 66, 52, 0.8);
+  text-decoration-thickness: 1.5px;
+  background: rgba(154, 66, 52, 0.06);
+  border-radius: 2px;
+}
+.hoja-escrito .cambio-del .citation-badge { opacity: 0.6; }
+.hoja-escrito .cambio-ins {
+  color: #1d5a3b;
+  text-decoration-line: underline;
+  text-decoration-color: #b08a3c;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+  background: rgba(201, 169, 98, 0.13);
+  border-radius: 2px;
+  animation: cambioAparece 900ms ease-out both;
+}
+/* Lo propuesto no se pega a lo tachado: un respiro entre los dos. */
+.hoja-escrito .cambio-del + .cambio-ins { margin-left: 0.3em; }
+/* Entre dos párrafos propuestos dentro del mismo <ins>: el aire de un párrafo. */
+.hoja-escrito .cambio-salto { display: block; height: 0.65em; }
+/* EL HUECO DE LA BARRA (Aceptar · Rechazar · Otra versión): en escritorio va
+   debajo del cambio, dentro de este hueco, y no encima del párrafo siguiente.
+   En teléfono la barra va abajo de la pantalla y el hueco sobra. */
+@media (min-width: 640px) {
+  .hoja-escrito .cambio-propuesto { padding-bottom: 52px; }
+}
+/* Al llegar, la propuesta se enciende un instante y se asienta: el ojo va a ella. */
+@keyframes cambioAparece {
+  from { background-color: rgba(201, 169, 98, 0.42); }
+  to { background-color: rgba(201, 169, 98, 0.13); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hoja-escrito .cambio-ins { animation: none; }
+}
+/* LO QUE SE VA A CAMBIAR, mientras el menú tiene el foco: la selección del
+   navegador se va al campo de la instrucción, y este resalte (la API de
+   resaltes de CSS, sin tocar el DOM) deja a la vista qué se está cambiando. */
+::highlight(redaccion-objetivo) { background-color: rgba(201, 169, 98, 0.34); }
+/* La franja que trabaja arriba del menú mientras llega la propuesta. */
+@keyframes redaccion-barrido {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(320%); }
+}
+@media print {
+  .hoja-escrito .cambio-del,
+  .hoja-escrito .cambio-ins,
+  .hoja-escrito .cambio-propuesto::before {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .hoja-escrito .cambio-ins { animation: none; }
+  .redaccion-capa { display: none !important; }
+}
+
 /* ── EL TEXTO APARECE POR PÁRRAFOS (18-sep-2026) ───────────────────────────
    David: «que el efecto de generación de texto no fuera tiping, sino que
    aparezca con efecto visual de generación párrafo por párrafo (efecto suave
