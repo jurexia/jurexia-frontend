@@ -378,14 +378,17 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                         <X className="h-4 w-4" /> Recoger
                     </button>
                 ) : (
-                    /* En pantalla chica, las dos pestañas de la maqueta */
+                    /* En pantalla chica, las dos pestañas de la maqueta. Con «Enviar»
+                       en la cabecera (16-oct-2026) a 320 px faltaban 4: «‹ Consulta» se
+                       partía en dos renglones. px-1.5 en el teléfono los devuelve, y
+                       nowrap impide que vuelva a partirse. */
                     <div className="grid shrink-0 grid-cols-2 gap-0.5 rounded-lg bg-charcoal-900/5 p-0.5" role="tablist">
                         <button type="button" role="tab" aria-selected={false} onClick={onCerrar} data-foco-inicial
-                            className="h-8 rounded-md px-2 text-[12px] font-medium text-charcoal-900/70 transition-colors hover:bg-white/60 sm:px-3 sm:text-[12.5px]">
+                            className="h-8 whitespace-nowrap rounded-md px-1.5 text-[12px] font-medium text-charcoal-900/70 transition-colors hover:bg-white/60 sm:px-3 sm:text-[12.5px]">
                             <ChevronLeft className="mr-0.5 inline h-3.5 w-3.5 align-[-2px]" />Consulta
                         </button>
                         <button type="button" role="tab" aria-selected={true}
-                            className="h-8 rounded-md bg-charcoal-900 px-2 text-[12px] font-medium text-white sm:px-3 sm:text-[12.5px]">
+                            className="h-8 whitespace-nowrap rounded-md bg-charcoal-900 px-1.5 text-[12px] font-medium text-white sm:px-3 sm:text-[12.5px]">
                             Documento
                         </button>
                     </div>
@@ -438,7 +441,7 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                         <>
                             <EnviarPorCorreo
                                 obtenerDocx={docxActual}
-                                obtenerTexto={() => hoja.current?.raiz()?.textContent ?? ''}
+                                obtenerTexto={() => hoja.current?.raiz()?.innerText ?? ''}
                                 titulo={tituloEfectivo}
                                 carpeta={null}
                                 deshabilitado={enVivo}
