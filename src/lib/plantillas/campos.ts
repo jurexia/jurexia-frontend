@@ -176,6 +176,15 @@ export function valorDeOrigen(origen: OrigenCampo, carpeta: DatosCarpeta | null 
     return undefined
 }
 
+// ─── Letras ──────────────────────────────────────────────────────────────────
+
+/* Con la bandera «u» por constructor: el tsconfig del repo no fija `target` y
+   tsc rechaza esa bandera en una expresión literal. */
+export const LETRA = new RegExp('\\p{L}', 'u')
+export const LETRAS = new RegExp('\\p{L}', 'gu')
+export const LETRA_O_CIFRA = new RegExp('[\\p{L}\\p{N}]', 'u')
+const SIGLAS = new RegExp('(^|[^\\p{L}])(rfc|curp|clabe|nss|ine|imss|issste|infonavit|sat|cfe|cp)(?=$|[^\\p{L}])', 'giu')
+
 // ─── Claves y etiquetas ──────────────────────────────────────────────────────
 
 /** «Nombre del Actor» → «nombre_del_actor». Siempre empieza con letra. */
@@ -214,7 +223,7 @@ export function etiquetaDe(texto: string): string {
     if (!t) return ''
     if (esMayusculas(t) || /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?: [A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)+$/.test(t)) t = t.toLocaleLowerCase('es-MX')
     // Las siglas siguen siendo siglas: «RFC del actor», no «Rfc del actor».
-    t = t.replace(/(^|[^\p{L}])(rfc|curp|clabe|nss|ine|imss|issste|infonavit|sat|cfe|cp)(?=$|[^\p{L}])/giu,
+    t = t.replace(SIGLAS,
         (_m, a: string, s: string) => a + s.toUpperCase())
     return (t.charAt(0).toLocaleUpperCase('es-MX') + t.slice(1)).slice(0, 60)
 }
@@ -223,7 +232,7 @@ export function etiquetaDe(texto: string): string {
 
 /** Tiene al menos dos letras y todas van en mayúscula. */
 export function esMayusculas(s: string): boolean {
-    const letras = s.match(/\p{L}/gu)
+    const letras = s.match(LETRAS)
     if (!letras || letras.length < 2) return false
     return s === s.toLocaleUpperCase('es-MX') && s !== s.toLocaleLowerCase('es-MX')
 }
@@ -237,7 +246,7 @@ export function esMayusculas(s: string): boolean {
 export function formaDe(campo: Pick<CampoPlantilla, 'fuente'>, aparicion: string): Aparicion['forma'] {
     if (campo.fuente !== 'modelo' && campo.fuente !== 'manual') return null
     if (esMayusculas(aparicion)) return 'mayus'
-    const primera = aparicion.match(/\p{L}/u)?.[0]
+    const primera = aparicion.match(LETRA)?.[0]
     if (primera && primera === primera.toLocaleUpperCase('es-MX') && primera !== primera.toLocaleLowerCase('es-MX')) return 'inicial'
     return null
 }
@@ -248,7 +257,7 @@ export function aplicarForma(valor: string, forma: Aparicion['forma']): string {
     if (forma === 'inicial') {
         // Sólo la primera letra, y sólo si no es un correo (que va como venga).
         if (/@/.test(valor)) return valor
-        const i = valor.search(/\p{L}/u)
+        const i = valor.search(LETRA)
         if (i < 0) return valor
         return valor.slice(0, i) + valor.charAt(i).toLocaleUpperCase('es-MX') + valor.slice(i + 1)
     }
@@ -257,13 +266,12 @@ export function aplicarForma(valor: string, forma: Aparicion['forma']): string {
 
 // ─── Qué cuenta como una aparición ───────────────────────────────────────────
 
-const LETRA_O_CIFRA = /[\p{L}\p{N}]/u
 
 /* SIN DISTINGUIR MAYÚSCULAS SÓLO LO LARGO. «Juan Pérez López» y «JUAN PÉREZ
    LÓPEZ» son el mismo dato; «Centro» (la colonia) y «centro» (el de trabajo)
    no. Con dos palabras o diez letras ya no hay coincidencias por azar. */
 function sinDistinguir(t: string): boolean {
-    if (!/\p{L}/u.test(t)) return false
+    if (!LETRA.test(t)) return false
     return t.trim().split(/\s+/).length >= 2 || t.length >= 10
 }
 

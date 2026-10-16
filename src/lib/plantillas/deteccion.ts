@@ -18,7 +18,7 @@
  */
 
 import {
-    aClave, aparicionesDelParrafo, aparicionesEn, campoLimpio, claveUnica, esMayusculas, etiquetaDe, origenValido,
+    aClave, aparicionesDelParrafo, aparicionesEn, campoLimpio, claveUnica, esMayusculas, etiquetaDe, LETRA, LETRAS, origenValido,
     type CampoPlantilla, type OrigenCampo,
 } from './campos'
 import type { Parte } from './docx'
@@ -38,18 +38,20 @@ interface Patron {
 
 const PATRONES: Patron[] = [
     // {{nombre}}: ya viene preparada para docxtemplater.
-    { re: /\{\{\s*([^{}\n\t]{1,60}?)\s*\}\}/g, acepta: (x) => /\p{L}/u.test(x) },
+    { re: /\{\{\s*([^{}\n\t]{1,60}?)\s*\}\}/g, acepta: (x) => LETRA.test(x) },
     // [NOMBRE DEL ACTOR], [fecha]: los corchetes son el hueco clásico.
-    { re: /\[([^[\]\n\t]{3,60})\]/g, acepta: (x) => /\p{L}.*\p{L}/u.test(x) && !NO_SON.test(x.trim()) && (esMayusculas(x) || PISTAS.test(x)) },
+    { re: /\[([^[\]\n\t]{3,60})\]/g, acepta: (x) => (x.match(LETRAS) ?? []).length >= 2 && !NO_SON.test(x.trim()) && (esMayusculas(x) || PISTAS.test(x)) },
     // «NombreCliente» (los campos de combinar correspondencia de Word) o «NOMBRE».
     { re: /«([^«»\n\t]{2,60})»/g, acepta: (x) => !/[.;:]\s/.test(x) && (esMayusculas(x) || (PISTAS.test(x) && x.trim().split(/\s+/).length <= 6)) },
-    { re: /<<([^<>\n\t]{2,60})>>/g, acepta: (x) => /\p{L}/u.test(x) },
+    { re: /<<([^<>\n\t]{2,60})>>/g, acepta: (x) => LETRA.test(x) },
 ]
 
 /* Las rayas: cuatro o más guiones bajos, XXXX, o los asteriscos de las
    versiones públicas del Poder Judicial («QUEJOSO: *********»). Sin cuantificadores
    anidados: sobre una sentencia entera, `(\*+\s*)+` se cuelga. */
-const RAYAS = /_{4,}|(?<![\p{L}\p{N}])(?:[Xx]{4,}|\*{5,})(?![\p{L}\p{N}])/gu
+const RAYAS = new RegExp('_{4,}|(?<![\\p{L}\\p{N}])(?:[Xx]{4,}|\\*{5,})(?![\\p{L}\\p{N}])', 'gu')
+
+const SEPARA_PALABRAS = new RegExp('[^\\p{L}\\p{N}.]+', 'u')
 
 const VACIAS = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'a', 'al', 'en', 'y', 'o', 'por', 'con', 'que', 'se', 'su', 'sus', 'un', 'una', 'para', 'no', 'no.', 'núm', 'núm.', 'num.'])
 
@@ -72,7 +74,7 @@ function rotuloDeFecha(antes: string, despues: string): string {
 function rotuloDeRaya(antes: string, despues: string): string {
     const fecha = rotuloDeFecha(antes, despues)
     if (fecha) return fecha
-    const palabras = (s: string) => s.replace(/_{4,}|[Xx]{4,}|\*{5,}/g, ' ').split(/[^\p{L}\p{N}.]+/u).filter(Boolean)
+    const palabras = (s: string) => s.replace(/_{4,}|[Xx]{4,}|\*{5,}/g, ' ').split(SEPARA_PALABRAS).filter(Boolean)
     const previas = palabras(antes).slice(-4).filter((w) => !VACIAS.has(w.toLowerCase()))
     if (previas.length) return etiquetaDe(previas.slice(-3).join(' '))
     const siguientes = palabras(despues).slice(0, 3).filter((w) => !VACIAS.has(w.toLowerCase()))
