@@ -86,6 +86,26 @@ export async function guardarArchivo(ruta: string, bytes: Uint8Array): Promise<{
     return error ? { message: error.message } : null
 }
 
+/**
+ * DEVOLVER LO QUE NO SE USÓ. El uso se gasta antes de llamar al modelo (así un
+ * abuso no llega a costar), pero si el modelo no respondió o el documento no se
+ * pudo armar, el abogado no recibió nada: con el plan gratuito, ésa era su
+ * única detección del mes. Se resta una unidad del renglón de hoy. No es
+ * atómico (leer y escribir), y por eso sólo puede equivocarse a favor del
+ * abogado si dos devoluciones se cruzan.
+ */
+export async function devolverUso(uid: string, funcion: 'plantilla_deteccion' | 'plantilla_generar'): Promise<void> {
+    try {
+        const dia = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Mexico_City' }).format(new Date())
+        const db = servicio()
+        const { data } = await db.from('uso_funciones').select('n').eq('user_id', uid).eq('funcion', funcion).eq('dia', dia).maybeSingle()
+        const n = Number((data as { n?: number } | null)?.n ?? 0)
+        if (n > 0) await db.from('uso_funciones').update({ n: n - 1 }).eq('user_id', uid).eq('funcion', funcion).eq('dia', dia)
+    } catch (e) {
+        console.warn('[plantillas] no se pudo devolver el uso:', funcion, (e as Error)?.message)
+    }
+}
+
 /** Cuánto le queda al abogado, para que la interfaz lo diga antes de cobrar. */
 export async function limitesDe(yo: Solicitante, guardadas: number): Promise<LimitesPlantillas> {
     const escalon = escalonDe(yo.plan)

@@ -22,7 +22,7 @@ import { gastarUso } from '@/lib/servidor/uso'
 import { llenar, MIME_DOCX, NoSePudoLlenar } from '@/lib/plantillas/docx'
 import { datosDeCarpeta, nombreDeArchivo, valorDeOrigen, valorLimpio, type DatosCarpeta } from '@/lib/plantillas/campos'
 import { htmlDeDocx, textoDeDocx } from '@/lib/plantillas/vista'
-import { descargar, fallo, faltaEsquema, plantillaDe, SIN_ESQUEMA } from '@/lib/plantillas/servidor'
+import { descargar, devolverUso, fallo, faltaEsquema, plantillaDe, SIN_ESQUEMA } from '@/lib/plantillas/servidor'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -78,6 +78,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     try {
         lleno = llenar(await descargar(fila.archivo_marcado), valores)
     } catch (e) {
+        // No salió documento: el uso no se cobra.
+        await devolverUso(yo.user.id, 'plantilla_generar')
         if (e instanceof NoSePudoLlenar) return fallo(422, `${e.message} Vuelve a revisar los campos de la plantilla.`)
         console.error('[plantillas] llenar:', (e as Error)?.message)
         return fallo(500, 'No se pudo armar el documento. Vuelve a intentarlo.')

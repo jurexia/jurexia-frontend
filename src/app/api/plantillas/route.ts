@@ -18,7 +18,7 @@ import { escalonDe, PLANTILLAS_GUARDADAS } from '@/lib/uso-funciones-config'
 import { abrirDocx, leerPartes, MAX_BYTES, PlantillaInvalida } from '@/lib/plantillas/docx'
 import { combinar, detectarMarcadores, textoParaModelo, type SugerenciaModelo } from '@/lib/plantillas/deteccion'
 import {
-    aResumen, BUCKET, COLUMNAS, fallo, faltaEsquema, guardarArchivo, limitesDe, nombreLimpio, rutaOriginal,
+    aResumen, BUCKET, COLUMNAS, devolverUso, fallo, faltaEsquema, guardarArchivo, limitesDe, nombreLimpio, rutaOriginal,
     SIN_ESQUEMA, sugerirConModelo, vistaDe, type FilaPlantilla,
 } from '@/lib/plantillas/servidor'
 
@@ -93,9 +93,11 @@ export async function POST(req: NextRequest) {
             if (uso.permitido) {
                 try { sugerencia = await sugerirConModelo(texto) } catch (e) {
                     console.warn('[plantillas] el modelo no respondió:', (e as Error)?.message)
-                    aviso = 'Iurexia no pudo revisar el documento esta vez. Te mostramos los huecos que ya traía; marca los demás seleccionando el texto.'
+                    aviso = 'Iurexia no pudo revisar el documento esta vez (no se te descontó). Te mostramos los huecos que ya traía; marca los demás seleccionando el texto.'
                 }
-                if (!sugerencia && !aviso) aviso = 'La revisión de Iurexia llegó incompleta. Te mostramos los huecos que ya traía; marca los demás seleccionando el texto.'
+                if (!sugerencia && !aviso) aviso = 'La revisión de Iurexia llegó incompleta (no se te descontó). Te mostramos los huecos que ya traía; marca los demás seleccionando el texto.'
+                // Sin respuesta útil del modelo, la detección no se cobra.
+                if (!sugerencia) await devolverUso(uid, 'plantilla_deteccion')
             } else {
                 aviso = `${uso.mensaje} Te mostramos los huecos que la plantilla ya traía; marca los demás seleccionando el texto.`
             }
