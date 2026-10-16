@@ -134,6 +134,9 @@ comprueba(ataque.texto.startsWith('Estimado <img src=x onerror=alert(1)>:') && a
 const sinAdjunto = E.armarCorreo({ firma: 'Ana', asunto: 'A', mensaje: 'Hola', adjunto: null });
 comprueba(!sinAdjunto.html.includes('Archivo adjunto') && !sinAdjunto.texto.includes('Archivo adjunto'), 'sin adjunto no se menciona archivo');
 comprueba(h.includes('<span style="font-family:Georgia,\'Times New Roman\',serif;font-weight:600;color:#1a1a1a;">Iurexia</span>'), 'la marca en Georgia 600 (regla del wordmark)');
+comprueba((h.match(/width:100%;max-width:600px/g) || []).length === 2 && !/width:600px;max-width:100%/.test(h)
+    && h.includes('<!--[if mso]><table role="presentation" width="600"') && h.includes('<!--[if mso]></td></tr></table><![endif]-->'),
+    'fluido en el teléfono (100% hasta 600) y 600 fijos para Outlook');
 
 // ─── 4. El remitente ────────────────────────────────────────────────────────
 console.log('\n4. El remitente');
@@ -358,6 +361,7 @@ const enc = E.encargoDePropuesta({ abogado: 'Ana Pérez', destinatario: 'Sr. Lui
 comprueba(enc.usuario.includes('Abogado que firma: Ana Pérez') && enc.usuario.includes('Destinatario: Sr. Luis García') && enc.usuario.includes('Adjunto: sí'), 'los datos del envío');
 comprueba(enc.usuario.includes('DEMANDA DE DIVORCIO INCAUSADO') && enc.usuario.includes('PROTESTO LO NECESARIO') && enc.usuario.includes('[…]') && enc.usuario.length < 7200, 'extracto: el principio y el final, no el escrito entero', `${enc.usuario.length} caracteres de ${escrito.length}`);
 comprueba(E.encargoDePropuesta({ abogado: 'A', titulo: 't', texto: 'x', adjunto: false }).usuario.includes('Destinatario: no se conoce su nombre'), 'sin destinatario: no se inventa');
+comprueba(E.extractoDelEscrito('DEMANDA\n\n\n\nC. JUEZ  \n  PRESENTE  hoy') === 'DEMANDA\n\nC. JUEZ\nPRESENTE hoy', 'el texto de la hoja (innerText): párrafos separados, sin blancos de sobra', JSON.stringify(E.extractoDelEscrito('DEMANDA\n\n\n\nC. JUEZ  \n  PRESENTE  hoy')));
 comprueba(/usted/.test(enc.sistema) && /sin añadirle títulos/.test(enc.sistema) && /Ningún dato que no esté/.test(enc.sistema) && /consejo/.test(enc.sistema) && /JSON/.test(enc.sistema), 'el encargo: usted, firma tal cual, sin datos inventados ni consejo, JSON');
 comprueba(!/Estimad[oa]|Atentamente|Le envío|Por medio del presente/i.test(enc.sistema), 'el encargo no trae un correo de ejemplo que copiar');
 const limpia = E.propuestaDe({ asunto: 'Asunto: «Demanda de divorcio para su revisión»', mensaje: '**Estimado Sr. García:**\\n\\nLe envío…\n\n\n\nAtentamente,\nAna Pérez' });

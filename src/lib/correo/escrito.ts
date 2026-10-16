@@ -328,6 +328,13 @@ const SANS = 'Arial,Helvetica,sans-serif';
  * abogado, no una pieza de Iurexia. Tablas y estilos en línea porque Outlook
  * no entiende otra cosa; Georgia porque las fuentes web no cargan en Gmail.
  * La marca va sólo en el pie, pequeña, y sin parámetros de rastreo.
+ *
+ * FLUIDO EN EL TELÉFONO (16-oct-2026, medido en la vista previa a 333 px).
+ * `width:600px; max-width:100%` en una tabla no encoge: Chrome no aplica
+ * `max-width` a las tablas, y el texto salía cortado por la derecha. Va al
+ * revés —`width:100%; max-width:600px`— y, para Outlook de escritorio, que
+ * no entiende `max-width`, una tabla fantasma de 600 px en comentario
+ * condicional.
  */
 export function armarCorreo(d: {
     firma: string;
@@ -340,7 +347,7 @@ export function armarCorreo(d: {
     const adjunto = d.adjunto
         ? `
     <tr>
-      <td style="padding:4px 40px 34px 40px;">
+      <td style="padding:4px 32px 32px 32px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border:1px solid ${PALETA.borde};background-color:${PALETA.cremaFondo};">
           <tr>
             <td style="padding:12px 18px;font-family:${SANS};">
@@ -367,21 +374,23 @@ export function armarCorreo(d: {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${PALETA.cremaFondo};">
   <tr>
     <td align="center" style="padding:28px 12px 32px 12px;">
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background-color:${PALETA.cremaPapel};border:1px solid ${PALETA.borde};border-top:3px solid ${PALETA.oro};">
+      <!--[if mso]><table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+      <table role="presentation" width="100%" align="center" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;margin:0 auto;background-color:${PALETA.cremaPapel};border:1px solid ${PALETA.borde};border-top:3px solid ${PALETA.oro};">
         <tr>
-          <td style="padding:34px 40px ${d.adjunto ? '14px' : '22px'} 40px;font-family:${SERIF};font-size:15px;line-height:1.7;color:${PALETA.texto};word-break:break-word;">
+          <td style="padding:32px 32px ${d.adjunto ? '14px' : '22px'} 32px;font-family:${SERIF};font-size:15px;line-height:1.7;color:${PALETA.texto};word-break:break-word;overflow-wrap:anywhere;">
 ${parrafos}
           </td>
         </tr>${adjunto}
       </table>
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;">
+      <table role="presentation" width="100%" align="center" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;margin:0 auto;">
         <tr>
-          <td style="padding:16px 40px 0 40px;font-family:${SANS};font-size:11px;line-height:1.7;color:${PALETA.marron};">
+          <td style="padding:16px 32px 0 32px;font-family:${SANS};font-size:11px;line-height:1.7;color:${PALETA.marron};">
             ${esc(pie)}<br>
             <span style="font-family:${SERIF};font-weight:600;color:${PALETA.tinta};">Iurexia</span> &middot; <a href="${esc(SITIO)}" style="color:${PALETA.marron};text-decoration:underline;">iurexia.com</a>
           </td>
         </tr>
       </table>
+      <!--[if mso]></td></tr></table><![endif]-->
     </td>
   </tr>
 </table>
@@ -411,7 +420,12 @@ export const EXTRACTO = { cabeza: 5000, cola: 1500 } as const;
  * multiplicaría el costo de cada propuesta.
  */
 export function extractoDelEscrito(texto: string): string {
-    const t = String(texto ?? '').replace(/\u00a0/g, ' ').replace(/[ \t]+/g, ' ').trim();
+    // Espacios repetidos, uno; y entre p\u00e1rrafos, a lo m\u00e1s una l\u00ednea en blanco.
+    const t = String(texto ?? '')
+        .replace(/\u00a0/g, ' ')
+        .replace(/[ \t]+/g, ' ')
+        .replace(/ ?\n[\n ]*/g, (s) => ((s.match(/\n/g) || []).length > 1 ? '\n\n' : '\n'))
+        .trim();
     if (t.length <= EXTRACTO.cabeza + EXTRACTO.cola + 50) return t;
     return `${t.slice(0, EXTRACTO.cabeza).trim()}\n[…]\n${t.slice(-EXTRACTO.cola).trim()}`;
 }
