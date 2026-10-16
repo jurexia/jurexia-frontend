@@ -9,6 +9,7 @@ import {
 import { Hoja, type HojaAPI } from './Hoja';
 import { TarjetaToulmin } from './TarjetaToulmin';
 import { aWord, imprimir, type Papel } from '@/lib/documento/exportarDocx';
+import { avisoCambiosPendientes, cambiosPendientes } from '@/lib/documento/cambios';
 import { analizarRespuesta, markdownAHtml, separarEstrategia, separarTarjetas, textoDeHtml } from '@/lib/documento/marcado';
 import {
     ErrorToulmin, argumentoAHtml, rotuloDe, toulminStream,
@@ -562,6 +563,9 @@ ${esRecurso ? `Escrito: ${nombreEscrito}\n\n` : ''}${cuerpoCaso}${argumentos}`;
     // ── 4 · REVISAR (el /chat de siempre) ────────────────────────────────
     async function revisar() {
         const raiz = hoja.current?.raiz();
+        // Un cambio de redacción a medias tiene dos textos a la vez: se resuelve antes.
+        const pendientes = cambiosPendientes(raiz);
+        if (pendientes) { setVError(avisoCambiosPendientes(pendientes)); setVEstado('error'); return; }
         const texto = raiz ? textoDeHtml(raiz) : '';
         if (texto.length < 200) { setVError('El documento todavía es muy corto para revisarlo.'); setVEstado('error'); return; }
         vAbort.current?.abort();
@@ -624,6 +628,8 @@ ${texto.slice(0, 60000)}`;
     async function descargarWord() {
         const raiz = hoja.current?.raiz();
         if (!raiz || hoja.current?.vacia()) { mostrarAviso('El documento está vacío.'); return; }
+        const pendientes = cambiosPendientes(raiz);
+        if (pendientes) { mostrarAviso(avisoCambiosPendientes(pendientes)); return; }
         setExportando(true);
         try { await aWord(raiz, tituloEfectivo, papel); }
         catch { mostrarAviso('No se pudo generar el Word. Vuelve a intentarlo.'); }
@@ -632,6 +638,8 @@ ${texto.slice(0, 60000)}`;
     function mandarAImprimir() {
         const raiz = hoja.current?.raiz();
         if (!raiz || hoja.current?.vacia()) { mostrarAviso('El documento está vacío.'); return; }
+        const pendientes = cambiosPendientes(raiz);
+        if (pendientes) { mostrarAviso(avisoCambiosPendientes(pendientes)); return; }
         if (!imprimir(raiz, tituloEfectivo, papel)) mostrarAviso('El navegador bloqueó la ventana de impresión.');
     }
 
