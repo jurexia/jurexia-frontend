@@ -55,6 +55,11 @@ function Escritorio() {
     const [carpetas, setCarpetas] = useState<Expediente[]>([])
     const [cargando, setCargando] = useState(true)
     const [pestana, setPestana] = useState<'carpetas' | 'seguimiento'>('carpetas')
+    // El correo de casos de uso (16-oct-2026) enlaza aquí con ?pestana=seguimiento. Se lee del window y no con
+    // useSearchParams, que obligaría a envolver la página en <Suspense>.
+    useEffect(() => {
+        if (new URLSearchParams(window.location.search).get('pestana') === 'seguimiento') setPestana('seguimiento')
+    }, [])
     const [error, setError] = useState<string | null>(null)
     const [busqueda, setBusqueda] = useState('')
     const [filtro, setFiltro] = useState<TipoCarpeta | 'todas'>('todas')

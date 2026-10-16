@@ -125,6 +125,16 @@ function filtrar(q: any, campania: NombreCampania) {
                 ]);
     }
 
+    // ── CASOS DE USO (16-oct-2026) ───────────────────────────────────────
+    // «Para los registrados excepto testers; sólo incluye a jdm.juridico»
+    // (David). Todos los planes, de pago o no, con la cuenta sin suspender. Los
+    // testers, las cuentas de prueba y los dominios sin buzón se quitan después,
+    // en `segmentoCasosUso`, porque PostgREST no filtra por la parte derecha
+    // del correo sin barrer también gmail.
+    if (campania === 'casos_uso') {
+        return q.is('suspendido_at', null);
+    }
+
     if (campania === 'referidos') {
         // ABIERTO A QUIEN YA USÓ LA PLATAFORMA (cambio del 7-ago-2026).
         //
@@ -215,8 +225,62 @@ async function segmentoRegistroPendiente(): Promise<Destinatario[]> {
         .map((f) => ({ id: null, email: f.email, full_name: f.full_name, estado: null, queries_used: 0 }));
 }
 
+/** El único administrador que SÍ recibe el correo de casos de uso: David, para verlo como lo ve el usuario. */
+export const INCLUIDOS_CASOS_USO = ['jdm.juridico@gmail.com'];
+
+/** Testers y cuentas de prueba: el dominio de la casa, los de ejemplo y la demo de las grabaciones. */
+function esPrueba(email: string): boolean {
+    const e = email.toLowerCase();
+    const dominio = e.split('@')[1] || '';
+    return dominio === 'iurexia.com'
+        || /(^|\.)(ejemplo|example|test|prueba|mailinator|borrar)/.test(dominio)
+        || /ejemplo-borrar|zz-demo/.test(e);
+}
+
+/**
+ * CASOS DE USO: todos los registrados menos los testers, en un orden que pone
+ * primero a quien más lo necesita. David va el primero (así es el primero en
+ * recibirlo y lo ve como lo ven los demás); luego los clientes de pago —la
+ * baja por «poco uso» es suya—; después, de lo usado más reciente a lo más
+ * viejo, y al final quien nunca consultó.
+ */
+async function segmentoCasosUso(): Promise<Destinatario[]> {
+    type Fila = Destinatario & { last_query_at?: string | null };
+    const filas: Fila[] = [];
+    for (let desde = 0; ; desde += 1000) {
+        const q = filtrar(admin().from('user_profiles')
+            .select(`${COLUMNAS_PERFIL}, subscription_type, last_query_at`), 'casos_uso');
+        const { data, error } = await q.order('id', { ascending: true }).range(desde, desde + 999);
+        if (error) throw new Error(`segmento casos_uso: ${error.message}`);
+        filas.push(...((data ?? []) as Fila[]));
+        if (!data || data.length < 1000) break;
+        if (desde > 50_000) break;
+    }
+    const candidatas = filas.filter((u) => {
+        const e = (u.email || '').toLowerCase().trim();
+        if (!e) return false;
+        if (INCLUIDOS_CASOS_USO.includes(e)) return true;
+        return !esPrueba(e) && !ADMINS.includes(e);
+    });
+    // Un correo a un dominio sin buzón rebota, y los rebotes hunden la
+    // reputación del remitente para todo lo demás (contraseñas incluidas).
+    const conCorreo = await dominiosConCorreo(candidatas.map((u) => u.email));
+    const vivas = candidatas.filter((u) => conCorreo.has((u.email.split('@')[1] || '').toLowerCase()));
+    const rango = (u: Fila) => {
+        if (INCLUIDOS_CASOS_USO.includes(u.email.toLowerCase())) return 0;
+        if (u.subscription_type && u.subscription_type !== 'gratuito') return 1;
+        return u.last_query_at ? 2 : 3;
+    };
+    return vivas.sort((a, b) => {
+        const r = rango(a) - rango(b);
+        if (r) return r;
+        return String(b.last_query_at ?? '').localeCompare(String(a.last_query_at ?? ''));
+    });
+}
+
 export async function segmento(campania: NombreCampania): Promise<Destinatario[]> {
     if (campania === 'registro_pendiente') return segmentoRegistroPendiente();
+    if (campania === 'casos_uso') return segmentoCasosUso();
 
     // Paginado obligatorio: Supabase corta en 1,000 filas por respuesta
     // (ajuste `max-rows` de PostgREST) y IGNORA un `.limit()` mayor. Pedir

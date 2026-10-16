@@ -279,10 +279,16 @@ export async function enviarCampania(opciones: {
      * de correo leen como envío masivo.
      */
     ventanaMs?: number;
+    /**
+     * Administradores que SÍ deben recibir esta campaña (16-oct-2026: el
+     * correo de casos de uso va también a David, para que lo vea como lo ve el
+     * usuario). Los demás administradores siguen fuera.
+     */
+    incluir?: readonly string[];
 }): Promise<Resultado> {
     const {
         campania, destinatarios, construir, simulacro = true, maximo = 500,
-        plazoHasta, programadoPara, lote: tamanoLote = LOTE, pausaMs = PAUSA_MS, ventanaMs,
+        plazoHasta, programadoPara, lote: tamanoLote = LOTE, pausaMs = PAUSA_MS, ventanaMs, incluir = [],
     } = opciones;
 
     // El bloque de hoy es lo menor entre lo que pide quien llama y lo que
@@ -325,7 +331,7 @@ export async function enviarCampania(opciones: {
         const email = d.email?.trim().toLowerCase();
         if (!email || vistos.has(email)) continue;
         vistos.add(email);
-        if (ADMINS.includes(email)) { res.omitidos_admin++; continue; }
+        if (ADMINS.includes(email) && !incluir.includes(email)) { res.omitidos_admin++; continue; }
         if (bajas.has(email)) { res.omitidos_baja++; continue; }
         if (yaEnviados.has(email)) { res.omitidos_ya_enviado++; continue; }
         if (recientes.has(email)) { res.omitidos_reciente++; continue; }

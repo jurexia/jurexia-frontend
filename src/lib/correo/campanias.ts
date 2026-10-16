@@ -22,8 +22,8 @@
  */
 
 import {
-    boton, caja, envolver, esc, fuerte, listado, nombrePila, parrafo, rotulo, SITIO, videoChat,
-    vistaDocumento,
+    animacion, boton, caja, enlaceTexto, envolver, esc, fuerte, listado, nombrePila, parrafo, rotulo, SITIO,
+    videoChat, vistaDocumento,
 } from './plantilla';
 import { urlActivacion } from './activar';
 import { urlBaja } from './baja';
@@ -765,6 +765,91 @@ export function correoActualizacion(d: Destinatario): Correo {
 }
 
 
+// ─────────────────────────────────────────────────────────────────────────
+// CASOS DE USO (16-oct-2026) — a TODOS los registrados, de pago o no.
+//
+// El motivo, medido ese día: de 78 cancelaciones con motivo desde agosto, la
+// primera causa es «poco uso» (28), y unos 70 de 99 exclientes llevaban dos
+// semanas sin consultar antes de irse. Pagan por la consulta y nunca
+// descubren el resto. David: «para que sepan qué más pueden hacer con la
+// plataforma», «no tan extensos sino concretos, con animaciones para cada
+// caso de uso», «muy profesional».
+//
+// Por eso es un correo de PRODUCTO, no de venta: sin precios, sin descuento,
+// sin botón dorado; cuatro bloques —animación, dos líneas, un enlace— y todo
+// lo que muestran está abierto en todos los planes, también en el gratuito.
+// Las animaciones salen de las grabaciones reales con la cuenta demo (datos
+// ficticios): promo16/gifs_correo.py.
+// ─────────────────────────────────────────────────────────────────────────
+const GIF_CASO = (nombre: string) => `${SITIO}/correo/caso-${nombre}.gif`;
+
+export function correoCasosUso(d: Destinatario): Correo {
+    const nombre = capitalizar(nombrePila(d.full_name, d.email));
+    const bloque = (titulo: string, gif: string, enlace: string, alt: string, texto: string, accion: string) =>
+        rotulo(titulo) +
+        animacion(GIF_CASO(gif), enlace, alt) +
+        parrafo(texto, '0 0 8px 0') +
+        parrafo(enlaceTexto(accion, enlace), '0 0 34px 0');
+
+    const cuerpo =
+        parrafo(saludo(d, nombre), '0 0 22px 0') +
+        parrafo(
+            'Muchos abogados usan Iurexia sólo para consultar, y su cuenta puede hacer bastante más por su ' +
+            'despacho. Le dejamos cuatro ejemplos breves; cada imagen muestra la plataforma tal como funciona.',
+            '0 0 30px 0',
+        ) +
+        bloque(
+            'Clientes y sus carpetas', 'carpetas', `${SITIO}/carpetas`,
+            'Mis carpetas: una carpeta por cliente o por asunto, con su objetivo y sus documentos.',
+            'Abra una carpeta por cliente o por asunto, con su objetivo y sus documentos. Lo que consulte o ' +
+            'redacte desde ella queda guardado ahí, y las plantillas de su despacho toman los datos del cliente.',
+            'Abrir mis carpetas',
+        ) +
+        bloque(
+            'Agenda de términos', 'agenda', `${SITIO}/agenda`,
+            'Agenda: se sube el acuerdo, la plataforma lee el plazo, lo cuenta y lo agenda con aviso por correo.',
+            'Suba el acuerdo: Iurexia identifica el plazo, lo cuenta con el ordenamiento aplicable y lo agenda, ' +
+            'con aviso a su correo antes de que venza. Usted revisa y confirma el cómputo.',
+            'Ir a mi agenda',
+        ) +
+        bloque(
+            'Seguimiento de expedientes', 'seguimiento', `${SITIO}/carpetas?pestana=seguimiento`,
+            'Seguimiento: el aviso por correo de un acuerdo nuevo publicado en un expediente.',
+            'Registre sus expedientes de juzgados y tribunales federales. Iurexia los revisa cada día hábil y ' +
+            'le escribe cuando se publica un acuerdo nuevo.',
+            'Dar de alta un expediente',
+        ) +
+        bloque(
+            'Consultas con fuentes verificadas', 'fuentes', `${SITIO}/chat`,
+            'Consulta: el razonamiento por capas y una cita que abre su documento oficial.',
+            'Plantee su caso y la respuesta llega razonada por capas —Constitución, tratados, Corte ' +
+            'Interamericana y jurisprudencia nacional—, con cada cita enlazada a su documento oficial. Si una ' +
+            'fuente no pudo comprobarse, la plataforma se lo indica.',
+            'Hacer una consulta',
+        ) +
+        parrafo(
+            'Si quiere que le ayudemos a preparar su primera carpeta o su agenda, responda a este correo y ' +
+            'con gusto le orientamos.',
+            '0 0 22px 0',
+        ) +
+        parrafo('Atentamente,<br>El equipo de Iurexia', '0');
+
+    const html = envolver({
+        cuerpo,
+        urlBaja: urlBaja(d.email),
+        preencabezado: 'Carpetas por cliente, agenda de términos, seguimiento de expedientes y consultas con ' +
+            'fuentes verificadas.',
+    });
+    return {
+        asunto: `${trato(d)} ${nombre}, lo que su cuenta de Iurexia ya puede hacer por su despacho`,
+        html,
+        texto: aTexto(cuerpo) +
+            `\n\nMis carpetas: ${SITIO}/carpetas\nAgenda: ${SITIO}/agenda\n` +
+            `Seguimiento: ${SITIO}/carpetas?pestana=seguimiento\nConsultas: ${SITIO}/chat\n` +
+            `Darse de baja: ${urlBaja(d.email)}`,
+    };
+}
+
 export const CAMPANIAS = {
     entrada: { construir: correoEntrada, etiqueta: 'Entrada — nunca inició sesión' },
     activacion: { construir: correoActivacion, etiqueta: 'Activación — nunca consultó' },
@@ -775,6 +860,7 @@ export const CAMPANIAS = {
     descuento_pro: { construir: correoDescuentoPro, etiqueta: 'Descuento Pro 50 % — consultó y no contrató' },
     registro_pendiente: { construir: correoRegistroPendiente, etiqueta: 'Registro pendiente — pidió el código y no entró' },
     actualizacion: { construir: correoActualizacion, etiqueta: 'Actualización de la pantalla — clientes de pago' },
+    casos_uso: { construir: correoCasosUso, etiqueta: 'Casos de uso con animaciones — todos los registrados' },
 } as const;
 
 export type NombreCampania = keyof typeof CAMPANIAS;

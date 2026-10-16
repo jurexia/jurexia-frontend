@@ -125,9 +125,36 @@ export function vistaDocumento(): string {
         `</a>`;
 }
 
+/**
+ * UNA ANIMACIÓN POR CASO DE USO (16-oct-2026, correo «lo que ya puede hacer»).
+ *
+ * GIF de 600 px sacado de las grabaciones reales de la plataforma (cuenta demo,
+ * datos ficticios), enlazado a la sección que muestra. Lleva ancho y alto
+ * declarados —sin ellos Gmail lo pinta a tamaño cero mientras carga— y un alt
+ * que se entiende solo, porque muchos clientes bloquean las imágenes hasta que
+ * el lector las permite.
+ */
+export function animacion(gif: string, enlace: string, alt: string, ancho = 600, alto = 338): string {
+    return `<a href="${esc(enlace)}" style="display:block;text-decoration:none;border:0;margin:0 0 14px;">` +
+        `<img src="${esc(gif)}" width="${ancho}" height="${alto}" alt="${esc(alt)}" ` +
+        `style="display:block;width:100%;max-width:${ancho}px;height:auto;border:1px solid ${PALETA.borde};outline:none;background-color:${PALETA.cremaFondo};" />` +
+        `</a>`;
+}
+
+/** Enlace discreto en el cuerpo: subrayado marrón, sin botón. */
+export function enlaceTexto(texto: string, url: string): string {
+    return `<a href="${esc(url)}" style="font-family:${SANS};font-size:13px;color:${PALETA.marron};text-decoration:underline;">${esc(texto)}</a>`;
+}
+
 export interface OpcionesCorreo {
     /** Cuerpo ya compuesto con los ayudantes de arriba. */
     cuerpo: string;
+    /**
+     * Texto de vista previa: lo que Gmail y Outlook muestran junto al asunto.
+     * Sin él, el cliente toma lo primero que encuentra —el membrete— y la
+     * bandeja enseña «Iurexia Legal Tech», que no dice nada. Va oculto.
+     */
+    preencabezado?: string;
     /**
      * Pieza visual a todo el ancho, entre el membrete y el cuerpo. Va fuera del
      * margen interior del cuerpo para que el GIF ocupe los 600 px completos.
@@ -149,12 +176,15 @@ const PIE_POR_DEFECTO =
  * confirmar cambio): esos no se pueden dar de baja porque no son publicidad, y
  * ofrecer la baja ahí haría que el usuario se saliera de avisos que necesita.
  */
-export function envolver({ cuerpo, urlBaja, pie, visual }: OpcionesCorreo): string {
+export function envolver({ cuerpo, urlBaja, pie, visual, preencabezado }: OpcionesCorreo): string {
     const baja = urlBaja
         ? `<br><a href="${esc(urlBaja)}" style="color:${PALETA.marron};text-decoration:underline;">Darse de baja de estos avisos</a>`
         : '';
+    const pre = preencabezado
+        ? `<div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">${esc(preencabezado)}</div>\n`
+        : '';
 
-    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${PALETA.cremaFondo};margin:0;padding:32px 12px;font-family:${SERIF};">
+    return `${pre}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${PALETA.cremaFondo};margin:0;padding:32px 12px;font-family:${SERIF};">
 <tr><td align="center">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background-color:${PALETA.cremaPapel};border:1px solid ${PALETA.borde};">
 
