@@ -133,6 +133,12 @@ interface Marco {
     lejos: Punto | null;
     deshacer: Punto | null;
 }
+/* LOS AVISOS DE LA CASA VIVEN ABAJO: el del editor a 20 px del borde y el del
+   panel del chat a 56, cada uno de ~40 px de alto. «Cambio aplicado · Deshacer»
+   e «Ir al cambio» se ponen por encima de esa franja; a 56 px se encimaban con
+   «Guardado en la carpeta» (visto en la prueba de punta a punta, 16-oct-2026). */
+const ALTURA_AVISOS = 112;
+
 const MARCO_VACIO: Marco = { visible: false, abajo: false, pastilla: null, menu: null, barra: null, lejos: null, deshacer: null };
 
 interface Caja { left: number; top: number; right: number; bottom: number }
@@ -293,6 +299,26 @@ function lugar(p: Punto | null, extra?: CSSProperties): CSSProperties {
         ? { left: Math.round(p.x), top: Math.round(p.y), ...extra }
         : { left: 0, top: 0, opacity: 0, pointerEvents: 'none', ...extra };
 }
+
+/** Dónde empieza (su borde de arriba) el aviso que la página anfitriona tiene a
+ *  la vista en la franja horizontal [x0, x1]: los paneles y el editor pintan los
+ *  suyos en un `role="status"`. Sin aviso, Infinity. El de dos renglones mide
+ *  62 px y no 40: por eso se mide en cada cuadro en vez de suponer una altura. */
+function techoDeAvisos(x0: number, x1: number): number {
+    let techo = Infinity;
+    document.querySelectorAll<HTMLElement>('[role="status"]').forEach((zona) => {
+        if (zona.closest('.redaccion-capa')) return;
+        Array.from(zona.children).forEach((hijo) => {
+            const r = (hijo as HTMLElement).getBoundingClientRect();
+            if (!r.width || !r.height || r.right <= x0 || r.left >= x1) return;
+            techo = Math.min(techo, r.top);
+        });
+    });
+    return techo;
+}
+
+/** El aviso propio («Cambio aplicado · Deshacer», «Ir al cambio») mide ~40 px. */
+const ALTO_AVISO_PROPIO = 40;
 
 /* ─── El componente ──────────────────────────────────────────────────────── */
 
@@ -969,7 +995,7 @@ export function MenuRedaccion({ hoja, onCambio }: MenuRedaccionProps) {
                 m.barra = { x: vista.left + 12, y: piso - h, ancho: ancho - 24 };
                 if (fuera) m.lejos = { x: 0, y: 0 };
             } else if (fuera) {
-                m.lejos = { x: (area.left + area.right) / 2, y: area.bottom - 56 };
+                m.lejos = { x: (area.left + area.right) / 2, y: Math.min(area.bottom - ALTURA_AVISOS, techoDeAvisos(area.left, area.right) - ALTO_AVISO_PROPIO - 8) };
             } else {
                 // En el hueco de abajo de la envoltura, alineada con la columna del
                 // texto y nunca más ancha que ella.
@@ -979,7 +1005,7 @@ export function MenuRedaccion({ hoja, onCambio }: MenuRedaccionProps) {
             }
         }
 
-        if (aceptado.current && !c) m.deshacer = { x: (area.left + area.right) / 2, y: area.bottom - 56 };
+        if (aceptado.current && !c) m.deshacer = { x: (area.left + area.right) / 2, y: Math.min(area.bottom - ALTURA_AVISOS, techoDeAvisos(area.left, area.right) - ALTO_AVISO_PROPIO - 8) };
         return m;
     }, [hoja]);
 
@@ -1221,6 +1247,7 @@ export function MenuRedaccion({ hoja, onCambio }: MenuRedaccionProps) {
                     aria-label={`Cambio propuesto: ${cambio.etiqueta}`}
                     tabIndex={-1}
                     onKeyDown={(e) => encerrarTab(e, refBarra.current)}
+                    data-sin-soporte
                     className={`fixed z-[95] flex flex-wrap items-center gap-1 rounded-xl border border-charcoal-900/10 bg-white p-1 text-[12.5px] shadow-[0_18px_44px_-18px_rgba(20,18,16,0.5),0_1px_3px_rgba(20,18,16,0.06)] outline-none transition-opacity duration-150 focus-visible:ring-2 focus-visible:ring-accent-gold/50 ${abajo ? '' : 'max-w-[min(560px,calc(100vw-24px))]'}`}
                     style={lugar(marco.barra, marco.barra?.ancho ? { width: marco.barra.ancho } : marco.barra?.maximo ? { maxWidth: marco.barra.maximo } : undefined)}
                 >
@@ -1270,7 +1297,7 @@ export function MenuRedaccion({ hoja, onCambio }: MenuRedaccionProps) {
 
             {/* ── EL CAMBIO PENDIENTE, FUERA DE LA VISTA ────────────────── */}
             {cambio && visible && marco.lejos && !marco.barra && (
-                <div className="fixed z-[95] -translate-x-1/2" style={lugar(marco.lejos)}>
+                <div data-sin-soporte className="fixed z-[95] -translate-x-1/2" style={lugar(marco.lejos)}>
                     <button type="button" onClick={irAlCambio}
                         className="inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-full bg-charcoal-900 px-4 text-[12.5px] font-medium text-white shadow-lg transition-colors hover:bg-charcoal-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-gold">
                         <span className="h-2 w-2 rounded-full bg-accent-gold" aria-hidden="true" />
@@ -1281,7 +1308,7 @@ export function MenuRedaccion({ hoja, onCambio }: MenuRedaccionProps) {
 
             {/* ── CAMBIO APLICADO · DESHACER ────────────────────────────── */}
             {deshacible && visible && marco.deshacer && (
-                <div className="fixed z-[95] -translate-x-1/2" style={lugar(marco.deshacer)}>
+                <div data-sin-soporte className="fixed z-[95] -translate-x-1/2" style={lugar(marco.deshacer)}>
                     <div className="inline-flex h-10 items-center gap-1 whitespace-nowrap rounded-full bg-charcoal-900 pl-4 pr-1.5 text-[13px] text-white shadow-lg">
                         <Check className="h-4 w-4 shrink-0 text-accent-gold" aria-hidden="true" />
                         <span className="pr-1.5">Cambio aplicado</span>
