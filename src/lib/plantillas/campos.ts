@@ -130,6 +130,28 @@ export interface DatosCarpeta {
     pretension?: string | null
 }
 
+/**
+ * Lo que una carpeta (`expedientes`) le da a una plantilla. OJO con el
+ * cliente: al crear una carpeta que NO es de cliente, `cliente_nombre` se
+ * llena con el título («Amparo contra el IMSS»), así que sólo cuenta como
+ * nombre del cliente en una carpeta de cliente o si es distinto del título.
+ */
+export function datosDeCarpeta(e: (DatosCarpeta & { tipo?: string | null }) | null | undefined): DatosCarpeta | null {
+    if (!e) return null
+    const titulo = e.titulo?.trim() || e.cliente_nombre?.trim() || null
+    const nombre = e.cliente_nombre?.trim() || null
+    const esCliente = e.tipo === 'cliente' || (!!nombre && nombre !== (e.titulo ?? '').trim())
+    return {
+        titulo,
+        cliente_nombre: esCliente ? nombre : null,
+        cliente_domicilio: e.cliente_domicilio ?? null,
+        cliente_correo: e.cliente_correo ?? null,
+        cliente_telefono: e.cliente_telefono ?? null,
+        materia: e.materia ?? null,
+        pretension: e.pretension ?? null,
+    }
+}
+
 /* La materia va en minúscula: casi siempre cae dentro de una frase («en
    materia civil»). Donde la plantilla la escribía con mayúscula o toda en
    mayúsculas, la forma de esa aparición se encarga (ver `formaDe`). */

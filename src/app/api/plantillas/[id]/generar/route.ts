@@ -20,7 +20,7 @@ import mammoth from 'mammoth'
 import { servicio, solicitanteDe } from '@/lib/servidor/peticion'
 import { gastarUso } from '@/lib/servidor/uso'
 import { llenar, MIME_DOCX, NoSePudoLlenar } from '@/lib/plantillas/docx'
-import { nombreDeArchivo, valorDeOrigen, valorLimpio, type DatosCarpeta } from '@/lib/plantillas/campos'
+import { datosDeCarpeta, nombreDeArchivo, valorDeOrigen, valorLimpio, type DatosCarpeta } from '@/lib/plantillas/campos'
 import { htmlDeDocx, textoDeDocx } from '@/lib/plantillas/vista'
 import { descargar, fallo, faltaEsquema, plantillaDe, SIN_ESQUEMA } from '@/lib/plantillas/servidor'
 
@@ -47,11 +47,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (typeof cuerpo.expediente_id === 'string' && cuerpo.expediente_id) {
         if (!/^[0-9a-f-]{36}$/i.test(cuerpo.expediente_id)) return fallo(400, 'Carpeta no válida.')
         const { data, error: errCarpeta } = await servicio().from('expedientes')
-            .select('id, titulo, cliente_nombre, cliente_domicilio, cliente_correo, cliente_telefono, materia, pretension')
+            .select('id, tipo, titulo, cliente_nombre, cliente_domicilio, cliente_correo, cliente_telefono, materia, pretension')
             .eq('id', cuerpo.expediente_id).eq('user_id', yo.user.id).maybeSingle()
         if (errCarpeta) return fallo(500, 'No se pudo leer la carpeta.')
         if (!data) return fallo(404, 'Esa carpeta ya no existe.')
-        carpeta = data as DatosCarpeta & { id: string }
+        carpeta = { ...datosDeCarpeta(data as DatosCarpeta & { tipo?: string | null }), id: (data as { id: string }).id }
     }
 
     // Los valores: lo que mandó el navegador y, lo que no mandó, de su origen.
