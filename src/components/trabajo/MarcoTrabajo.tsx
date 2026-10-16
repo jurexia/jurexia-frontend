@@ -159,7 +159,8 @@ export default function MarcoTrabajo() {
     const limite = profile?.queries_limit ?? 0;
     const quedan = Math.max(0, limite - usadas);
 
-    const enTrabajo = pathname === '/carpetas' || pathname.startsWith('/carpetas/');
+    // Las plantillas son parte de «Mi trabajo»: se llenan desde las carpetas.
+    const enTrabajo = pathname === '/carpetas' || pathname.startsWith('/carpetas/') || pathname.startsWith('/plantillas');
     const enUltimo = pathname.startsWith('/ultimo');
     const enAgenda = pathname.startsWith('/agenda');
     const enNormativa = pathname.startsWith('/normativa');
