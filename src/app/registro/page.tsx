@@ -11,6 +11,7 @@ import { OfertaContrasena, PasoCodigo } from '@/components/EntradaConCodigo';
 import LemaOpenAI from '@/components/LemaOpenAI';
 import AvisoNavegadorIntegrado, { useNavegadorIntegrado } from '@/components/AvisoNavegadorIntegrado';
 import { medirAltaIurexia } from '@/components/MetaPixel';
+import { verPreguntaPortada } from '@/lib/gratis';
 
 export default function RegistroPage() {
     const router = useRouter();
@@ -27,7 +28,11 @@ export default function RegistroPage() {
         const ref = q.get('ref');
         if (ref) setCodigoReferido(ref.trim().toUpperCase());
         setDestino(destinoTrasEntrar(q.get('redirect')));
+        setPendiente(verPreguntaPortada());
     }, []);
+    // La consulta que escribió en la portada (17-oct-2026): se le enseña aquí para
+    // que sepa por qué se le pide la cuenta, y el chat la responde sola al entrar.
+    const [pendiente, setPendiente] = useState('');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [acceptTerms, setAcceptTerms] = useState(false);
@@ -177,6 +182,20 @@ export default function RegistroPage() {
                             <p className="text-charcoal-500 text-center text-sm mb-6">
                                 Comienza con 5 consultas gratis
                             </p>
+
+                            {pendiente && (
+                                <div className="mb-6 rounded-xl border border-accent-gold/40 bg-accent-gold/10 p-4">
+                                    <p className="text-[13px] font-semibold text-charcoal-900">
+                                        Tu consulta está lista
+                                    </p>
+                                    <p className="mt-1 text-[13px] leading-snug text-charcoal-700 line-clamp-3">
+                                        «{pendiente}»
+                                    </p>
+                                    <p className="mt-2 text-xs text-charcoal-500">
+                                        Crea tu cuenta gratuita y la respondemos en cuanto entres, con la legislación, la jurisprudencia y cada cita verificada.
+                                    </p>
+                                </div>
+                            )}
 
                             {/* Benefits */}
                             <div className="bg-green-50 rounded-xl p-4 mb-6">

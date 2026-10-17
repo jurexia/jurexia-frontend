@@ -18,10 +18,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Loader2 } from 'lucide-react';
-import { abrirSesionBasica } from '@/lib/gratis';
+import { RUTA_PROBAR } from '@/lib/gratis';
 
 export default function BotonProbar({
-    children = 'Probar sin registrarme',
+    children = 'Probar gratis',
     className = '',
     sub,
     subClassName = 'text-xs text-charcoal-500',
@@ -41,8 +41,9 @@ export default function BotonProbar({
         setError('');
         setAbriendo(true);
         try {
-            await abrirSesionBasica();
-            router.push('/chat');
+            // Desde el 17-oct-2026 «probar» es crear la cuenta gratuita: la versión
+            // sin cuenta contestaba con tan poca capacidad que espantaba la compra.
+            router.push(RUTA_PROBAR);
         } catch {
             setError('No pudimos abrir la prueba. Inténtalo de nuevo.');
             setAbriendo(false);

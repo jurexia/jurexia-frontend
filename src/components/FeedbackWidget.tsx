@@ -34,8 +34,25 @@ interface FeedbackWidgetProps {
 interface Turno { rol: 'usuario' | 'soporte'; texto: string }
 
 const CLAVE_POSICION = 'iurexia-soporte-pos';
+/* El saludo dice para qué SÍ es (17-oct-2026): usuarios nuevos escribían aquí su
+   consulta jurídica creyendo que era el chat, y la respuesta nunca llegaba. */
 const SALUDO =
-    'Hola. Soy de soporte de Iurexia. Cuénteme qué está fallando y lo vemos ahora mismo.';
+    'Hola. Soy de soporte de Iurexia: le ayudo con la plataforma, su plan o un fallo. ' +
+    'Sus consultas jurídicas van en la caja del chat principal.';
+
+/** Las direcciones que da soporte (precios, perfil) se pueden pulsar. Sólo las
+ *  de iurexia.com: un enlace ajeno dentro de soporte no se pinta como enlace. */
+function conEnlaces(texto: string) {
+    const partes = texto.split(/((?:https?:\/\/)?(?:www\.)?iurexia\.com\/[^\s)»,]*[^\s)».,])/g);
+    return partes.map((p, i) => {
+        if (i % 2 === 0) return p;
+        const url = p.startsWith('http') ? p : `https://${p.startsWith('www.') ? p : `www.${p}`}`;
+        return (
+            <a key={i} href={url} target="_blank" rel="noopener noreferrer"
+                className="font-semibold text-[#e6c77f] underline underline-offset-2">{p.replace(/^https?:\/\//, '')}</a>
+        );
+    });
+}
 
 export default function FeedbackWidget({ userId, userEmail, userName, plan }: FeedbackWidgetProps) {
     const [abierto, setAbierto] = useState(false);
@@ -308,7 +325,7 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
                                         ? { background: 'rgba(201,169,98,0.16)', color: '#f0e9da', borderBottomRightRadius: 6 }
                                         : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.88)', borderBottomLeftRadius: 6 }}
                                 >
-                                    {t.texto}
+                                    {t.rol === 'soporte' ? conEnlaces(t.texto) : t.texto}
                                 </div>
                             </div>
                         ))}

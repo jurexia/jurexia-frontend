@@ -104,8 +104,8 @@ export default function PlantillaModulo({
                         <div className="aparecer [animation-delay:120ms]">
                             <Entrada>{entrada}</Entrada>
                             <div className="mt-7 flex flex-col items-start gap-3 sm:flex-row">
-                                <BotonProbar className={clasesBoton()} sub="Sin correo, sin tarjeta." subClassName="text-xs text-piedra-600">
-                                    Probar sin registrarme
+                                <BotonProbar className={clasesBoton()} sub="Cuenta gratuita, sin tarjeta." subClassName="text-xs text-piedra-600">
+                                    Probar gratis
                                 </BotonProbar>
                                 <Boton href="/precios" variante="secundario">Ver planes</Boton>
                             </div>

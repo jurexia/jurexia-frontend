@@ -196,10 +196,10 @@ export function CierreCTA({ titulo = 'Empieza hoy con Iurexia', entrada = 'Pregu
                     <p className="mt-3 text-[1.0625rem] text-white/60">{entrada}</p>
                 </div>
                 <div className="flex flex-col items-start gap-3 sm:flex-row">
-                    <BotonProbar className={clasesBoton({ oscuro: true })} sub="Sin correo, sin tarjeta." subClassName="text-xs text-white/50">
-                        Probar sin registrarme
+                    <BotonProbar className={clasesBoton({ oscuro: true })} sub="Cuenta gratuita, sin tarjeta." subClassName="text-xs text-white/50">
+                        Probar gratis
                     </BotonProbar>
-                    <Boton href="/registro" variante="secundario" oscuro>Crear cuenta gratis</Boton>
+                    <Boton href="/precios" variante="secundario" oscuro>Ver planes</Boton>
                 </div>
             </div>
         </section>

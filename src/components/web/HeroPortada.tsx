@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { useAuth } from '@/lib/useAuth';
-import { abrirSesionBasica, PREGUNTA_PORTADA } from '@/lib/gratis';
+import { guardarPreguntaPortada, RUTA_PROBAR } from '@/lib/gratis';
 import { Titulo } from '@/components/web/sistema';
 
 /* ═══ EL GANCHO DE LA PORTADA (8-oct-2026) ═══
@@ -24,9 +24,10 @@ import { Titulo } from '@/components/web/sistema';
    1. La frase, que dictó David al revisarlo en local: «Perfecciona tu ejercicio
       legal con Iurexia» y, en pequeño, qué es y qué hace. (La primera propuesta
       fue «Tú firmas. Iurexia fundamenta.», el cierre del anuncio v78.)
-   2. La consulta, aquí mismo y sin registro: la pregunta se guarda, se abre la
-      visita básica y el chat la manda sola (`PREGUNTA_PORTADA`). Allí el panel
-      de la versión básica empuja a la cuenta gratuita (PanelBasico).
+   2. La consulta, aquí mismo: la pregunta se guarda, se crea la cuenta gratuita
+      y el chat la manda sola con el motor completo (`PREGUNTA_PORTADA`). Hasta el
+      17-oct abría una visita básica sin cuenta; se cerró porque su poca capacidad
+      se leía como «esto es lo que venden» (ver `@/lib/gratis`).
    3. La prueba: una consulta real grabada en producción —los pasos, la hoja,
       «8 citas · 8 verificadas» y el PDF de la Gaceta con su registro digital—,
       sobre un pórtico de la casa. Nada dibujado: así es.
@@ -81,11 +82,10 @@ export default function HeroPortada() {
         setError('');
         setEnviando(true);
         try {
-            try {
-                window.sessionStorage.setItem(PREGUNTA_PORTADA, texto);
-            } catch { /* sin almacenamiento la pregunta no viaja; el chat abre igual */ }
-            if (!user) await abrirSesionBasica();
-            router.push('/chat');
+            // Sin cuenta ya no se abre la versión básica (17-oct-2026): la consulta
+            // se guarda, se crea la cuenta gratuita y el chat la manda sola.
+            guardarPreguntaPortada(texto);
+            router.push(user ? '/chat' : RUTA_PROBAR);
         } catch {
             setError('No pudimos abrir la consulta. Inténtalo de nuevo.');
             setEnviando(false);
@@ -149,8 +149,8 @@ export default function HeroPortada() {
                                 />
                                 <div className="flex items-center justify-between gap-3 px-1 pb-0.5 pl-3">
                                     <span className="text-[12.5px] leading-snug text-piedra-600">
-                                        Sin registro ni tarjeta.
-                                        <span className="hidden sm:inline"> Responde con tesis del Semanario y su registro digital.</span>
+                                        Con tu cuenta gratuita, sin tarjeta.
+                                        <span className="hidden sm:inline"> Te respondemos con leyes, tesis y su registro digital.</span>
                                     </span>
                                     <button
                                         type="submit"

@@ -20,7 +20,7 @@ import FeedbackWidget from '@/components/FeedbackWidget';
 import { useChat } from '@/hooks/useChat';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useAuthOBasico } from '@/lib/useAuth';
-import { hayTestigoBasico, preguntarBasico, markdownDeBasico, BLOQUEADO_POR_OMISION, PREGUNTA_PORTADA } from '@/lib/gratis';
+import { preguntarBasico, markdownDeBasico, BLOQUEADO_POR_OMISION, tomarPreguntaPortada } from '@/lib/gratis';
 import PanelBasico from '@/components/PanelBasico';
 import dynamic from 'next/dynamic';
 import type { InsercionDocumento } from '@/components/documento/ConstructorDemanda';
@@ -158,9 +158,14 @@ export default function ChatPage() {
        puede leer después de montar, y con `false` de partida la puerta mandaba
        al acceso en el primer render, antes de enterarse de que había visita
        abierta. Se redirige sólo cuando consta que NO hay testigo. */
+    /* LA VISITA SIN CUENTA, CERRADA (17-oct-2026). David: el chat abierto con
+       poca capacidad «da a entender que eso ofrecemos por planes de pago». Quien
+       llega sin sesión va a entrar o a crear su cuenta gratuita; la consulta que
+       traía de la portada se responde sola al volver, ya con el motor completo.
+       El modo básico sigue SÓLO para la cuenta gratuita que gastó sus consultas. */
     const [hayTestigo, setHayTestigo] = useState<boolean | null>(null);
-    useEffect(() => { setHayTestigo(hayTestigoBasico()); }, []);
-    const { loading: authLoading, isAuthenticated, user, profile } = useAuthOBasico(hayTestigo !== false);
+    useEffect(() => { setHayTestigo(false); }, []);
+    const { loading: authLoading, isAuthenticated, user, profile } = useAuthOBasico(hayTestigo !== false, '/login?redirect=/chat');
     const router = useRouter();
 
     /* EL INICIO DE CADA QUIEN (24-sep-2026). David, sobre una usuaria que
@@ -932,11 +937,7 @@ export default function ChatPage() {
         if (preguntaPortadaHecha.current || authLoading || hayTestigo === null) return;
         if (!modoBasico && (!user || !profile || (profile.estado && !selectedEstado))) return;
         preguntaPortadaHecha.current = true;
-        let texto = '';
-        try {
-            texto = (window.sessionStorage.getItem(PREGUNTA_PORTADA) || '').trim();
-            window.sessionStorage.removeItem(PREGUNTA_PORTADA);
-        } catch { /* sin almacenamiento no hay pregunta guardada */ }
+        const texto = tomarPreguntaPortada();
         if (texto) void handleSendMessage(texto);
     }, [authLoading, hayTestigo, modoBasico, user, profile, selectedEstado, handleSendMessage]);
 

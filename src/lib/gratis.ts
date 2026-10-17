@@ -28,6 +28,57 @@ const LLAVE = 'iurexia-basico-testigo';
  *  el chat la manda sola al abrir y la borra. */
 export const PREGUNTA_PORTADA = 'iurexia-pregunta-portada';
 
+/* EL REGISTRO ANTES DE LA RESPUESTA (17-oct-2026). David: el chat abierto «da a
+   entender que eso ofrecemos por planes de pago». La versión sin cuenta contestaba
+   con poca capacidad y la gente se quedaba con esa impresión: desde que la portada
+   la abría (8-oct), de cada diez registros sólo tres o cuatro llegaron a preguntar
+   con la cuenta, y ninguno pagó. Ahora la consulta se guarda, se pide la cuenta
+   gratuita y la MISMA consulta sale sola con el motor completo.
+
+   Se guarda en sessionStorage (sobrevive al viaje a Google/Apple en la misma
+   pestaña) y en localStorage con hora, por si el registro se termina en otra
+   pestaña desde el enlace del correo. Caduca a las dos horas. */
+const CADUCIDAD_PREGUNTA_MS = 2 * 60 * 60 * 1000;
+
+export function guardarPreguntaPortada(texto: string) {
+    try { window.sessionStorage.setItem(PREGUNTA_PORTADA, texto); } catch { /* sin almacenamiento */ }
+    try {
+        window.localStorage.setItem(PREGUNTA_PORTADA, JSON.stringify({ texto, t: Date.now() }));
+    } catch { /* sin almacenamiento */ }
+}
+
+/** La consulta pendiente, UNA vez: la lee y la borra de las dos memorias. */
+export function tomarPreguntaPortada(): string {
+    let texto = '';
+    try {
+        texto = (window.sessionStorage.getItem(PREGUNTA_PORTADA) || '').trim();
+        window.sessionStorage.removeItem(PREGUNTA_PORTADA);
+    } catch { /* sin almacenamiento */ }
+    try {
+        const crudo = window.localStorage.getItem(PREGUNTA_PORTADA);
+        window.localStorage.removeItem(PREGUNTA_PORTADA);
+        if (!texto && crudo) {
+            const g = JSON.parse(crudo) as { texto?: string; t?: number };
+            if (g.texto && g.t && Date.now() - g.t < CADUCIDAD_PREGUNTA_MS) texto = g.texto.trim();
+        }
+    } catch { /* guardado ilegible: no hay pregunta */ }
+    return texto;
+}
+
+/** Sólo mirar, sin consumirla (para enseñarla en el registro). */
+export function verPreguntaPortada(): string {
+    try {
+        const s = (window.sessionStorage.getItem(PREGUNTA_PORTADA) || '').trim();
+        if (s) return s;
+        const g = JSON.parse(window.localStorage.getItem(PREGUNTA_PORTADA) || 'null') as { texto?: string; t?: number } | null;
+        if (g?.texto && g.t && Date.now() - g.t < CADUCIDAD_PREGUNTA_MS) return g.texto.trim();
+    } catch { /* nada */ }
+    return '';
+}
+
+/** A dónde va quien quiere probar sin cuenta: al registro, y de ahí al chat. */
+export const RUTA_PROBAR = '/registro?redirect=/chat';
+
 export interface FuenteBasica {
     n: number;
     tipo: 'tesis' | 'bloque' | string;
