@@ -53,8 +53,13 @@ async function deReportes(cliente: ReturnType<typeof admin>): Promise<Entrada[]>
         .from('user_feedback')
         .select('id, folio, user_email, user_id, message, created_at, contexto_soporte, conversation_id')
         .eq('status', 'pendiente')
-        .order('created_at', { ascending: true })
-        .limit(200);
+        // LO MÁS NUEVO PRIMERO (16-oct-2026). Con `ascending: true` la ventana
+        // de 200 se llenó de reportes viejos que ya estaban en el libro pero
+        // seguían «pendientes» —sólo se cierran con el correo de cierre—, y
+        // desde el 20-sep ningún reporte nuevo entraba: 177 sin recoger y sin
+        // que nadie se enterara. Lo nuevo es lo que no puede quedarse fuera.
+        .order('created_at', { ascending: false })
+        .limit(300);
     if (error) throw new Error(`reportes: ${error.message}`);
 
     const filas = data ?? [];
@@ -145,7 +150,7 @@ async function deCorrecciones(cliente: ReturnType<typeof admin>): Promise<Entrad
     const { data, error } = await cliente
         .from('correcciones_usuario')
         .select('id, correo, user_id, texto, respuesta_previa, senal, estado, creado_at')
-        .order('creado_at', { ascending: true })
+        .order('creado_at', { ascending: false })
         .limit(200);
     if (error) throw new Error(`correcciones: ${error.message}`);
     return (data ?? []).map((r: Record<string, unknown>) => ({

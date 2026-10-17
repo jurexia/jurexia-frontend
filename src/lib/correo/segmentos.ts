@@ -229,7 +229,7 @@ async function segmentoRegistroPendiente(): Promise<Destinatario[]> {
 export const INCLUIDOS_CASOS_USO = ['jdm.juridico@gmail.com'];
 
 /** Testers y cuentas de prueba: el dominio de la casa, los de ejemplo y la demo de las grabaciones. */
-function esPrueba(email: string): boolean {
+export function esPrueba(email: string): boolean {
     const e = email.toLowerCase();
     const dominio = e.split('@')[1] || '';
     return dominio === 'iurexia.com'
