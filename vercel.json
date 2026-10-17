@@ -93,7 +93,7 @@
       "schedule": "0 2 * * *"
     },
     {
-      "path": "/api/cron/incidencias?paso=acuse",
+      "path": "/api/cron/incidencias-acuse",
       "schedule": "15 14,16,18,20,22,0,2 * * *"
     }
   ]
