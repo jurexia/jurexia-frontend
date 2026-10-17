@@ -301,15 +301,15 @@ const ACUSE_POR_FAMILIA: Record<string, { titulo: string; cuerpo: string }> = {
     },
     'soporte/cancelacion': {
         titulo: 'La cancelación de su suscripción',
-        cuerpo: 'Puede cancelar en cualquier momento desde www.iurexia.com/cuenta/suscripcion, ' +
-            'botón «Gestionar suscripción», sin hablar con nadie. Si prefiere que lo hagamos nosotros, responda ' +
+        cuerpo: 'Puede cancelar en cualquier momento desde su perfil, pestaña «Plan y pagos», ' +
+            'botón «Cancelar mi suscripción», sin hablar con nadie. Si prefiere que lo hagamos nosotros, responda ' +
             'a este correo con la palabra «cancelar».',
     },
     'soporte/planes-y-cobro': {
         titulo: 'Su consulta sobre planes y cobro',
         cuerpo: 'Los planes y sus precios están en www.iurexia.com/precios. Para cambiar de ' +
-            'plan, actualizar la tarjeta, descargar comprobantes o cancelar, entre a ' +
-            'www.iurexia.com/cuenta/suscripcion y pulse «Gestionar suscripción». Si su caso no se resuelve ahí, responda a ' +
+            'plan, actualizar la tarjeta, descargar comprobantes o cancelar, entre a su ' +
+            'perfil, pestaña «Plan y pagos». Si su caso no se resuelve ahí, responda a ' +
             'este correo y una persona del equipo lo atiende.',
     },
     'soporte/sin-respuesta': {

@@ -231,6 +231,14 @@ LA BARRA DE ARRIBA (en el chat y en las demás páginas de la plataforma)
 Botones con su nombre, sin iconos. Lo que no cabe en pantallas angostas —o con
 el panel Documento abierto— pasa al botón «Más».
 · Mi trabajo — sus carpetas (página «Mis carpetas»).
+· Agenda — sus términos y audiencias, con aviso a su correo (página «Agenda»;
+  también hay botón en «Mis carpetas»). «Nuevo término»: se pega el acuerdo y
+  «Leer el acuerdo» propone qué hay que hacer, el código que rige y el
+  vencimiento calculado, que el abogado puede corregir; o se captura a mano
+  (expediente, juzgado o tribunal, fecha y tipo de notificación). «Avisarme por
+  correo»: 5, 3, 2 o 1 días antes, o el mismo día; los avisos salen cada mañana
+  a las 7:00 (hora de la Ciudad de México). El calendario se hojea por mes.
+  SÍ EXISTE: nunca digas que no hay agenda.
 · Lo último — novedades en cuatro pestañas: Suprema Corte, Tesis de la semana,
   Diario Oficial e Inteligencia artificial.
 · Normativa — el repositorio de leyes: Constitución, tratados, leyes federales y
