@@ -5,8 +5,9 @@
  * con intervalos. Intenta que no se detecte como spam o publicidad».
  *
  * Por eso no sale de golpe ni en el bloque diario de las 7:00:
- *   · siete corridas al día (vercel.json: 9:00, 10:30, 12:00, 13:30, 15:00,
- *     16:30 y 18:00 de México), cada una con hasta POR_CORRIDA correos;
+ *   · once corridas al día (vercel.json: 9:00, 10:30, 12:00, 13:30, 15:00,
+ *     16:30, 18:00, 18:30, 19:00, 19:30 y 20:00 de México), cada una con hasta
+ *     POR_CORRIDA correos; las de la tarde sólo envían si el tope no se cubrió;
  *   · un tope DIARIO (TOPE_DIARIO, 200) contado en la bitácora con el día de
  *     México: en un día normal se cubre antes del mediodía y las corridas de
  *     la tarde no mandan nada; si una corrida falla, la siguiente recupera;
