@@ -11,9 +11,9 @@ import TutorialNuevoChat from '@/components/TutorialNuevoChat';
    Sus direcciones viejas redirigen aquí (next.config.js). Lo enlaza la liga
    azul «Ver tutorial de uso del nuevo chat» bajo la caja de consulta. */
 
-const TITULO = 'Tutorial del nuevo chat · Iurexia';
+const TITULO = 'Tutorial de la plataforma · Iurexia';
 const DESCRIPCION =
-    'En un minuto y medio: Fuentes, Esfuerzo de redacción, las herramientas y los Flujos de trabajo del nuevo chat de Iurexia, grabado en la interfaz real.';
+    'En cinco minutos, cada herramienta de Iurexia sobre la plataforma real: la consulta con sus fuentes, las carpetas inteligentes, los flujos de trabajo, la Bóveda, la agenda y los plazos, las plantillas y las herramientas de Platinum.';
 
 export const metadata: Metadata = {
     title: TITULO,
@@ -26,26 +26,26 @@ export const metadata: Metadata = {
         siteName: 'Iurexia',
         locale: 'es_MX',
         type: 'video.other',
-        images: [{ url: '/video/tutorial-nuevo-chat-og.jpg', width: 1200, height: 630, alt: 'El nuevo chat de Iurexia' }],
-        videos: [{ url: 'https://www.iurexia.com/video/tutorial-nuevo-chat.mp4', type: 'video/mp4', width: 1920, height: 1080 }],
+        images: [{ url: '/video/tutorial-plataforma-og.jpg', width: 1200, height: 630, alt: 'La plataforma Iurexia' }],
+        videos: [{ url: 'https://www.iurexia.com/video/tutorial-plataforma.mp4', type: 'video/mp4', width: 1920, height: 1080 }],
     },
     twitter: {
         card: 'summary_large_image',
         title: TITULO,
         description: DESCRIPCION,
-        images: ['/video/tutorial-nuevo-chat-og.jpg'],
+        images: ['/video/tutorial-plataforma-og.jpg'],
     },
 };
 
 const VIDEO_LD = {
     '@context': 'https://schema.org',
     '@type': 'VideoObject',
-    name: 'Tutorial del nuevo chat de Iurexia',
+    name: 'Tutorial de la plataforma Iurexia',
     description: DESCRIPCION,
-    thumbnailUrl: ['https://www.iurexia.com/video/tutorial-nuevo-chat-og.jpg'],
-    uploadDate: '2026-09-27',
-    duration: 'PT1M25S',
-    contentUrl: 'https://www.iurexia.com/video/tutorial-nuevo-chat.mp4',
+    thumbnailUrl: ['https://www.iurexia.com/video/tutorial-plataforma-og.jpg'],
+    uploadDate: '2026-10-17',
+    duration: 'PT5M23S',
+    contentUrl: 'https://www.iurexia.com/video/tutorial-plataforma.mp4',
     inLanguage: 'es-MX',
 };
 
@@ -58,14 +58,14 @@ export default function TutorialPage() {
             <section className="px-4 pb-8 pt-28 sm:px-6 sm:pt-32">
                 <div className="mx-auto max-w-3xl text-center">
                     <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-brown">
-                        Tutorial · 1 min 25 s
+                        Tutorial · 5 min 23 s
                     </p>
                     <h1 className="font-serif text-4xl font-semibold leading-[1.1] text-charcoal-900 sm:text-5xl md:text-6xl">
-                        Así se usa el <span className="text-accent-gold">nuevo chat</span>
+                        Así se usa <span className="text-accent-gold">Iurexia</span>
                     </h1>
                     <p className="mx-auto mt-5 max-w-2xl text-[17px] leading-relaxed text-charcoal-700 sm:text-lg">
-                        Fuentes, Esfuerzo de redacción, las herramientas y los Flujos de trabajo, en un minuto y medio
-                        y sobre la interfaz real.
+                        Carpetas, flujos de trabajo, Bóveda, agenda, plantillas y las herramientas de Platinum: qué hace
+                        cada una, dónde está y para qué te sirve, sobre la plataforma real.
                     </p>
                 </div>
             </section>

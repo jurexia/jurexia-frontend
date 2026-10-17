@@ -3,21 +3,22 @@
 import { useEffect, useRef, useState } from 'react';
 import { Play } from 'lucide-react';
 
-/* EL TUTORIAL DEL NUEVO CHAT (v56, 1:25; 27-sep-2026).
+/* EL TUTORIAL DE LA PLATAFORMA (5:23; 17-oct-2026). Sustituye al v56 (1:25).
 
-   Una pieza grabada en vivo con la cuenta demo, voz de Javi y sin avatar. A
-   diferencia de la pieza de la portada (VideoChat), aquí NO arranca sola ni en
-   silencio: quien llega a /tutorial viene a verla con sonido, así que espera
-   al clic y entonces sí suena desde el principio.
+   Grabado en vivo con la cuenta demo (la licenciada Irene, Platinum) y SÓLO
+   material ficticio: la carpeta de Andrea Robles, los 20 contratos de la
+   Bóveda, el acuerdo de la agenda y el contrato del despacho. Voz del canal.
+   Aquí NO arranca sola ni en silencio: quien llega a /tutorial viene a verla
+   con sonido, así que espera al clic y entonces sí suena desde el principio.
 
-   LOS CAPÍTULOS SALEN DE LA VOZ, NO A OJO. Cada inicio es el instante en que
-   empieza su bloque de voz en el montaje (video-nodos/mapa_v56.json, campo
-   `voz_en`): al pulsar «Flujos de trabajo» se oye «Y lo más potente…» desde la
-   primera sílaba. Si se vuelve a montar el vídeo, se vuelven a leer de ahí.
+   LOS CAPÍTULOS SALEN DEL MONTAJE, NO A OJO: cada inicio es el instante en que
+   empieza su bloque de voz (video-nodos/tutorial2/capitulos.json, que escribe
+   armar_t2.py). Si se vuelve a montar, se vuelven a leer de ahí.
 
-   Lo que se dice de los planes es lo mismo que dice la voz, comprobado en el
-   código vivo al grabar: Internet y los Flujos de trabajo desde Pro, y los
-   escalones del Esfuerzo de redacción según el plan. */
+   Lo que se dice de los planes es lo que dice el código vivo al grabar:
+   Internet y los Flujos de trabajo desde Pro (30 al mes; 60 en Platinum), y la
+   Bóveda, la Cronología y las herramientas de «Desplegar herramientas» sólo en
+   Platinum. */
 
 export type Capitulo = {
     /** segundo en que empieza (inicio de su bloque de voz) */
@@ -27,36 +28,40 @@ export type Capitulo = {
 };
 
 export const CAPITULOS: Capitulo[] = [
-    { t: 0, titulo: 'La nueva interfaz', texto: 'El chat, la caja de consulta y lo que la rodea.' },
+    { t: 0, titulo: 'Qué es Iurexia', texto: 'La plataforma de inteligencia artificial para el trabajo jurídico en México, y lo que vas a ver.' },
     {
-        t: 7.48, titulo: 'Fuentes: sólo tu estado',
-        texto: 'Deja sólo las Leyes estatales y la respuesta cita tu legislación local; en el ejemplo, sólo el Código de Procedimientos Civiles de Querétaro.',
+        t: 20.2, titulo: 'La consulta: fuentes y esfuerzo',
+        texto: 'Dónde busca (bloque de constitucionalidad, jurisprudencia, leyes federales y de tu estado, NOM e Internet desde Pro) y el motor de redacción según tu plan.',
     },
     {
-        t: 22.71, titulo: 'Todas las fuentes e Internet',
-        texto: 'Para una consulta compleja, enciende todas. Internet, desde el plan Pro.',
+        t: 58.73, titulo: 'Carpetas inteligentes',
+        texto: 'Una carpeta por cliente o por asunto, con su objetivo y sus documentos: qué le falta, qué riesgos hay y consultas con el expediente a la vista.',
     },
     {
-        t: 31.04, titulo: 'Esfuerzo de redacción',
-        texto: 'Básico, Pro y Platinum: la potencia del escrito según tu plan.',
+        t: 99.7, titulo: 'Flujos de trabajo',
+        texto: 'Una demanda de amparo construida contigo parte por parte: deduce, te pide lo que falta y redacta con el acervo. Pro, 30 al mes; Platinum, 60.',
     },
     {
-        t: 47.21, titulo: 'Las herramientas',
-        texto: 'Escrito legal, revisión de sentencias, precedentes, jurimetría y Toulmin.',
+        t: 166.4, titulo: 'Bóveda',
+        texto: 'Hasta 500 documentos por carpeta: preguntas al expediente completo y tablas de revisión con cita literal verificada. Plan Platinum.',
     },
     {
-        t: 58.98, titulo: 'Flujos de trabajo',
-        texto: 'Un amparo, una contestación, unos agravios o un dictamen, construidos contigo parte por parte. Desde el plan Pro.',
+        t: 205.23, titulo: 'Agenda y plazos',
+        texto: 'Sube el acuerdo y se agenda el término, verificado en el acuerdo y con aviso a tu correo; el botón Plazos calcula cualquier vencimiento.',
     },
     {
-        t: 74.36, titulo: 'Un flujo en marcha',
-        texto: 'Propone lo que deduce de tu carpeta, te pide lo que falta y redacta hasta el documento completo.',
+        t: 246.47, titulo: 'Mis plantillas',
+        texto: 'Tu formato de Word con los datos de cada cliente: membrete, estilos y tablas intactos, sin gastar consultas.',
+    },
+    {
+        t: 285.1, titulo: 'Herramientas de Platinum',
+        texto: 'Sentencia, Precedentes, Jurimetría, Toulmin y la Cronología del expediente.',
     },
 ];
 
-const VIDEO = '/video/tutorial-nuevo-chat.mp4';
-const POSTER = '/video/tutorial-nuevo-chat-poster.webp';
-const SUBTITULOS = '/video/tutorial-nuevo-chat.es.vtt';
+const VIDEO = '/video/tutorial-plataforma.mp4';
+const POSTER = '/video/tutorial-plataforma-poster.webp';
+const SUBTITULOS = '/video/tutorial-plataforma.es.vtt';
 
 function mmss(s: number) {
     const m = Math.floor(s / 60);
@@ -107,7 +112,7 @@ export default function TutorialNuevoChat() {
                     playsInline
                     preload="metadata"
                     poster={POSTER}
-                    aria-label="Tutorial del nuevo chat de Iurexia, 1 minuto 25 segundos"
+                    aria-label="Tutorial de la plataforma Iurexia, 5 minutos 23 segundos"
                     onPlay={() => { setEmpezado(true); setReproduciendo(true); }}
                     onPause={() => setReproduciendo(false)}
                     onEnded={() => setReproduciendo(false)}
@@ -129,7 +134,7 @@ export default function TutorialNuevoChat() {
                             <Play className="ml-1 h-8 w-8 fill-current sm:h-9 sm:w-9" aria-hidden />
                         </span>
                         <span className="rounded-full bg-charcoal-950/70 px-4 py-1.5 text-[13px] font-medium tracking-wide backdrop-blur-sm">
-                            Ver el tutorial · 1:25
+                            Ver el tutorial · 5:23
                         </span>
                     </button>
                 )}
