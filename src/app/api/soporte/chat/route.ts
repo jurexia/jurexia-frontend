@@ -11,11 +11,14 @@
  *   3. Publicar un cambio de soporte no reinicia el API ni corta una consulta
  *      en curso.
  *
- * LA REGLA DE LOS CINCO MENSAJES
- * ------------------------------
+ * LA REGLA DE LOS QUINCE MENSAJES (eran cinco hasta el 17-oct-2026)
+ * -----------------------------------------------------------------
+ * David: «quizá sea prudente subir el límite a unos 15 mensajes». Con cinco,
+ * el chat se cerraba justo cuando el usuario empezaba a explicar su caso.
+ *
  * Se cuenta AQUÍ, con el historial que llega en la petición, y no en el
- * navegador: allá el usuario la puede burlar recargando. Al quinto turno del
- * usuario sin solución —o antes, si el modelo declara que no sabe— la
+ * navegador: allá el usuario la puede burlar recargando. Pasado el turno
+ * QUINCE del usuario sin solución —o antes, si el modelo declara que no sabe— la
  * conversación se manda a soporte@iurexia.com y se le dice al usuario que ya
  * está en manos del equipo. Nunca se le deja esperando sin saber.
  */
@@ -33,7 +36,9 @@ export const maxDuration = 30;
    litigante mexicano eso se pierde en la primera línea. La diferencia son 36
    centavos de dólar por cada mil conversaciones. */
 const MODELO = process.env.SOPORTE_MODELO || 'google/gemini-2.5-flash-lite';
-const MAX_TURNOS_USUARIO = 5;
+const MAX_TURNOS_USUARIO = 15;
+/** Lo que ve el modelo: los quince turnos de cada lado más el saludo. */
+const VENTANA_TURNOS = 2 * MAX_TURNOS_USUARIO + 2;
 const CORREO_SOPORTE = 'soporte@iurexia.com';
 
 interface Turno { rol: 'usuario' | 'soporte'; texto: string }
@@ -112,8 +117,11 @@ function sistema(): string {
         conocimientoParaPrompt(),
         '',
         'CUÁNDO ESCALAR',
-        'Si tras un par de intercambios no tienes una solución clara, o el usuario',
-        'reporta algo que sólo el equipo puede revisar, termina tu mensaje con la',
+        'Tienes hasta quince mensajes del usuario para resolverlo: úsalos. Antes de',
+        'escalar, pregunta lo que te falte —qué pantalla, qué botón, qué mensaje',
+        've— y dale los pasos del mapa. Escalar cierra esta conversación.',
+        'Si aun así no hay solución, si el usuario pide hablar con una persona, o',
+        'si reporta algo que sólo el equipo puede revisar, termina tu mensaje con la',
         'marca exacta [ESCALAR] en una línea aparte. Avísale de que lo pasas al',
         'equipo y de que le escribirán a su correo. No la uses si ya le diste una',
         'solución: escalar algo resuelto llena el buzón de ruido. Tampoco pidas',
@@ -204,13 +212,16 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Petición inválida' }, { status: 400 });
     }
 
-    const conversacion = (cuerpo.conversacion || []).slice(-12);
+    const conversacion = (cuerpo.conversacion || []).slice(-VENTANA_TURNOS);
     const ultimo = [...conversacion].reverse().find(t => t.rol === 'usuario');
     if (!ultimo?.texto?.trim()) {
         return NextResponse.json({ error: 'Falta el mensaje' }, { status: 400 });
     }
 
-    const turnosUsuario = conversacion.filter(t => t.rol === 'usuario').length;
+    // Sobre el historial ENTERO, no sobre la ventana: con la ventana de 12
+    // turnos que había, el conteo nunca pasaba de seis y un tope mayor no
+    // habría llegado a dispararse.
+    const turnosUsuario = (cuerpo.conversacion || []).filter(t => t.rol === 'usuario').length;
     const navegador = req.headers.get('user-agent');
 
     const comun = {
@@ -257,7 +268,7 @@ export async function POST(req: NextRequest) {
             // Y los turnos del propio soporte. Hasta hoy sobrevivía UNA línea,
             // por eso la cola tiene reportes que dicen «pro» o «uno por uno»:
             // el hilo que los hacía comprensibles se tiraba al guardar.
-            const hilo = (cuerpo.conversacion || []).slice(-8)
+            const hilo = (cuerpo.conversacion || []).slice(-VENTANA_TURNOS)
                 .map((t: { rol: string; texto: string }) =>
                     `${t.rol === 'usuario' ? 'Usuario' : 'Soporte'}: ${(t.texto || '').slice(0, 700)}`)
                 .join('\n');
@@ -301,12 +312,12 @@ export async function POST(req: NextRequest) {
         });
     }
 
-    // ── Tope duro: al quinto turno se escala, diga lo que diga el modelo ──
+    // ── Tope duro: pasado el turno quince se escala, diga lo que diga el modelo ──
     if (turnosUsuario > MAX_TURNOS_USUARIO) {
         const folio = await guardar(ultimo.texto.trim(), 'error');
         await avisarAlEquipo({
             ...comun,
-            motivo: `Sin resolver tras cinco mensajes${folio ? ` — folio ${folio}` : ''}`,
+            motivo: `Sin resolver tras ${MAX_TURNOS_USUARIO} mensajes${folio ? ` — folio ${folio}` : ''}`,
         });
         return NextResponse.json({
             respuesta: conFolio(
@@ -377,7 +388,7 @@ export async function POST(req: NextRequest) {
     // conversaciones ya resueltas y el escalado dejó de significar nada.
     //
     // Ahora sólo escala cuando el modelo declara que no puede —o cuando se
-    // agotan los cinco turnos, más arriba—, y va UN correo con la
+    // agotan los quince turnos, más arriba—, y va UN correo con la
     // conversación entera, que es lo único útil para quien la lee.
     const pidioEscalar = /\[ESCALAR\]/i.test(texto);
     const delicado = temaDelicado(ultimo.texto);
