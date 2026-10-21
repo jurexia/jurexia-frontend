@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { MapPin, Check, ArrowRight, X } from 'lucide-react';
 import { ESTADOS_SOLO, getEstadoLabel } from '@/lib/estados';
 import { updateUserEstado } from '@/lib/supabase';
@@ -10,12 +10,34 @@ interface WelcomeExperienceProps {
     userName?: string;
     onComplete: (estado: string) => void;
     onStartTour?: () => void;
+    /** El estado probable según la IP (ver /api/region): llega ya marcado. */
+    estadoSugerido?: string | null;
+    /** La consulta que espera esta respuesta para salir. */
+    pregunta?: string;
 }
 
-export default function WelcomeExperience({ userId, userName, onComplete }: WelcomeExperienceProps) {
-    const [selectedEstado, setSelectedEstado] = useState('');
+/* LA PRIMERA CONSULTA NO SE DETIENE AQUÍ (20-oct-2026). Esta ventana sale justo
+   cuando la cuenta nueva manda su primera pregunta. Llega con el estado probable
+   marcado —un toque en «Continuar con …»—, enseña la pregunta que va a salir y,
+   con ese estado ya marcado o en un teléfono, no abre el teclado del buscador:
+   el teclado tapaba la mitad de la ventana, justo el botón de seguir. */
+export default function WelcomeExperience({ userId, userName, onComplete, estadoSugerido, pregunta }: WelcomeExperienceProps) {
+    const [selectedEstado, setSelectedEstado] = useState(estadoSugerido || '');
     const [searchQuery, setSearchQuery] = useState('');
     const [saving, setSaving] = useState(false);
+    const marcadoRef = useRef<HTMLButtonElement | null>(null);
+    const [tactil] = useState(() => typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches);
+
+    // La sugerencia puede llegar con la ventana ya abierta: sólo se marca si
+    // el usuario no ha elegido nada todavía.
+    useEffect(() => {
+        if (estadoSugerido) setSelectedEstado(prev => prev || estadoSugerido);
+    }, [estadoSugerido]);
+
+    // El estado marcado, a la vista dentro de la rejilla (que tiene su propio scroll).
+    useEffect(() => {
+        marcadoRef.current?.scrollIntoView({ block: 'nearest' });
+    }, [estadoSugerido]);
 
     const firstName = userName?.split(' ')[0] || '';
 
@@ -81,6 +103,23 @@ export default function WelcomeExperience({ userId, userName, onComplete }: Welc
                         <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12.5 }}>
                             Así tus consultas priorizarán tu legislación local
                         </p>
+                        {pregunta && (
+                            <div style={{
+                                marginTop: 14, padding: '9px 12px', borderRadius: 10,
+                                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                                textAlign: 'left',
+                            }}>
+                                {/* El recorte va en el párrafo, no en la caja: con el
+                                    relleno dentro, el tercer renglón asomaba a medias. */}
+                                <p style={{
+                                    color: 'rgba(255,255,255,0.72)', fontSize: 12.5, lineHeight: 1.45,
+                                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                                }}>
+                                    <span style={{ color: 'rgba(255,255,255,0.45)' }}>Tu consulta sale al continuar: </span>
+                                    {pregunta}
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Search */}
@@ -94,7 +133,7 @@ export default function WelcomeExperience({ userId, userName, onComplete }: Welc
                             placeholder="Buscar estado..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
-                            autoFocus
+                            autoFocus={!selectedEstado && !tactil}
                             style={{
                                 width: '100%', padding: '9px 14px 9px 32px',
                                 borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)',
@@ -116,6 +155,7 @@ export default function WelcomeExperience({ userId, userName, onComplete }: Welc
                         {filteredEstados.map(estado => (
                             <button
                                 key={estado.value}
+                                ref={estado.value === selectedEstado ? marcadoRef : undefined}
                                 onClick={() => setSelectedEstado(estado.value)}
                                 style={{
                                     padding: '7px 8px',

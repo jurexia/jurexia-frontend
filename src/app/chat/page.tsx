@@ -14,6 +14,7 @@ import DocumentModal from '@/components/DocumentModal';
 import ChatSidebar from '@/components/ChatSidebar';
 import StateSelectorModal from '@/components/StateSelectorModal';
 import WelcomeExperience from '@/components/WelcomeExperience';
+import PrimeraConsulta from '@/components/PrimeraConsulta';
 import PdfViewerPanel from '@/components/PdfViewerPanel';
 import FeedbackWidget from '@/components/FeedbackWidget';
 // FreeUserOnboardingModal removed — was causing 43% user abandonment (audio-modal blocker)
@@ -299,6 +300,18 @@ export default function ChatPage() {
     const creatingConvRef = useRef(false); // Mutex to prevent duplicate conversation creation
     const [showWelcomeExperience, setShowWelcomeExperience] = useState(false);
     const pendingMessageRef = useRef<{ content: string; reasoning: boolean } | null>(null);
+    /* El estado probable de una cuenta sin entidad (ver /api/region): la ventana
+       del estado llega con él marcado. Sólo se pide si el perfil no tiene uno. */
+    const [estadoSugerido, setEstadoSugerido] = useState<string | null>(null);
+    useEffect(() => {
+        if (!profile?.id || profile.estado) return;
+        let vivo = true;
+        fetch('/api/region')
+            .then((r) => (r.ok ? r.json() : null))
+            .then((j) => { if (vivo && typeof j?.estado === 'string') setEstadoSugerido(j.estado); })
+            .catch(() => { /* sin sugerencia: la ventana sale sin nada marcado, como antes */ });
+        return () => { vivo = false; };
+    }, [profile?.id, profile?.estado]);
 
 
     // Auto-deactivate cache after 3 minutes of inactivity (safety: evita costos excesivos)
@@ -925,6 +938,15 @@ export default function ChatPage() {
         lastSentUserMsgRef.current = null;
     }, [user, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed,
         modoBasico, enviarBasico, profile?.subscription_type, vincularNueva, estadoDeMensajes]);
+
+    /* LA VENTANA DEL ESTADO SALÍA DOS VECES (20-oct-2026). Al confirmar el estado,
+       la consulta pendiente se mandaba con el `handleSendMessage` del render en que
+       se abrió la ventana —el que aún no tenía estado—, así que la ventana volvía
+       a abrirse en blanco y la primera consulta no salía hasta elegir otra vez.
+       Medido en el chat real: la cuenta nueva tenía que elegir su estado DOS veces.
+       La pendiente se manda ahora con la versión vigente de la función. */
+    const enviarVigenteRef = useRef(handleSendMessage);
+    useEffect(() => { enviarVigenteRef.current = handleSendMessage; }, [handleSendMessage]);
 
     /* LA PREGUNTA QUE TRAEN DE LA PORTADA (8-oct-2026). La portada deja
        escribir la consulta antes de entrar (`PREGUNTA_PORTADA`, en
@@ -1972,6 +1994,14 @@ export default function ChatPage() {
                                     constructorAbierto={constructorAbierto}
                                 />
 
+                                {!modoBasico && !!profile && queriesUsed === 0 && !conversationsLoading && conversations.length === 0
+                                    && !carpetaActivaId && !flujoActivo && (
+                                    <PrimeraConsulta
+                                        onElegir={(texto) => { void handleSendMessage(texto); }}
+                                        deshabilitado={isLoading}
+                                    />
+                                )}
+
                                 {/* EL TUTORIAL DEL NUEVO CHAT (27-sep-2026). David: «una liga
                                     azul debajo del chat». Abre /tutorial en otra pestaña para
                                     no perder lo que ya se escribió en la caja. Es la única
@@ -2168,6 +2198,8 @@ export default function ChatPage() {
                 <WelcomeExperience
                     userId={user.id}
                     userName={profile?.full_name ?? undefined}
+                    estadoSugerido={estadoSugerido}
+                    pregunta={pendingMessageRef.current?.content}
                     onComplete={(estado) => {
                         setSelectedEstado(estado);
                         setShowWelcomeExperience(false);
@@ -2176,7 +2208,7 @@ export default function ChatPage() {
                             const { content, reasoning } = pendingMessageRef.current;
                             pendingMessageRef.current = null;
                             // Small delay to let estado propagate
-                            setTimeout(() => handleSendMessage(content, reasoning), 200);
+                            setTimeout(() => enviarVigenteRef.current(content, reasoning), 200);
                         }
                     }}
                 />
