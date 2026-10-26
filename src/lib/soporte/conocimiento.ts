@@ -147,7 +147,7 @@ export const TEMAS: Tema[] = [
         senales: ['no puedo subir mi archivo', 'no me acepta el documento', 'el pdf es muy grande'],
         respuesta:
             'En el chat se adjunta un documento por consulta: PDF o Word (.doc y .docx), de hasta 25 MB, con el clip de la caja o arrastrándolo a la ventana. ' +
-            'Cada plan lee hasta cierto número de hojas: Gratuito 20, Básico 50, Pro 100 y Platinum 600. ' +
+            'Cada plan lee hasta cierto número de hojas: Gratuito 20, Básico 50, Pro 100 y Platinum 600. En el plan Gratuito, de un documento más largo se leen las primeras 20 hojas y la respuesta lo dice. ' +
             'Si es un archivo de texto u otro formato, guárdelo como PDF o Word y vuelva a subirlo.',
     },
     {
@@ -279,7 +279,8 @@ LA CAJA DE CONSULTA
 · Micrófono — dictado en español; funciona en Chrome y Safari.
 · Clip — UN documento por consulta: PDF o Word (.doc, .docx), hasta 25 MB.
   También se puede arrastrar a la ventana. Hojas que se leen: Gratuito 20,
-  Básico 50, Pro 100, Platinum y Ultra 600. No acepta TXT.
+  Básico 50, Pro 100, Platinum y Ultra 600 (en Gratuito, de un documento más
+  largo se leen las primeras 20 hojas y se avisa). No acepta TXT.
 · «Desplegar herramientas» (o «Herramientas»), bajo la caja, abre seis. Desde
   el 12-oct-2026 todas, salvo Escrito legal, son del plan Platinum (y Ultra);
   en Pro se ven con candado:

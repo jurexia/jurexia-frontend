@@ -153,7 +153,7 @@ export default function PreciosPage() {
                                     "Filtros de jurisdicción",
                                     "Acceso a base documental completa",
                                     "Lee documentos de hasta 20 hojas",
-                                    <span className="text-piedra-500">Sin flujos de trabajo ni análisis de documentos</span>
+                                    <span className="text-piedra-500">Sin flujos de trabajo</span>
                                 ]}
                                 buttonText="Comenzar Gratis"
                                 buttonHref="/chat"

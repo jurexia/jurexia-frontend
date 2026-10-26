@@ -7,6 +7,7 @@ import { esfuerzoParaEnviar, marcadorDeEsfuerzo } from '@/lib/esfuerzo';
 import { Trash2, Scale, Building2, Settings, ChevronDown, ArrowRight, Zap, Shield, Gavel, PlayCircle, Loader2 as Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
 import AvisoLimitePlan from '@/components/AvisoLimitePlan';
+import AvisoDocumentoGratis, { type DatosAvisoDocumentoGratis } from '@/components/AvisoDocumentoGratis';
 import ChatInput from '@/components/ChatInput';
 import ChatMessage from '@/components/ChatMessage';
 import { FlujoAgente } from '@/components/FlujoAgente';
@@ -515,9 +516,15 @@ export default function ChatPage() {
     const [queriesUsed, setQueriesUsed] = useState<number>(0);
     const [queriesLimit, setQueriesLimit] = useState<number>(3);
     const [showLimitModal, setShowLimitModal] = useState(false);
+    /** El documento cuyo envío no salió vuelve a la caja (ver `ChatInput`). */
+    const [adjuntoDevuelto, setAdjuntoDevuelto] = useState<{ file: File; prompt: string; nonce: number } | null>(null);
+    /** Tras un documento del plan gratuito: cuánto le queda y qué abre Pro (ver `AvisoDocumentoGratis`). */
+    const [avisoDocGratis, setAvisoDocGratis] = useState<DatosAvisoDocumentoGratis | null>(null);
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [activeConversationId, setActiveConvId] = useState<string | null>(null);
     const [conversationsLoading, setConversationsLoading] = useState(true);
+    // La tarjeta del plan gratuito es de la última respuesta de ESTA conversación.
+    useEffect(() => { setAvisoDocGratis(null); }, [activeConversationId]);
 
     /* ═══ CARPETAS Y FLUJOS (25-sep-2026) ═══
        `carpetas` es null mientras la base no tenga el vínculo (o no cargue):
@@ -790,6 +797,7 @@ export default function ChatPage() {
     }, [isAuthenticated, user?.email, setMessages]);
 
     const handleSendMessage = useCallback(async (content: string, enableReasoning = false) => {
+        setAvisoDocGratis(null);
         if (modoBasico) { void enviarBasico(content); return; }
         if (!user) return;
 
@@ -966,6 +974,7 @@ export default function ChatPage() {
     // Document analysis via Gemini Flash (streaming from /analyze-document)
     const handleDocumentSubmit = useCallback(async (file: File, prompt: string, displayMessage: string) => {
         if (!user) return;
+        setAvisoDocGratis(null);
         const isAdminUser = isAdmin(user?.email);
         const remaining = queriesLimit - queriesUsed;
         if (remaining <= 0 && !isAdminUser) {
@@ -1060,6 +1069,11 @@ export default function ChatPage() {
         // El análisis de un documento adjunto también nace en el panel.
         if (!constructorAbiertoRef.current) setDocumentoAbierto(true);
         let reloj: ReturnType<typeof setTimeout> | undefined;
+        /* Para la tarjeta del plan gratuito: si llegó respuesta, si hubo error y
+           si la API leyó el documento en muestra (`limite_plan`). */
+        let huboRespuesta = false;
+        let huboError = false;
+        let limitePlan: { leidas: number; total: number; plan: string | null } | null = null;
         try {
             /* ═══ EL RELOJ MIRA EL SILENCIO, NO EL RELOJ (18-sep-2026) ═══
                Antes se abortaba a los 120 segundos contados desde el envío,
@@ -1077,15 +1091,37 @@ export default function ChatPage() {
             };
             rearmar();
 
-            const response = await fetch(`${API_URL}/analyze-document`, {
-                method: 'POST',
-                body: formData,
-                signal: controller.signal,
-            });
+            /* UN REINTENTO SI LA PETICIÓN NO SALIÓ (25-oct-2026). «Failed to
+               fetch» antes de las cabeceras casi siempre quiere decir que el
+               servidor no recibió nada: en móvil, una red que parpadea o una
+               pestaña que el teléfono pausó. El archivo ya está en memoria
+               (`fijarAdjunto`), así que reenviarlo es lo mismo que el primer
+               envío. «Load failed» es como lo dice Safari en el iPhone. */
+            let response: Response | null = null;
+            for (let intento = 1; ; intento++) {
+                try {
+                    response = await fetch(`${API_URL}/analyze-document`, {
+                        method: 'POST',
+                        body: formData,
+                        signal: controller.signal,
+                    });
+                    break;
+                } catch (errEnvio: any) {
+                    const deRed = errEnvio?.name !== 'AbortError'
+                        && /Failed to fetch|NetworkError|ERR_CONNECTION|Load failed/i.test(errEnvio?.message || '');
+                    if (!deRed || intento >= 2) throw errEnvio;
+                    console.warn('[analyze-document] el envío no salió; se reintenta una vez', errEnvio);
+                    setPasoDocumento('Reintentando el envío del documento…');
+                    await new Promise((r) => setTimeout(r, 2500));
+                    rearmar();
+                }
+            }
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ detail: 'Error al analizar documento' }));
-                throw new Error(errorData.detail || `Error ${response.status}`);
+                const errHttp = new Error(errorData.detail || `Error ${response.status}`) as Error & { status?: number };
+                errHttp.status = response.status;
+                throw errHttp;
             }
 
             const reader = response.body?.getReader();
@@ -1109,6 +1145,7 @@ export default function ChatPage() {
                         try {
                             const data = JSON.parse(line.slice(6));
                             if (data.token) {
+                                huboRespuesta = true;
                                 // On first token, hide typing indicator
                                 setIsDocumentAnalyzing(false);
                                 setMessages(prev => {
@@ -1146,7 +1183,13 @@ export default function ChatPage() {
                                 };
                                 const conTexto = userMsgGuardado;
                                 setMessages(prev => prev.map(m => (m === userMsg ? conTexto : m)));
+                            } else if (data.limite_plan) {
+                                /* LECTURA DE MUESTRA (25-oct-2026): el plan gratuito
+                                   leyó sólo las primeras hojas; la respuesta lo dice y
+                                   la tarjeta de abajo invita al plan que lo lee entero. */
+                                limitePlan = data.limite_plan;
                             } else if (data.error) {
+                                huboError = true;
                                 setMessages(prev => {
                                     const updated = [...prev];
                                     const last = updated[updated.length - 1];
@@ -1183,6 +1226,7 @@ export default function ChatPage() {
                     + 'el análisis que se ve puede estar incompleto.');
             }
         } catch (err: any) {
+            huboError = true;
             // Map technical errors to user-friendly Spanish messages
             let userMessage: string;
             const errMsg = err?.message || '';
@@ -1192,7 +1236,24 @@ export default function ChatPage() {
                     + 'Dejó de llegar información durante más de un minuto mientras se '
                     + 'analizaba tu documento. Puede que el análisis sí se haya completado: '
                     + 'vuelve a intentarlo y, si se repite, escríbenos a soporte@iurexia.com.';
-            } else if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError') || errMsg.includes('ERR_CONNECTION')) {
+            } else if (err?.status === 402) {
+                /* SIN CONSULTAS: el aviso del plan, no un error. La cuenta de
+                   pantalla podía ir atrasada respecto de la base. */
+                setShowLimitModal(true);
+                userMessage = '📊 **Ya usó las consultas de este periodo.**\n\n'
+                    + 'Su documento no se analizó y no se le descontó nada. '
+                    + '[Ver los planes →](/precios)';
+            } else if (err?.status === 413) {
+                /* MÁS HOJAS DE LAS QUE LEE SU PLAN: el detalle de la API ya dice
+                   cuántas tiene, cuántas lee el plan y cuál las cubre. Antes
+                   salía como «Error al analizar documento» y sin salida. */
+                userMessage = `📄 **${errMsg}**\n\nNo se le descontó la consulta. `
+                    + '[Ver qué plan lee su documento completo →](/precios)';
+            } else if (/Failed to fetch|NetworkError|ERR_CONNECTION|Load failed/i.test(errMsg)) {
+                /* EL DOCUMENTO VUELVE A LA CAJA (25-oct-2026). Ya se reintentó
+                   una vez; ahora el usuario reintenta con un toque, sin volver
+                   a buscar el archivo en el teléfono. */
+                setAdjuntoDevuelto({ file, prompt, nonce: Date.now() });
                 // ESTA RAMA ES SÓLO RED, y el mensaje decía otra cosa.
                 //
                 // Aquí se entra únicamente con Failed to fetch / NetworkError /
@@ -1204,9 +1265,10 @@ export default function ChatPage() {
                 // era malo, lo volvió a subir sin cambiar nada y funcionó. Lo
                 // que se rompió fue la conexión, y decirlo es lo mínimo.
                 userMessage = '🔌 **Se cortó la conexión al enviar el documento.**\n\n'
-                    + 'No es tu archivo: la petición no llegó a completarse. '
-                    + 'Vuelve a adjuntarlo — normalmente entra al segundo intento.\n\n'
-                    + 'Si se repite, avísanos en soporte@iurexia.com y lo revisamos.';
+                    + 'No es su archivo: la petición no llegó a completarse. '
+                    + 'Su documento sigue adjunto en la caja: pulse enviar para intentarlo otra vez. '
+                    + 'Si está con datos móviles, pruebe con wifi o con mejor señal.\n\n'
+                    + 'Si se repite, escríbanos a soporte@iurexia.com y lo revisamos.';
             } else if (errMsg.includes('Formato no soportado')) {
                 userMessage = `📋 **Formato no soportado.**\n\nSolo se aceptan archivos PDF, DOCX y DOC. Convierte tu documento a uno de estos formatos e intenta de nuevo.`;
             } else if (errMsg.includes('muy grande') || errMsg.includes('too large') || errMsg.includes('25MB')) {
@@ -1257,6 +1319,8 @@ export default function ChatPage() {
             }
 
             // Sync counter with real DB values after document analysis
+            let restantes: number | null = null;
+            let limiteMes = queriesLimit;
             if (user?.id && !isAdmin(user?.email)) {
                 try {
                     const { getSubscriptionInfo } = await import('@/lib/supabase');
@@ -1266,11 +1330,25 @@ export default function ChatPage() {
                         setQueriesLimit(info.queriesLimit);
                         setCounterPulse(true);
                         setTimeout(() => setCounterPulse(false), 600);
+                        restantes = Math.max(0, info.queriesLimit - info.queriesUsed);
+                        limiteMes = info.queriesLimit;
                     }
                 } catch {}
             }
+
+            /* LA TARJETA DEL PLAN GRATUITO (25-oct-2026, David): tras cada
+               documento que se respondió bien, cuánto le queda y qué abre Pro;
+               si se leyó en muestra, cuántas hojas y qué plan lo lee entero. */
+            const esGratuito = (profile?.subscription_type || 'gratuito') === 'gratuito';
+            if (esGratuito && !isAdmin(user?.email) && huboRespuesta && !huboError) {
+                setAvisoDocGratis({
+                    restantes,
+                    limite: limiteMes,
+                    ...(limitePlan ? { leidas: limitePlan.leidas, total: limitePlan.total, plan: limitePlan.plan } : {}),
+                });
+            }
         }
-    }, [user, activeConversationId, selectedEstado, queriesLimit, queriesUsed, setMessages, vincularNueva, estadoDeMensajes]);
+    }, [user, profile, activeConversationId, selectedEstado, queriesLimit, queriesUsed, setMessages, vincularNueva, estadoDeMensajes]);
 
     /* ═══ CONTINUAR EN UNA CONVERSACIÓN NUEVA (7-oct-2026) ═══════════════
        El botón del aviso de memoria llena (`AvisoMemoriaLlena`). El API
@@ -1971,6 +2049,7 @@ export default function ChatPage() {
                                 <ChatInput
                                     onSubmit={handleSendMessage}
                                     onDocumentSubmit={handleDocumentSubmit}
+                                    adjuntoDevuelto={adjuntoDevuelto}
                                     onStop={stopGeneration}
                                     isLoading={isLoading || basicoCargando}
                                     basico={modoBasico}
@@ -2147,6 +2226,9 @@ export default function ChatPage() {
                                     <PanelBasico bloqueado={bloqueado} sinCuenta={sinCuenta} compacto />
                                 </div>
                             )}
+                            {avisoDocGratis && !modoBasico && !analisisEnVuelo && (
+                                <AvisoDocumentoGratis datos={avisoDocGratis} onCerrar={() => setAvisoDocGratis(null)} />
+                            )}
                             <div ref={messagesEndRef} />
                         </div>
                     </>)}
@@ -2170,6 +2252,7 @@ export default function ChatPage() {
                         <ChatInput
                             onSubmit={handleSendMessage}
                             onDocumentSubmit={handleDocumentSubmit}
+                            adjuntoDevuelto={adjuntoDevuelto}
                             onStop={stopGeneration}
                             isLoading={isLoading || basicoCargando}
                             basico={modoBasico}

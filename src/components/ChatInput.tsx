@@ -21,7 +21,7 @@ import SelectorFuentes from './SelectorFuentes';
 import CalculadoraPlazos from './CalculadoraPlazos';
 import SelectorEsfuerzo from './SelectorEsfuerzo';
 import { FileText, X, Network, ChevronUp, ChevronDown, UploadCloud } from 'lucide-react';
-import { validarAdjunto, EXTENSIONES_ADJUNTO, LIMITE_ADJUNTO_MB } from '@/lib/documento/adjuntos';
+import { validarAdjunto, fijarAdjunto, AVISO_ADJUNTO_ILEGIBLE, EXTENSIONES_ADJUNTO, LIMITE_ADJUNTO_MB } from '@/lib/documento/adjuntos';
 import TextEnhanceModal from './TextEnhanceModal';
 import DraftModal, { DraftRequest } from './DraftModal';
 import SentenciaModal from './SentenciaModal';
@@ -34,6 +34,9 @@ import AvisoPlan from './AvisoPlan';
 import { enhanceText } from '@/lib/api';
 import { useAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
+
+/** La instrucción que viaja cuando se adjunta un documento sin escribir nada. */
+const PROMPT_DOCUMENTO_PREDETERMINADO = 'Analiza este documento y genera un resumen ejecutivo completo';
 
 interface ChatInputProps {
     onSubmit: (message: string, enableReasoning?: boolean) => void;
@@ -62,6 +65,10 @@ interface ChatInputProps {
     /** Modo básico SIN cuenta (la visita de prueba): lo que se enseña no son los
      *  planes sino lo que abre la cuenta gratuita, y el candado lleva a crearla. */
     sinCuenta?: boolean;
+    /** Un documento cuyo envío no salió del teléfono: vuelve a la caja, con su
+     *  instrucción, para reintentar con un toque. `nonce` distingue dos
+     *  devoluciones seguidas del mismo archivo. */
+    adjuntoDevuelto?: { file: File; prompt: string; nonce: number } | null;
 }
 
 export default function ChatInput({
@@ -83,6 +90,7 @@ export default function ChatInput({
     constructorAbierto = false,
     basico = false,
     sinCuenta = false,
+    adjuntoDevuelto = null,
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
     const [isListening, setIsListening] = useState(false);
@@ -325,7 +333,7 @@ export default function ChatInput({
 
             // If there's an attached document, use dedicated document analysis endpoint
             if (attachedDocument) {
-                const userPrompt = finalMessage || 'Analiza este documento y genera un resumen ejecutivo completo';
+                const userPrompt = finalMessage || PROMPT_DOCUMENTO_PREDETERMINADO;
                 const displayMessage = `📄 **Documento adjunto:** ${attachedDocument.fileName}\n\n${userPrompt}`;
 
                 if (onDocumentSubmit) {
@@ -449,16 +457,19 @@ export default function ChatInput({
             if (!archivos.length) return;
             const fallo = validarAdjunto(archivos[0]);
             if (fallo) { anunciarAdjunto(fallo); return; }
-            setAttachedDocument({ file: archivos[0], fileName: archivos[0].name });
-            setActiveMode('search');
-            /* SE DICE QUÉ ENTRÓ Y QUÉ NO. Aquí se revisa un documento por
-               consulta; callarse los que sobran produce un análisis seguro de
-               sí mismo sobre un expediente incompleto. */
-            anunciarAdjunto(archivos.length > 1
-                ? `Se adjuntó «${archivos[0].name}». Aquí se revisa un documento por consulta: `
-                  + `${archivos.length - 1} ${archivos.length - 1 === 1 ? 'archivo no se envió' : 'archivos no se enviaron'}.`
-                : `«${archivos[0].name}» adjuntado. Escriba qué quiere que se haga con él.`);
-            window.setTimeout(() => textareaRef.current?.focus(), 0);
+            const primero = archivos[0];
+            void fijarAdjunto(primero).then((fijo) => {
+                setAttachedDocument({ file: fijo, fileName: primero.name });
+                setActiveMode('search');
+                /* SE DICE QUÉ ENTRÓ Y QUÉ NO. Aquí se revisa un documento por
+                   consulta; callarse los que sobran produce un análisis seguro de
+                   sí mismo sobre un expediente incompleto. */
+                anunciarAdjunto(archivos.length > 1
+                    ? `Se adjuntó «${primero.name}». Aquí se revisa un documento por consulta: `
+                      + `${archivos.length - 1} ${archivos.length - 1 === 1 ? 'archivo no se envió' : 'archivos no se enviaron'}.`
+                    : `«${primero.name}» adjuntado. Escriba qué quiere que se haga con él.`);
+                window.setTimeout(() => textareaRef.current?.focus(), 0);
+            }).catch(() => anunciarAdjunto(AVISO_ADJUNTO_ILEGIBLE));
         };
         window.addEventListener('dragenter', entrar);
         window.addEventListener('dragover', encima);
@@ -475,10 +486,31 @@ export default function ChatInput({
     }, [showFileModal]);
 
     const handleFileExtracted = (file: File, fileName: string) => {
-        // Attach raw file for backend-side analysis (Gemini Flash 1M context)
-        setAttachedDocument({ file, fileName });
-        setActiveMode('search');
+        // El archivo crudo va al backend, que extrae y analiza; se fija en
+        // memoria al elegirlo para que el envío no dependa del teléfono (ver
+        // `fijarAdjunto`).
+        void fijarAdjunto(file)
+            .then((fijo) => {
+                setAttachedDocument({ file: fijo, fileName });
+                setActiveMode('search');
+            })
+            .catch(() => anunciarAdjunto(AVISO_ADJUNTO_ILEGIBLE));
     };
+
+    /* EL DOCUMENTO QUE NO SALIÓ VUELVE A LA CAJA (25-oct-2026). La caja lo
+       suelta al enviar; si el envío no llegaba al servidor había que volver a
+       buscarlo en el teléfono, y en móvil eso es justo donde se pierde. Ahora
+       regresa adjunto, con su instrucción, y basta con pulsar enviar. */
+    useEffect(() => {
+        if (!adjuntoDevuelto) return;
+        setAttachedDocument({ file: adjuntoDevuelto.file, fileName: adjuntoDevuelto.file.name });
+        if (adjuntoDevuelto.prompt && adjuntoDevuelto.prompt !== PROMPT_DOCUMENTO_PREDETERMINADO) {
+            setMessage((actual) => actual || adjuntoDevuelto.prompt);
+        }
+        setActiveMode('search');
+        anunciarAdjunto('Su documento sigue adjunto: pulse enviar para intentarlo otra vez.');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [adjuntoDevuelto?.nonce]);
 
     const handleEnhanceText = async (text: string, docType: string): Promise<string> => {
         const response = await enhanceText(text, docType, estado);
