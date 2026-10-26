@@ -15,6 +15,7 @@ import {
     PLAN_CONFIG,
 } from '@/lib/supabase-admin';
 import { guardarTarjetaQuePague, suscripcionDeLaFactura } from '@/lib/cobro-pendiente';
+import { reactivarSiPagoFacturaVieja, type Reactivacion } from '@/lib/reactivar-factura-vieja';
 import { avisarSuspension } from '@/lib/correo/suspension';
 import { conTope, medirCompraMeta } from '@/lib/meta-capi';
 import { Resend } from 'resend';
@@ -678,6 +679,33 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
             } catch (e) {
                 console.error(`⚠️ Entró el pago de ${email} pero no pude reabrir su cuenta cerrada:`, e);
             }
+
+            // LA FACTURA VIEJA DE UNA SUSCRIPCIÓN YA CANCELADA (26-oct-2026). El
+            // muro manda a pagar la deuda de una suscripción que Stripe canceló
+            // por falta de pago, y pagarla no la revive: la cuenta se quedaba en
+            // gratuito con el cobro hecho. Ver `@/lib/reactivar-factura-vieja`.
+            try {
+                const r = await reactivarSiPagoFacturaVieja(getStripe(), invoice, email);
+                if (r.resultado === 'reactivada') {
+                    console.log(`♻️ ${email} pagó la factura ${invoice.id} de ${r.suscripcionVieja} (cancelada): suscripción nueva ${r.suscripcion.id}, primer cargo ${r.primerCargo.toISOString()}`);
+                    // No se espera al aviso `customer.subscription.created`: el
+                    // plan se pone ya, mientras la persona sigue en la pantalla.
+                    await handleSubscriptionUpdate(r.suscripcion);
+                    await avisarReactivacion(email, invoice, r);
+                } else if (r.resultado === 'revisar') {
+                    console.warn(`⚠️ ${email} pagó la factura ${invoice.id} de una suscripción cancelada, sin reactivar: ${r.motivo}`);
+                    await avisarReactivacion(email, invoice, r);
+                } else if (r.resultado === 'ya_tiene') {
+                    console.log(`ℹ️ ${email} pagó una factura vieja pero ya tiene la suscripción ${r.suscripcion}: no se crea otra`);
+                }
+            } catch (e) {
+                console.error(`❌ ${email} pagó la factura ${invoice.id} y no pude reactivar su plan:`, e);
+                await avisarReactivacion(email, invoice, {
+                    resultado: 'revisar',
+                    motivo: `falló la reactivación automática: ${(e as Error).message}`,
+                    suscripcionVieja: suscripcionDeLaFactura(invoice) || '(sin id)',
+                });
+            }
         }
 
         /* EL RECIBO, CON EL NOMBRE QUE VERÁ EN SU BANCO (23-sep-2026).
@@ -694,6 +722,49 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
         } catch (e) {
             console.error(`⚠️ No salió el recibo de ${email}:`, e);
         }
+    }
+}
+
+/** Aviso interno a soporte@ de una reactivación por factura vieja, o de un
+ *  pago que no se pudo convertir en plan y necesita a una persona. Nunca
+ *  rompe el webhook: si el correo falla, queda en el registro. */
+async function avisarReactivacion(
+    email: string,
+    invoice: Stripe.Invoice,
+    r: Exclude<Reactivacion, { resultado: 'no_aplica' } | { resultado: 'ya_tiene' }>,
+) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) return;
+    const pesos = ((invoice.amount_paid || 0) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 });
+    const filas = r.resultado === 'reactivada'
+        ? [
+            ['Resultado', 'Plan reactivado automáticamente'],
+            ['Suscripción nueva', r.suscripcion.id],
+            ['Primer cargo', r.primerCargo.toLocaleString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'long', timeStyle: 'short' })],
+        ]
+        : [
+            ['Resultado', 'NO se reactivó: revisar a mano'],
+            ['Motivo', r.motivo],
+        ];
+    const tabla = [
+        ['Usuario', email],
+        ['Pagó', `$${pesos} MXN · factura ${invoice.id}`],
+        ['Suscripción cancelada', r.suscripcionVieja],
+        ...filas,
+    ].map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;color:#777">${k}</td><td style="padding:4px 0">${String(v).replace(/</g, '&lt;')}</td></tr>`).join('');
+    try {
+        await new Resend(apiKey).emails.send({
+            from: process.env.FROM_EMAIL || 'Iurexia <noreply@iurexia.com>',
+            to: 'soporte@iurexia.com',
+            subject: r.resultado === 'reactivada'
+                ? `[Soporte] Plan reactivado tras pagar una factura vieja — ${email}`
+                : `[Soporte] Pagó una factura vieja y NO se reactivó — ${email}`,
+            html: `<div style="font-family:-apple-system,Segoe UI,sans-serif;font-size:14px;color:#1a1a1a">
+<p>Pago de la factura de una suscripción que Stripe ya había cancelado.</p>
+<table>${tabla}</table></div>`,
+        });
+    } catch (e) {
+        console.error(`⚠️ No salió el aviso de reactivación de ${email}:`, e);
     }
 }
 
