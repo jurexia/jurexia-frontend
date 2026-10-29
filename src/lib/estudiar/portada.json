@@ -307,6 +307,256 @@
   "subtitulo": "De la locatio conductio romana al juicio oral del Código Nacional: forma, deberes, terminación y despojo",
   "miniatura": "/estudiar/miniaturas/contrato-de-arrendamiento-640.webp",
   "duracion": 734,
+  "publicado": "2026-10-27T19:00:00-06:00"
+ },
+ {
+  "id": "v98",
+  "slug": "starbucks-responsabilidad-civil",
+  "numero": "XIII.1",
+  "titulo": "Un té, Starbucks y un veredicto de 50 millones de dólares",
+  "subtitulo": "Michael Garcia contra Starbucks: negligencia, daños compensatorios y responsabilidad civil en México",
+  "miniatura": "/estudiar/miniaturas/starbucks-responsabilidad-civil-640.webp",
+  "duracion": 562,
+  "publicado": "2026-10-19T19:00:00-06:00"
+ },
+ {
+  "id": "v99",
+  "slug": "liebeck-mcdonalds-danos-punitivos",
+  "numero": "XIII.2",
+  "titulo": "¿Millones por derramarse un café?",
+  "subtitulo": "Stella Liebeck contra McDonald's, los daños punitivos y el caso Mayan Palace en la Suprema Corte de México",
+  "miniatura": "/estudiar/miniaturas/liebeck-mcdonalds-danos-punitivos-640.webp",
+  "duracion": 541,
+  "publicado": "2026-10-22T19:00:00-06:00"
+ },
+ {
+  "id": "v106",
+  "slug": "tesla-piloto-automatico-responsabilidad",
+  "numero": "XIII.3",
+  "titulo": "Benavides contra Tesla",
+  "subtitulo": "El choque de Key Largo, la condena de 242 millones de dólares por el piloto automático y qué reglas aplicaría el derecho mexicano a un caso parecido",
+  "miniatura": "/estudiar/miniaturas/tesla-piloto-automatico-responsabilidad-640.webp",
+  "duracion": 583,
+  "publicado": "2026-10-17T19:00:00-06:00"
+ },
+ {
+  "id": "v111",
+  "slug": "responsabilidad-patrimonial-del-estado",
+  "numero": "XIII.4",
+  "titulo": "Cuando el Estado te daña… y debe repararte",
+  "subtitulo": "La responsabilidad patrimonial del Estado en México: origen, requisitos, casos y cómo reclamarla",
+  "miniatura": "/estudiar/miniaturas/responsabilidad-patrimonial-del-estado-640.webp",
+  "duracion": 594,
+  "publicado": "2026-11-03T19:00:00-06:00"
+ },
+ {
+  "id": "v112",
+  "slug": "responsabilidad-civil-coche-prestado",
+  "numero": "XIII.5",
+  "titulo": "Presté mi carro y atropelló a alguien: ¿quién paga?",
+  "subtitulo": "La responsabilidad civil en México: de la ley Aquilia al riesgo creado, el daño moral, la solidaridad del dueño y el seguro",
+  "miniatura": "/estudiar/miniaturas/responsabilidad-civil-coche-prestado-640.webp",
+  "duracion": 592,
+  "publicado": "2026-11-05T19:00:00-06:00"
+ },
+ {
+  "id": "v121",
+  "slug": "negligencia-medica",
+  "numero": "XIII.6",
+  "titulo": "¿Cuánto vale lo que un error médico te quita?",
+  "subtitulo": "La negligencia médica en México: la prueba, la reparación del daño y las vías para reclamar",
+  "miniatura": "/estudiar/miniaturas/negligencia-medica-640.webp",
+  "duracion": 1128,
+  "publicado": "2026-11-18T19:00:00-06:00"
+ },
+ {
+  "id": "v102",
+  "slug": "falacia-del-fiscal-y-peticion-de-principio",
+  "numero": "XII.1",
+  "titulo": "Culpable si se parece, culpable si no",
+  "subtitulo": "La falacia del fiscal y la petición de principio en los casos de Sally Clark y Alfred Dreyfus, y lo que dicen los tribunales mexicanos",
+  "miniatura": "/estudiar/miniaturas/falacia-del-fiscal-y-peticion-de-principio-640.webp",
+  "duracion": 382,
+  "publicado": "2026-10-17T19:00:00-06:00"
+ },
+ {
+  "id": "v103",
+  "slug": "ad-populum-y-pregunta-compleja",
+  "numero": "XII.2",
+  "titulo": "La mayoría no es una prueba",
+  "subtitulo": "La falacia ad populum y la pregunta compleja, de Elaine (1919) y Salem (1692) a las reglas mexicanas del juicio penal",
+  "miniatura": "/estudiar/miniaturas/ad-populum-y-pregunta-compleja-640.webp",
+  "duracion": 430,
+  "publicado": "2026-10-24T19:00:00-06:00"
+ },
+ {
+  "id": "v104",
+  "slug": "falacia-de-autoridad-y-de-ignorancia",
+  "numero": "XII.3",
+  "titulo": "«Lo dice el perito»",
+  "subtitulo": "La falacia de autoridad y la falacia de ignorancia: los casos Mayfield y Willingham, un detector sin mecanismo y las tesis mexicanas sobre peritos y coartadas",
+  "miniatura": "/estudiar/miniaturas/falacia-de-autoridad-y-de-ignorancia-640.webp",
+  "duracion": 460,
+  "publicado": "2026-10-25T19:00:00-06:00"
+ },
+ {
+  "id": "v105",
+  "slug": "ad-hominem-y-post-hoc",
+  "numero": "XII.4",
+  "titulo": "«Mira cómo es»",
+  "subtitulo": "La falacia ad hominem y la falacia post hoc en los casos de Amanda Knox y Lucia de Berk, y lo que ha dicho la Suprema Corte sobre la víctima, el autor y la coincidencia de tiempo",
+  "miniatura": "/estudiar/miniaturas/ad-hominem-y-post-hoc-640.webp",
+  "duracion": 432,
+  "publicado": "2026-10-29T19:00:00-06:00"
+ },
+ {
+  "id": "v107",
+  "slug": "prueba-escondida-y-afirmar-el-consecuente",
+  "numero": "XII.5",
+  "titulo": "La prueba escondida y la sangre que no era",
+  "subtitulo": "Dos falacias en la valoración de la prueba, los casos de Michael Morton y Lindy Chamberlain y las reglas mexicanas que las desarman",
+  "miniatura": "/estudiar/miniaturas/prueba-escondida-y-afirmar-el-consecuente-640.webp",
+  "duracion": 429,
+  "publicado": "2026-10-30T19:00:00-06:00"
+ },
+ {
+  "id": "v108",
+  "slug": "falso-dilema-presunto-culpable",
+  "numero": "XII.6",
+  "titulo": "¿Mentía o fue él?",
+  "subtitulo": "El falso dilema y la generalización apresurada en el caso de «Presunto culpable» y las reglas mexicanas sobre el testimonio",
+  "miniatura": "/estudiar/miniaturas/falso-dilema-presunto-culpable-640.webp",
+  "duracion": 354,
+  "publicado": "2026-10-31T19:00:00-06:00"
+ },
+ {
+  "id": "v109",
+  "slug": "falsa-analogia-y-pendiente-resbaladiza",
+  "numero": "XII.7",
+  "titulo": "¿En la bici o sobre la bici?",
+  "subtitulo": "La falsa analogía y la pendiente resbaladiza, y cómo las frena el derecho: la analogía prohibida en materia penal y la exigencia de probar cada escalón",
+  "miniatura": "/estudiar/miniaturas/falsa-analogia-y-pendiente-resbaladiza-640.webp",
+  "duracion": 418,
+  "publicado": "2026-11-01T19:00:00-06:00"
+ },
+ {
+  "id": "v101",
+  "slug": "orden-de-cateo",
+  "numero": "V.3",
+  "titulo": "Una orden de cateo no es un cheque en blanco",
+  "subtitulo": "Cateo, aseguramiento de bienes y suspensión en el amparo en el proceso penal acusatorio",
+  "miniatura": "/estudiar/miniaturas/orden-de-cateo-640.webp",
+  "duracion": 421,
+  "publicado": "2026-10-21T19:00:00-06:00"
+ },
+ {
+  "id": "v116",
+  "slug": "vallarta-presos-sin-sentencia",
+  "numero": "V.4",
+  "titulo": "Casi veinte años preso sin sentencia",
+  "subtitulo": "Israel Vallarta, la prisión preventiva y el derecho a ser juzgado en un plazo razonable",
+  "miniatura": "/estudiar/miniaturas/vallarta-presos-sin-sentencia-640.webp",
+  "duracion": 592,
+  "publicado": "2026-11-06T19:00:00-06:00"
+ },
+ {
+  "id": "v118",
+  "slug": "procedimiento-abreviado",
+  "numero": "V.5",
+  "titulo": "La justicia tiene descuentos",
+  "subtitulo": "El procedimiento abreviado en México: la ley, la jurisprudencia y dos casos que eligieron distinto",
+  "miniatura": "/estudiar/miniaturas/procedimiento-abreviado-640.webp",
+  "duracion": 598,
+  "publicado": "2026-11-09T19:00:00-06:00"
+ },
+ {
+  "id": "v119",
+  "slug": "hasta-donde-puede-llegar-un-policia",
+  "numero": "V.6",
+  "titulo": "Hasta dónde puede llegar un policía",
+  "subtitulo": "Los límites del poder policial en México, de 1789 al Protocolo Nacional sobre el Uso de la Fuerza",
+  "miniatura": "/estudiar/miniaturas/hasta-donde-puede-llegar-un-policia-640.webp",
+  "duracion": 864,
+  "publicado": "2026-11-11T19:00:00-06:00"
+ },
+ {
+  "id": "v120",
+  "slug": "suspension-en-el-amparo",
+  "numero": "II.6",
+  "titulo": "Un juez corrió de madrugada",
+  "subtitulo": "La suspensión en el juicio de amparo: de dónde viene, cómo se pide, cuánto cuesta y dónde termina",
+  "miniatura": "/estudiar/miniaturas/suspension-en-el-amparo-640.webp",
+  "duracion": 1057,
+  "publicado": "2026-11-13T19:00:00-06:00"
+ },
+ {
+  "id": "v113",
+  "slug": "doble-nacionalidad-escrutinio-estricto",
+  "numero": "III.6",
+  "titulo": "¿Te pueden prohibir gobernar por dónde naciste?",
+  "subtitulo": "La reforma de la nacionalidad única de 2026 frente al escrutinio estricto: categoría sospechosa, proporcionalidad y derecho comparado",
+  "miniatura": "/estudiar/miniaturas/doble-nacionalidad-escrutinio-estricto-640.webp",
+  "duracion": 674,
+  "publicado": "2026-11-04T19:00:00-06:00"
+ },
+ {
+  "id": "v123",
+  "slug": "compraventa-buena-fe-registral",
+  "numero": "VI.4",
+  "titulo": "Compraventas y fraudes: ¿de quién es la casa?",
+  "subtitulo": "La doble venta, la venta de cosa ajena, el Registro Público de la Propiedad y los límites de la buena fe registral en el derecho mexicano",
+  "miniatura": "/estudiar/miniaturas/compraventa-buena-fe-registral-640.webp",
+  "duracion": 1137,
+  "publicado": "2026-11-21T19:00:00-06:00"
+ },
+ {
+  "id": "v122",
+  "slug": "herencia-sin-testamento",
+  "numero": "VII.5",
+  "titulo": "¿Quién hereda si no hay testamento?",
+  "subtitulo": "La sucesión legítima en el derecho mexicano: el orden de los herederos, la casa, el concubinato, los hijos y la nueva lectura de la Suprema Corte",
+  "miniatura": "/estudiar/miniaturas/herencia-sin-testamento-640.webp",
+  "duracion": 944,
+  "publicado": "2026-11-15T19:00:00-06:00"
+ },
+ {
+  "id": "v100",
+  "slug": "dilema-del-tranvia",
+  "numero": "X.5",
+  "titulo": "¿Moverías la palanca?",
+  "subtitulo": "El dilema del tranvía, sus variantes y las preguntas del derecho penal mexicano: comisión por omisión, estado de necesidad y reparación del daño",
+  "miniatura": "/estudiar/miniaturas/dilema-del-tranvia-640.webp",
+  "duracion": 575,
+  "publicado": "2026-10-26T19:00:00-06:00"
+ },
+ {
+  "id": "v115",
+  "slug": "demandas-absurdas",
+  "numero": "XI.2",
+  "titulo": "Antes de reírte, léela",
+  "subtitulo": "Demandas absurdas de México y de Estados Unidos, lo que resolvieron los jueces y la que sonaba a chiste y ganó en la Suprema Corte",
+  "miniatura": "/estudiar/miniaturas/demandas-absurdas-640.webp",
+  "duracion": 587,
+  "publicado": "2026-10-23T19:00:00-06:00"
+ },
+ {
+  "id": "v114",
+  "slug": "caducidad-fiscal-nulidad-lisa-y-llana",
+  "numero": "XIV.1",
+  "titulo": "Hacienda llegó cinco meses tarde",
+  "subtitulo": "Facultades de comprobación, caducidad y nulidad lisa y llana: por qué el error casi nunca cierra la puerta y el reloj sí",
+  "miniatura": "/estudiar/miniaturas/caducidad-fiscal-nulidad-lisa-y-llana-640.webp",
+  "duracion": 623,
   "publicado": "2026-11-02T19:00:00-06:00"
+ },
+ {
+  "id": "v117",
+  "slug": "faltas-civicas-cdmx",
+  "numero": "XIV.2",
+  "titulo": "La cubeta y otras multas de todos los días",
+  "subtitulo": "Faltas cívicas y de tránsito en la Ciudad de México: qué se sanciona, quién sanciona, cuánto cuesta y qué límites pone la Constitución",
+  "miniatura": "/estudiar/miniaturas/faltas-civicas-cdmx-640.webp",
+  "duracion": 574,
+  "publicado": "2026-11-08T19:00:00-06:00"
  }
 ]

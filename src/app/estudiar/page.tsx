@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { ArrowRight, BookOpenText, FileText, Play } from 'lucide-react';
+import { ArrowRight, BookOpenText, ChevronDown, FileText, Play } from 'lucide-react';
 
 import Navbar from '@/components/Navbar';
 import PieDePagina, { IconoYouTube } from '@/components/PieDePagina';
-import { EstadoEstreno, MarcaEstudiada, ProgresoEstudio } from '@/components/estudiar/Estudio';
+import { AbrirTemaDelEnlace, DesplegarTemas, EstadoEstreno, MarcaEstudiada, ProgresoEstudio } from '@/components/estudiar/Estudio';
 import { claseWeb } from '@/lib/fuentes-web';
 import {
     CANAL_YOUTUBE,
@@ -176,37 +176,54 @@ export default function EstudiarPage() {
                         <div>
                             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-brown">Programa</p>
                             <h2 id="titulo-programa" className="mt-2 font-serif text-3xl font-semibold text-charcoal-900 sm:text-4xl">
-                                {t.ejes} ejes, {t.lecciones} lecciones
+                                {t.ejes} temas, {t.lecciones} lecciones
                             </h2>
                         </div>
                         <ProgresoEstudio total={LECCIONES.length} ids={LECCIONES.map((l) => l.id)} />
                     </div>
 
-                    <div className="mt-12 space-y-16">
-                        {EJES.filter((e) => leccionesDelEje(e.id).length > 0).map((eje) => (
-                            <section key={eje.id} id={`eje-${eje.id}`} aria-labelledby={`t-${eje.id}`} className="scroll-mt-20">
-                                <div className="grid gap-x-8 gap-y-2 border-t-2 border-charcoal-900 pt-5 md:grid-cols-[5rem_1fr]">
-                                    <span className="font-serif text-4xl font-semibold leading-none text-accent-gold" aria-hidden>
-                                        {eje.numero}
-                                    </span>
-                                    <div>
-                                        <h3 id={`t-${eje.id}`} className="font-serif text-2xl font-semibold text-charcoal-900">
-                                            <span className="sr-only">Eje {eje.numero}. </span>{eje.titulo}
-                                        </h3>
-                                        <p className="mt-1.5 max-w-3xl font-lectura text-[1.0625rem] leading-relaxed text-charcoal-900/70">
-                                            {eje.descripcion}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <ol className="mt-6 md:ml-[7rem]">
-                                    {leccionesDelEje(eje.id).map((l) => (
-                                        <FilaLeccion key={l.id} l={l} />
-                                    ))}
-                                </ol>
-                            </section>
-                        ))}
+                    {/* Cada tema se despliega con un clic (29-oct-2026). Con más de
+                        cincuenta lecciones, la lista completa abierta se amontonaba:
+                        ahora se ve el temario de un vistazo y se abre sólo el tema
+                        que interesa. Es un <details> nativo, así que funciona sin
+                        JavaScript; el enlace «/estudiar#eje-…» de cada lección abre
+                        su tema al llegar. */}
+                    <div className="mt-6 flex justify-end">
+                        <DesplegarTemas />
                     </div>
+                    <div className="mt-3 border-b-2 border-charcoal-900">
+                        {EJES.filter((e) => leccionesDelEje(e.id).length > 0).map((eje) => {
+                            const n = leccionesDelEje(eje.id).length;
+                            return (
+                                <details key={eje.id} id={`eje-${eje.id}`} data-tema className="group scroll-mt-20 border-t-2 border-charcoal-900">
+                                    <summary className="grid cursor-pointer list-none grid-cols-[3.25rem_1fr] gap-x-4 gap-y-2 py-5 transition-colors hover:bg-charcoal-900/[0.02] md:grid-cols-[5rem_1fr_auto] md:gap-x-8 [&::-webkit-details-marker]:hidden">
+                                        <span className="font-serif text-3xl font-semibold leading-none text-accent-gold md:text-4xl" aria-hidden>
+                                            {eje.numero}
+                                        </span>
+                                        <span className="min-w-0">
+                                            <span className="block font-serif text-[1.375rem] font-semibold leading-snug text-charcoal-900 md:text-2xl">
+                                                <span className="sr-only">Tema {eje.numero}. </span>{eje.titulo}
+                                            </span>
+                                            <span className="mt-1.5 block max-w-3xl font-lectura text-[1.0625rem] leading-relaxed text-charcoal-900/70">
+                                                {eje.descripcion}
+                                            </span>
+                                        </span>
+                                        <span className="col-start-2 inline-flex items-center gap-2 self-start whitespace-nowrap text-[13px] font-medium text-charcoal-900/70 md:col-start-auto md:mt-1">
+                                            {n} {n === 1 ? 'lección' : 'lecciones'}
+                                            <ChevronDown className="h-4 w-4 text-accent-brown transition-transform duration-200 group-open:rotate-180" aria-hidden />
+                                        </span>
+                                    </summary>
+
+                                    <ol className="mb-6 md:ml-[7rem]">
+                                        {leccionesDelEje(eje.id).map((l) => (
+                                            <FilaLeccion key={l.id} l={l} />
+                                        ))}
+                                    </ol>
+                                </details>
+                            );
+                        })}
+                    </div>
+                    <AbrirTemaDelEnlace />
                 </div>
             </section>
 

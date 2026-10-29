@@ -96,6 +96,50 @@ export function ProgresoEstudio({ total, ids: validos }: { total: number; ids: s
     );
 }
 
+/** Abre el tema al que apunta el enlace (/estudiar#eje-amparo): desde la ficha
+    de una lección se llega a su tema ya desplegado. */
+export function AbrirTemaDelEnlace() {
+    useEffect(() => {
+        const abrir = () => {
+            const id = decodeURIComponent(window.location.hash.slice(1));
+            if (!id.startsWith('eje-')) return;
+            const tema = document.getElementById(id);
+            if (tema instanceof HTMLDetailsElement && !tema.open) {
+                tema.open = true;
+                tema.scrollIntoView({ block: 'start' });
+            }
+        };
+        abrir();
+        window.addEventListener('hashchange', abrir);
+        return () => window.removeEventListener('hashchange', abrir);
+    }, []);
+    return null;
+}
+
+/** Desplegar o plegar todos los temas del programa de una vez. */
+export function DesplegarTemas() {
+    const [abiertos, setAbiertos] = useState(false);
+    useEffect(() => {
+        const temas = () => Array.from(document.querySelectorAll<HTMLDetailsElement>('details[data-tema]'));
+        const leer = () => setAbiertos(temas().length > 0 && temas().every((d) => d.open));
+        leer();
+        temas().forEach((d) => d.addEventListener('toggle', leer));
+        return () => temas().forEach((d) => d.removeEventListener('toggle', leer));
+    }, []);
+    return (
+        <button
+            type="button"
+            onClick={() => {
+                document.querySelectorAll<HTMLDetailsElement>('details[data-tema]').forEach((d) => { d.open = !abiertos; });
+                setAbiertos(!abiertos);
+            }}
+            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-charcoal-900/70 underline decoration-charcoal-900/20 underline-offset-4 transition-colors hover:text-charcoal-900 hover:decoration-accent-gold"
+        >
+            {abiertos ? 'Plegar todos los temas' : 'Desplegar todos los temas'}
+        </button>
+    );
+}
+
 /** «Estreno: 6 oct» mientras el video no se publique. Se decide en el navegador. */
 export function EstadoEstreno({ publicado }: { publicado: string }) {
     const [futuro, setFuturo] = useState(false);
