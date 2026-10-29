@@ -54,7 +54,20 @@ import {
     generateTitle,
     updateConversationTitle
 } from '@/lib/conversations';
-import { avisarTraba, nuevoId, reclamarRespuesta, recuperarRespuestas } from '@/lib/respuestas-servidor';
+import {
+    avisarTraba,
+    copiaYaGuardada,
+    copiasDelServidor,
+    esperaConAviso,
+    nuevoId,
+    reclamarRespuesta,
+    recuperarRespuestas,
+    sesionDelAlmacen,
+    textoDeCopia,
+} from '@/lib/respuestas-servidor';
+import { analizarDocumento, type FinDelAnalisis } from '@/lib/analisis-documento';
+import { getSession } from '@/lib/supabase';
+import AvisoRedRetiene from '@/components/AvisoRedRetiene';
 /* Carpetas y flujos de trabajo en el chat (25-sep-2026): ver ChatSidebar. */
 import FlujosDeTrabajo, { type InicioDeFlujo } from '@/components/FlujosDeTrabajo';
 import ContextoConsulta from '@/components/ContextoConsulta';
@@ -107,6 +120,13 @@ function sinMarcadoresDeUsuario(texto: string): string {
         .replace(/<!-- DOCUMENTO_INICIO -->[\s\S]*?(<!-- DOCUMENTO_FIN -->|$)/g, '')
         .trim();
 }
+
+/* Cuando la red retuvo el análisis más que la espera (ver `@/lib/analisis-documento`):
+   se enseña en el hilo, pero no se guarda; lo guardado lo pone la recuperación. */
+const ANALISIS_SIGUE_EN_EL_SERVIDOR = '⏳ **Su análisis sigue en el servidor.**\n\n'
+    + 'Su red está reteniendo la respuesta y pasaron más de diez minutos sin que llegara. '
+    + 'No lo vuelva a enviar: en cuanto el servidor termine, el análisis aparecerá en esta '
+    + 'conversación, con el texto del documento, al volver a esta pestaña o al recargar la página.';
 
 function idDeRespuesta(markdown: string): string {
     let h = 0;
@@ -467,6 +487,17 @@ export default function ChatPage() {
     const todoElAcervo = useCallback(() => redaccionFlujoRef.current !== null, []);
     // Las partes de un flujo ya se pagaron con el flujo: no descuentan consultas.
     const sinCobro = todoElAcervo;
+    /* LA RED QUE RETIENE, EN PANTALLA (28-oct-2026): ver `AvisoRedRetiene`.
+       Una vez cerrada, no vuelve a salir mientras la página siga abierta. */
+    const [avisoRed, setAvisoRed] = useState(false);
+    const avisoRedCerradoRef = useRef(false);
+    const alRetenerLaRed = useCallback(() => {
+        if (!avisoRedCerradoRef.current) setAvisoRed(true);
+    }, []);
+    const cerrarAvisoRed = useCallback(() => {
+        avisoRedCerradoRef.current = true;
+        setAvisoRed(false);
+    }, []);
 
     // Chat Hook
     const { messages, isLoading, error, sendMessage, stopGeneration, clearMessages, setMessages, retryMessage, retryType, sourcesCount, pasos, limpiarPasos } = useChat({
@@ -480,6 +511,7 @@ export default function ChatPage() {
         contextoSistema,
         todoElAcervo,
         sinCobro,
+        onRedRetuvo: alRetenerLaRed,
     });
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -524,7 +556,7 @@ export default function ChatPage() {
     const [activeConversationId, setActiveConvId] = useState<string | null>(null);
     const [conversationsLoading, setConversationsLoading] = useState(true);
     // La tarjeta del plan gratuito es de la última respuesta de ESTA conversación.
-    useEffect(() => { setAvisoDocGratis(null); }, [activeConversationId]);
+    useEffect(() => { setAvisoDocGratis(null); setAvisoRed(false); }, [activeConversationId]);
 
     /* ═══ CARPETAS Y FLUJOS (25-sep-2026) ═══
        `carpetas` es null mientras la base no tenga el vínculo (o no cargue):
@@ -646,11 +678,23 @@ export default function ChatPage() {
     ocupadoRef.current = isLoading || isDocumentAnalyzing || analisisEnVuelo;
     const activaRef = useRef<string | null>(null);
     activaRef.current = activeConversationId;
+    /* SIN ESPERAR A QUE CAMBIE DE PESTAÑA (28-oct-2026). Tras un envío que
+       terminó sin texto —se detuvo, o la red retuvo el flujo— el servidor
+       puede seguir escribiendo, y su copia se recupera un minuto después de
+       terminada. Se vuelve a mirar a los 2 y a los 6 minutos. */
+    const recuperarRef = useRef<(() => Promise<void>) | null>(null);
+    const relojesRecuperacion = useRef<ReturnType<typeof setTimeout>[]>([]);
+    const programarRecuperacion = useCallback(() => {
+        relojesRecuperacion.current.forEach(clearTimeout);
+        relojesRecuperacion.current = [2, 6].map((min) =>
+            setTimeout(() => { void recuperarRef.current?.(); }, min * 60_000));
+    }, []);
+    useEffect(() => () => relojesRecuperacion.current.forEach(clearTimeout), []);
     useEffect(() => {
         if (authLoading || !isAuthenticated) return;
         let ultima = 0;
-        const recuperar = async () => {
-            if (Date.now() - ultima < 60_000) return;
+        const recuperar = async (programada = false) => {
+            if (!programada && Date.now() - ultima < 60_000) return;
             ultima = Date.now();
             const tocadas = await recuperarRespuestas();
             if (!tocadas.length) return;
@@ -663,9 +707,13 @@ export default function ChatPage() {
             }
         };
         void recuperar();
+        recuperarRef.current = () => recuperar(true);
         const alVolver = () => { if (document.visibilityState === 'visible') void recuperar(); };
         document.addEventListener('visibilitychange', alVolver);
-        return () => document.removeEventListener('visibilitychange', alVolver);
+        return () => {
+            recuperarRef.current = null;
+            document.removeEventListener('visibilitychange', alVolver);
+        };
     }, [authLoading, isAuthenticated, setMessages]);
 
     // "Ensure conversation exists" useEffect REMOVED — was a race condition source
@@ -798,6 +846,7 @@ export default function ChatPage() {
 
     const handleSendMessage = useCallback(async (content: string, enableReasoning = false) => {
         setAvisoDocGratis(null);
+        setAvisoRed(false);
         if (modoBasico) { void enviarBasico(content); return; }
         if (!user) return;
 
@@ -892,16 +941,6 @@ export default function ChatPage() {
         // which was stale (captured at useCallback creation time, not after streaming).
         if (convId) {
             try {
-                /* ¿LA GUARDÓ YA OTRA PESTAÑA? La API guardó su copia de esta
-                   respuesta; quien la reclama primero es quien la pasa al
-                   historial. Si la recuperación (otra pestaña, o ésta al volver)
-                   se adelantó, aquí no se guarda dos veces. Sin copia en el
-                   servidor, se guarda como siempre. */
-                if ((await reclamarRespuesta(peticionId)) === 'ajena') {
-                    setConversations(await getConversations());
-                    lastSentUserMsgRef.current = null;
-                    return;
-                }
                 const latestMessages = await estadoDeMensajes();
 
                 // EL HISTORIAL SE GUARDA CON LO QUE DEVOLVIÓ EL STREAM, no con
@@ -921,18 +960,46 @@ export default function ChatPage() {
                 const delEstado = latestMessages.length >= 1
                     ? latestMessages[latestMessages.length - 1]
                     : null;
+                /* Y EL ESTADO SÓLO VALE SI RESPONDE A ESTA PREGUNTA (28-oct-2026).
+                   Si el abogado cambió de conversación mientras esperaba, el
+                   último mensaje en pantalla es de la otra, y se guardaba —y
+                   se reclamaba— como respuesta de ésta. */
+                const previo = latestMessages.length >= 2 ? latestMessages[latestMessages.length - 2] : null;
+                const delEstadoEsDeEsta = delEstado?.role === 'assistant'
+                    && previo?.role === 'user' && previo.content === content;
                 const textoAsistente = (respuesta && respuesta.trim())
-                    || (delEstado?.role === 'assistant' ? delEstado.content.trim() : '');
+                    || (delEstadoEsDeEsta && delEstado ? delEstado.content.trim() : '');
 
                 if (textoAsistente) {
+                    /* ¿LA GUARDÓ YA OTRA PESTAÑA? La API guardó su copia de esta
+                       respuesta; quien la reclama primero es quien la pasa al
+                       historial. Si la recuperación (otra pestaña, o ésta al volver)
+                       se adelantó, aquí no se guarda dos veces. Sin copia en el
+                       servidor, se guarda como siempre. */
+                    if ((await reclamarRespuesta(peticionId)) === 'ajena') {
+                        setConversations(await getConversations());
+                        lastSentUserMsgRef.current = null;
+                        return;
+                    }
                     await addMessageBatch(convId, userMsg, {
-                        ...(delEstado?.role === 'assistant' ? delEstado : {}),
+                        ...(delEstadoEsDeEsta ? delEstado : {}),
                         role: 'assistant',
                         content: textoAsistente,
                     } as Message);
                 } else {
-                    // El stream no produjo nada: al menos queda la pregunta.
-                    await addMessageToConversation(convId, userMsg);
+                    /* SIN TEXTO NO SE RECLAMA (28-oct-2026). El stream no trajo
+                       nada —se detuvo, se cambió de conversación o la red retuvo
+                       el flujo—, pero el servidor puede seguir y terminar: la
+                       copia queda para la recuperación, que pone la respuesta
+                       detrás de esta pregunta. Antes se reclamaba aquí y la
+                       respuesta terminada después ya no la traía nadie: 29,833
+                       caracteres de un Platinum tras Cisco Umbrella, 26-oct.
+                       Al menos queda la pregunta, salvo que la recuperación ya
+                       la haya guardado con su respuesta. */
+                    if (!(await copiaYaGuardada(peticionId))) {
+                        await addMessageToConversation(convId, userMsg);
+                    }
+                    programarRecuperacion();
                 }
 
                 // Refresh sidebar
@@ -945,7 +1012,7 @@ export default function ChatPage() {
 
         lastSentUserMsgRef.current = null;
     }, [user, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed,
-        modoBasico, enviarBasico, profile?.subscription_type, vincularNueva, estadoDeMensajes]);
+        modoBasico, enviarBasico, profile?.subscription_type, vincularNueva, estadoDeMensajes, programarRecuperacion]);
 
     /* LA VENTANA DEL ESTADO SALÍA DOS VECES (20-oct-2026). Al confirmar el estado,
        la consulta pendiente se mandaba con el `handleSendMessage` del render en que
@@ -975,6 +1042,7 @@ export default function ChatPage() {
     const handleDocumentSubmit = useCallback(async (file: File, prompt: string, displayMessage: string) => {
         if (!user) return;
         setAvisoDocGratis(null);
+        setAvisoRed(false);
         const isAdminUser = isAdmin(user?.email);
         const remaining = queriesLimit - queriesUsed;
         if (remaining <= 0 && !isAdminUser) {
@@ -1066,164 +1134,140 @@ export default function ChatPage() {
             formData.append('historial_archivo', new Blob([historial], { type: 'application/json' }), 'historial.json');
         }
 
+        /* LA COPIA DEL ANÁLISIS EN EL SERVIDOR (28-oct-2026). Con este id y el
+           token, la API guarda el análisis y el texto leído en `respuestas_chat`:
+           si la red retiene el flujo, la pantalla espera esa copia en vez de dar
+           el análisis por perdido (ver `@/lib/analisis-documento`). Sin sesión
+           sale igual, sin copia, como antes. */
+        const peticionId = nuevoId();
+        formData.append('peticion_id', peticionId);
+        formData.append('mensaje_visible', displayMessage);
+        if (docConvId) formData.append('conversation_id', docConvId);
+        const carpetaDoc = consultaCtxRef.current.expedienteId;
+        if (carpetaDoc) formData.append('expediente_id', carpetaDoc);
+        const sesionDoc = (await esperaConAviso(getSession(), 8_000, null, 'sesion', { peticionId }))
+            ?? sesionDelAlmacen();
+
         // El análisis de un documento adjunto también nace en el panel.
         if (!constructorAbiertoRef.current) setDocumentoAbierto(true);
-        let reloj: ReturnType<typeof setTimeout> | undefined;
         /* Para la tarjeta del plan gratuito: si llegó respuesta, si hubo error y
            si la API leyó el documento en muestra (`limite_plan`). */
         let huboRespuesta = false;
         let huboError = false;
-        let limitePlan: { leidas: number; total: number; plan: string | null } | null = null;
+        // Con `as`: se asigna dentro de un evento, y TS lo daría por null para siempre.
+        let limitePlan = null as { leidas: number; total: number; plan: string | null } | null;
+        /* Lo que se guarda como respuesta: lo mismo que se pinta, llevado aquí y
+           no releído del estado, que si el abogado cambió de conversación ya es
+           el de la otra. */
+        let textoRespuesta = '';
+        let fin: FinDelAnalisis | null = null;
+        const pintarRespuesta = (contenido: string) => setMessages(prev => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            if (last && last.role === 'assistant') {
+                updated[updated.length - 1] = { ...last, content: contenido };
+            } else {
+                updated.push({ role: 'assistant' as const, content: contenido });
+            }
+            return updated;
+        });
         try {
             /* ═══ EL RELOJ MIRA EL SILENCIO, NO EL RELOJ (18-sep-2026) ═══
                Antes se abortaba a los 120 segundos contados desde el envío,
-               pasara lo que pasara. Una contestación de demanda escaneada de
-               50 páginas tarda más que eso sólo en reconocerse, así que el
-               análisis se cancelaba aquí mientras el servidor lo terminaba
-               para nadie: cuatro veces el mismo día, con las cuatro consultas
-               cobradas. El servidor ahora cuenta su avance y late cada cinco
-               segundos; lo que se vigila es que no llegue NADA. */
-            const SILENCIO_MAXIMO_MS = 75000;
-            const controller = new AbortController();
-            const rearmar = () => {
-                if (reloj) clearTimeout(reloj);
-                reloj = setTimeout(() => controller.abort(), SILENCIO_MAXIMO_MS);
-            };
-            rearmar();
+               pasara lo que pasara: una contestación de demanda escaneada de 50
+               páginas se cancelaba mientras el servidor la terminaba. El
+               servidor cuenta su avance y late cada cinco segundos; lo que se
+               vigila es que no llegue NADA.
 
-            /* UN REINTENTO SI LA PETICIÓN NO SALIÓ (25-oct-2026). «Failed to
-               fetch» antes de las cabeceras casi siempre quiere decir que el
-               servidor no recibió nada: en móvil, una red que parpadea o una
-               pestaña que el teléfono pausó. El archivo ya está en memoria
-               (`fijarAdjunto`), así que reenviarlo es lo mismo que el primer
-               envío. «Load failed» es como lo dice Safari en el iPhone. */
-            let response: Response | null = null;
-            for (let intento = 1; ; intento++) {
-                try {
-                    response = await fetch(`${API_URL}/analyze-document`, {
-                        method: 'POST',
-                        body: formData,
-                        signal: controller.signal,
-                    });
-                    break;
-                } catch (errEnvio: any) {
-                    const deRed = errEnvio?.name !== 'AbortError'
-                        && /Failed to fetch|NetworkError|ERR_CONNECTION|Load failed/i.test(errEnvio?.message || '');
-                    if (!deRed || intento >= 2) throw errEnvio;
-                    console.warn('[analyze-document] el envío no salió; se reintenta una vez', errEnvio);
-                    setPasoDocumento('Reintentando el envío del documento…');
-                    await new Promise((r) => setTimeout(r, 2500));
-                    rearmar();
-                }
-            }
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ detail: 'Error al analizar documento' }));
-                const errHttp = new Error(errorData.detail || `Error ${response.status}`) as Error & { status?: number };
-                errHttp.status = response.status;
-                throw errHttp;
-            }
-
-            const reader = response.body?.getReader();
-            if (!reader) throw new Error('No se pudo iniciar la lectura del análisis');
-
-            const decoder = new TextDecoder();
-            let buffer = '';
-            let tramasPerdidas = 0;
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                rearmar();   // llegó algo: texto, avance o latido
-
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n');
-                buffer = lines.pop() || '';
-
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.slice(6));
-                            if (data.token) {
-                                huboRespuesta = true;
-                                // On first token, hide typing indicator
-                                setIsDocumentAnalyzing(false);
-                                setMessages(prev => {
-                                    const updated = [...prev];
-                                    const last = updated[updated.length - 1];
-                                    if (last && last.role === 'assistant') {
-                                        updated[updated.length - 1] = {
-                                            ...last,
-                                            content: last.content + data.token
-                                        };
-                                    } else {
-                                        // First token — create assistant message
-                                        updated.push({ role: 'assistant' as const, content: data.token });
-                                    }
-                                    return updated;
-                                });
-                            } else if (data.progreso) {
-                                setPasoDocumento(String(data.progreso));
-                            } else if (data.documento?.texto) {
-                                /* EL DOCUMENTO SE QUEDA EN LA CONVERSACIÓN
-                                   (23-sep-2026). Antes el texto leído se usaba
-                                   para este análisis y se perdía: la siguiente
-                                   pregunta iba al chat con sólo «📄 Documento
-                                   adjunto: nombre», y el modelo contestaba que no
-                                   tenía el decreto que el abogado acababa de
-                                   subir. Ahora el texto queda oculto dentro de su
-                                   mensaje —la burbuja no lo enseña— y viaja en el
-                                   historial de los turnos siguientes. */
-                                const d = data.documento as { nombre?: string; texto: string; recortado?: boolean };
-                                // El formato vive en `mensajeConDocumento`: la conversación
-                                // que continúa otra (7-oct-2026) arranca con el mismo.
-                                userMsgGuardado = {
-                                    ...userMsg,
-                                    content: mensajeConDocumento(displayMessage, d.nombre || file.name, d.texto, d.recortado),
+               Y EL SILENCIO YA NO TIRA EL ANÁLISIS (28-oct-2026). Tras Cisco
+               Umbrella no llega nada hasta el final, y a los 75 s se abortaban
+               análisis que el servidor terminaba (144, 110 y 101 s). Ahora,
+               pasado el silencio, se sigue escuchando y se espera además la
+               copia del servidor; si la red corta a media lectura, también. */
+            fin = await analizarDocumento({
+                url: `${API_URL}/analyze-document`,
+                cuerpo: formData,
+                cabeceras: sesionDoc?.access_token
+                    ? { Authorization: `Bearer ${sesionDoc.access_token}` }
+                    : undefined,
+                peticionId,
+                copias: copiasDelServidor,
+                eventos: {
+                    token: (token) => {
+                        huboRespuesta = true;
+                        textoRespuesta += token;
+                        // On first token, hide typing indicator
+                        setIsDocumentAnalyzing(false);
+                        setMessages(prev => {
+                            const updated = [...prev];
+                            const last = updated[updated.length - 1];
+                            if (last && last.role === 'assistant') {
+                                updated[updated.length - 1] = {
+                                    ...last,
+                                    content: last.content + token
                                 };
-                                const conTexto = userMsgGuardado;
-                                setMessages(prev => prev.map(m => (m === userMsg ? conTexto : m)));
-                            } else if (data.limite_plan) {
-                                /* LECTURA DE MUESTRA (25-oct-2026): el plan gratuito
-                                   leyó sólo las primeras hojas; la respuesta lo dice y
-                                   la tarjeta de abajo invita al plan que lo lee entero. */
-                                limitePlan = data.limite_plan;
-                            } else if (data.error) {
-                                huboError = true;
-                                setMessages(prev => {
-                                    const updated = [...prev];
-                                    const last = updated[updated.length - 1];
-                                    if (last && last.role === 'assistant') {
-                                        updated[updated.length - 1] = {
-                                            ...last,
-                                            content: `❌ Error al analizar documento: ${data.error}`
-                                        };
-                                    } else {
-                                        updated.push({ role: 'assistant' as const, content: `❌ Error al analizar documento: ${data.error}` });
-                                    }
-                                    return updated;
-                                });
-                                setIsDocumentAnalyzing(false);
+                            } else {
+                                // First token — create assistant message
+                                updated.push({ role: 'assistant' as const, content: token });
                             }
-                        } catch (e) {
-                            /* UNA TRAMA QUE NO SE PUEDE LEER NO SE TIRA EN
-                               SILENCIO (20-sep-2026). Este `catch` estaba vacío:
-                               si una trama fallaba al parsear, ese trozo del
-                               análisis se perdía sin dejar rastro. El servidor
-                               guarda la respuesta entera, así que la base queda
-                               completa y el cliente con un pedazo — y nadie se
-                               entera de nada. Al menos que se vea en la consola
-                               y se cuente. */
-                            tramasPerdidas++;
-                            console.error('[analyze-document] trama SSE ilegible',
-                                { perdidas: tramasPerdidas, largo: line.length, error: e });
-                        }
-                    }
-                }
-            }
-            if (tramasPerdidas > 0) {
-                console.error(`[analyze-document] ${tramasPerdidas} trama(s) perdida(s): `
-                    + 'el análisis que se ve puede estar incompleto.');
+                            return updated;
+                        });
+                    },
+                    progreso: (paso) => setPasoDocumento(paso),
+                    aviso: (paso) => setPasoDocumento(paso),
+                    documento: (d) => {
+                        /* EL DOCUMENTO SE QUEDA EN LA CONVERSACIÓN (23-sep-2026).
+                           Antes el texto leído se usaba para este análisis y se
+                           perdía: la siguiente pregunta iba al chat con sólo «📄
+                           Documento adjunto: nombre», y el modelo contestaba que no
+                           tenía el decreto que el abogado acababa de subir. Ahora el
+                           texto queda oculto dentro de su mensaje —la burbuja no lo
+                           enseña— y viaja en el historial de los turnos siguientes. */
+                        // El formato vive en `mensajeConDocumento`: la conversación
+                        // que continúa otra (7-oct-2026) arranca con el mismo.
+                        userMsgGuardado = {
+                            ...userMsg,
+                            content: mensajeConDocumento(displayMessage, d.nombre || file.name, d.texto, d.recortado),
+                        };
+                        const conTexto = userMsgGuardado;
+                        setMessages(prev => prev.map(m => (m === userMsg ? conTexto : m)));
+                    },
+                    /* LECTURA DE MUESTRA (25-oct-2026): el plan gratuito leyó sólo
+                       las primeras hojas; la respuesta lo dice y la tarjeta de
+                       abajo invita al plan que lo lee entero. */
+                    limitePlan: (l) => { limitePlan = l; },
+                    error: (mensaje) => {
+                        huboError = true;
+                        textoRespuesta = `❌ Error al analizar documento: ${mensaje}`;
+                        pintarRespuesta(textoRespuesta);
+                        setIsDocumentAnalyzing(false);
+                    },
+                },
+            });
+            if (fin.redRetuvo) alRetenerLaRed();
+            if (fin.via === 'copia') {
+                /* EL FLUJO NO LLEGÓ Y LA COPIA SÍ: se pinta y se guarda como un
+                   análisis normal, con el documento leído dentro de la pregunta. */
+                const enPantalla = userMsgGuardado;
+                const conDocumento: Message = { role: 'user', content: fin.copia.pregunta || enPantalla.content };
+                userMsgGuardado = conDocumento;
+                textoRespuesta = textoDeCopia(fin.copia);
+                const deLaCopia = textoRespuesta;
+                setMessages(prev => {
+                    const i = prev.lastIndexOf(enPantalla);
+                    if (i === -1) return prev;   // cambió de conversación: sólo se guarda
+                    return [...prev.slice(0, i), conDocumento,
+                        ...(deLaCopia ? [{ role: 'assistant' as const, content: deLaCopia }] : [])];
+                });
+                if (deLaCopia) huboRespuesta = true;
+                if (deLaCopia.startsWith('❌ Error al analizar documento:')) huboError = true;
+            } else if (fin.via === 'sigue') {
+                /* El servidor seguía escribiendo al acabarse la espera. Aquí no
+                   se guarda nada: cuando termine, la recuperación pasa al
+                   historial la pregunta —con el documento— y el análisis. */
+                huboError = true;
+                pintarRespuesta(ANALISIS_SIGUE_EN_EL_SERVIDOR);
+                programarRecuperacion();
             }
         } catch (err: any) {
             huboError = true;
@@ -1279,18 +1323,9 @@ export default function ChatPage() {
                 userMessage = `❌ **Error al analizar documento.**\n\n${errMsg || 'Ocurrió un error inesperado. Intenta de nuevo en unos momentos.'}`;
             }
 
-            setMessages(prev => {
-                const updated = [...prev];
-                const last = updated[updated.length - 1];
-                if (last && last.role === 'assistant') {
-                    updated[updated.length - 1] = { ...last, content: userMessage };
-                } else {
-                    updated.push({ role: 'assistant' as const, content: userMessage });
-                }
-                return updated;
-            });
+            textoRespuesta = userMessage;
+            pintarRespuesta(userMessage);
         } finally {
-            if (reloj) clearTimeout(reloj);
             setPasoDocumento('');
             // ALWAYS reset — guarantees export bar (PDF/DOCX/Print) appears after response
             setIsDocumentAnalyzing(false);
@@ -1299,14 +1334,22 @@ export default function ChatPage() {
             setAnalisisEnVuelo(false);
 
             // ── SAVE document analysis messages to conversation history ──
-            // FIX 2026-05-22: Same Promise-based state reading as handleSendMessage
-            if (docConvId) {
+            // Con lo que se pintó en ESTE análisis (`textoRespuesta`). Si el
+            // servidor sigue escribiendo, nada: lo guardará la recuperación.
+            if (docConvId && fin?.via !== 'sigue') {
                 try {
-                    const latestMessages = await estadoDeMensajes();
-
-                    const lastMsg = latestMessages[latestMessages.length - 1];
-                    if (lastMsg && lastMsg.role === 'assistant' && lastMsg.content.trim().length > 0) {
-                        await addMessageBatch(docConvId, userMsgGuardado, lastMsg);
+                    if (textoRespuesta.trim()) {
+                        /* La API guardó su copia de este mismo análisis: quien lo
+                           pasa al historial la reclama, para que la recuperación no
+                           lo guarde otra vez. Si ya lo pasó ella (otra pestaña), se
+                           enseña lo guardado. */
+                        if ((await reclamarRespuesta(peticionId)) === 'ajena') {
+                            const conv = activaRef.current === docConvId ? await getConversation(docConvId) : null;
+                            if (conv && activaRef.current === docConvId) setMessages(conv.messages);
+                        } else {
+                            await addMessageBatch(docConvId, userMsgGuardado,
+                                { role: 'assistant', content: textoRespuesta });
+                        }
                     } else {
                         await addMessageToConversation(docConvId, userMsgGuardado);
                     }
@@ -1348,7 +1391,8 @@ export default function ChatPage() {
                 });
             }
         }
-    }, [user, profile, activeConversationId, selectedEstado, queriesLimit, queriesUsed, setMessages, vincularNueva, estadoDeMensajes]);
+    }, [user, profile, activeConversationId, selectedEstado, queriesLimit, queriesUsed, setMessages, vincularNueva,
+        alRetenerLaRed, programarRecuperacion]);
 
     /* ═══ CONTINUAR EN UNA CONVERSACIÓN NUEVA (7-oct-2026) ═══════════════
        El botón del aviso de memoria llena (`AvisoMemoriaLlena`). El API
@@ -2228,6 +2272,9 @@ export default function ChatPage() {
                             )}
                             {avisoDocGratis && !modoBasico && !analisisEnVuelo && (
                                 <AvisoDocumentoGratis datos={avisoDocGratis} onCerrar={() => setAvisoDocGratis(null)} />
+                            )}
+                            {avisoRed && !isLoading && !analisisEnVuelo && (
+                                <AvisoRedRetiene onCerrar={cerrarAvisoRed} />
                             )}
                             <div ref={messagesEndRef} />
                         </div>

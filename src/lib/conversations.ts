@@ -418,10 +418,24 @@ export async function deleteConversation(id: string): Promise<boolean> {
 // MESSAGE OPERATIONS (with retry + fallback)
 // ============================================================================
 
+/* EN SU SITIO DE LA CONVERSACIÓN (28-oct-2026). Lo que pasa al historial la
+   recuperación (`./respuestas-servidor`) no es de ahora: es de cuando se hizo
+   la consulta. Con `creadaEn` —una hora de la BASE, nunca del reloj de este
+   equipo— el mensaje se ordena ahí y no al final, detrás de lo que el abogado
+   preguntó después. En un par, la respuesta va 1 ms detrás de su pregunta. */
+export interface OpcionesDeGuardado {
+    creadaEn?: string;
+}
+
+export function unMsDespues(iso: string): string {
+    return new Date(Date.parse(iso) + 1).toISOString();
+}
+
 // Add a single message to a conversation — with retry and localStorage fallback
 export async function addMessageToConversation(
     conversationId: string,
-    message: Message
+    message: Message,
+    opciones: OpcionesDeGuardado = {}
 ): Promise<boolean> {
     try {
         await withRetry(async () => {
@@ -432,6 +446,7 @@ export async function addMessageToConversation(
                     conversation_id: conversationId,
                     role: message.role,
                     content: message.content,
+                    ...(opciones.creadaEn ? { created_at: opciones.creadaEn } : {}),
                 });
 
             if (msgError) throw msgError;
@@ -477,8 +492,10 @@ export async function addMessageToConversation(
 export async function addMessageBatch(
     conversationId: string,
     userMessage: Message,
-    assistantMessage: Message
+    assistantMessage: Message,
+    opciones: OpcionesDeGuardado = {}
 ): Promise<boolean> {
+    const { creadaEn } = opciones;
     try {
         await withRetry(async () => {
             const { error } = await supabase
@@ -488,11 +505,13 @@ export async function addMessageBatch(
                         conversation_id: conversationId,
                         role: userMessage.role,
                         content: userMessage.content,
+                        ...(creadaEn ? { created_at: creadaEn } : {}),
                     },
                     {
                         conversation_id: conversationId,
                         role: assistantMessage.role,
                         content: assistantMessage.content,
+                        ...(creadaEn ? { created_at: unMsDespues(creadaEn) } : {}),
                     },
                 ]);
 
