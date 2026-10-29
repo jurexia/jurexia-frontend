@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 import type Stripe from 'stripe';
-import { boton, envolver, esc, fuerte, parrafo, rotulo, SITIO } from './plantilla';
+import { boton, envolver, esc, fuerte, parrafo, PIE_SOPORTE, rotulo, SITIO } from './plantilla';
 
 /**
  * EL AVISO DE SUSPENSIÓN (31-ago-2026; al primer rechazo desde el 28-sep-2026).
@@ -26,7 +26,7 @@ export async function avisarSuspension(email: string, invoice: Stripe.Invoice) {
 
     const { asunto, html } = correoDeSuspension(invoice);
     const { error } = await new Resend(clave).emails.send({
-        from: 'Equipo de Desarrollo de Iurexia <soporte@iurexia.com>',
+        from: 'Soporte de Iurexia <soporte@iurexia.com>',
         replyTo: 'soporte@iurexia.com',
         to: email,
         subject: asunto,
@@ -57,14 +57,11 @@ export function correoDeSuspension(invoice: Pick<Stripe.Invoice, 'hosted_invoice
         '16px 0 20px 0'),
         parrafo('Si esto es un error, o si prefiere cancelar su suscripción, respóndanos a este correo: '
             + 'lo revisa una persona.'),
-        `<p style="margin:0;">Atentamente,<br>${fuerte('Equipo de Desarrollo de Iurexia')}</p>`,
+        `<p style="margin:0;">Atentamente,<br>${fuerte('Soporte de Iurexia')}</p>`,
     ].join('\n');
 
     return {
         asunto: 'Su cuenta de Iurexia está suspendida: no pudimos cobrar su mensualidad',
-        html: envolver({
-            cuerpo,
-            pie: 'Este aviso se envía una sola vez, cuando la cuenta se suspende por un cobro rechazado.',
-        }),
+        html: envolver({ cuerpo, logo: true, pie: PIE_SOPORTE }),
     };
 }

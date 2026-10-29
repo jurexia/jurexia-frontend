@@ -21,6 +21,10 @@
       "schedule": "0 14 * * *"
     },
     {
+      "path": "/api/cron/cobranza",
+      "schedule": "0 16 * * *"
+    },
+    {
       "path": "/api/noticias/dof",
       "schedule": "0 15 * * 1-5"
     },

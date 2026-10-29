@@ -164,7 +164,21 @@ export interface OpcionesCorreo {
     urlBaja?: string;
     /** Texto del pie. Por defecto, el aviso de verificación de citas. */
     pie?: string;
+    /** Membrete con el logotipo en vez del nombre en texto. Lo llevan los
+     *  avisos que firma Soporte de Iurexia. */
+    logo?: boolean;
 }
+
+/**
+ * El logotipo del membrete: 480×185, pintado a 240×92, fondo blanco. Vive en el
+ * almacenamiento público de Supabase. `public/logo-jurexia.png` es la marca
+ * vieja («Jurexia»): no usarlo.
+ */
+export const LOGO_CORREO =
+    'https://ukcuzhwmmfwvcedvhfll.supabase.co/storage/v1/object/public/legal-docs/assets/correo/logo-iurexia-correo.png';
+
+/** Pie de los avisos de soporte: invita a responder, no a darse de baja. */
+export const PIE_SOPORTE = 'Soporte de Iurexia · soporte@iurexia.com · Puede responder directamente a este correo.';
 
 const PIE_POR_DEFECTO =
     'Las respuestas de la plataforma citan la fuente oficial para su verificación y no sustituyen el criterio profesional del abogado.';
@@ -176,7 +190,11 @@ const PIE_POR_DEFECTO =
  * confirmar cambio): esos no se pueden dar de baja porque no son publicidad, y
  * ofrecer la baja ahí haría que el usuario se saliera de avisos que necesita.
  */
-export function envolver({ cuerpo, urlBaja, pie, visual, preencabezado }: OpcionesCorreo): string {
+export function envolver({ cuerpo, urlBaja, pie, visual, preencabezado, logo }: OpcionesCorreo): string {
+    const membrete = logo
+        ? `<img src="${LOGO_CORREO}" width="240" height="92" alt="Iurexia" style="display:block;width:240px;max-width:100%;height:auto;border:0;outline:none;" />`
+        : `<div style="font-family:${SERIF};font-size:25px;font-weight:600;color:${PALETA.tinta};letter-spacing:0.5px;line-height:1;">Iurexia</div>
+      <div style="font-family:${SANS};font-size:10px;letter-spacing:2.6px;color:${PALETA.marron};text-transform:uppercase;padding-top:8px;">Legal Tech</div>`;
     const baja = urlBaja
         ? `<br><a href="${esc(urlBaja)}" style="color:${PALETA.marron};text-decoration:underline;">Darse de baja de estos avisos</a>`
         : '';
@@ -189,9 +207,8 @@ export function envolver({ cuerpo, urlBaja, pie, visual, preencabezado }: Opcion
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background-color:${PALETA.cremaPapel};border:1px solid ${PALETA.borde};">
 
   <tr>
-    <td style="padding:34px 44px 26px 44px;border-bottom:2px solid ${PALETA.oro};">
-      <div style="font-family:${SERIF};font-size:25px;font-weight:600;color:${PALETA.tinta};letter-spacing:0.5px;line-height:1;">Iurexia</div>
-      <div style="font-family:${SANS};font-size:10px;letter-spacing:2.6px;color:${PALETA.marron};text-transform:uppercase;padding-top:8px;">Legal Tech</div>
+    <td style="padding:${logo ? '26px 44px 20px 44px' : '34px 44px 26px 44px'};border-bottom:2px solid ${PALETA.oro};">
+      ${membrete}
     </td>
   </tr>
 
