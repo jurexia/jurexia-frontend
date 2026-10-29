@@ -187,6 +187,48 @@ function motivoDelRechazo(e: unknown): string {
 }
 
 /**
+ * EL MÉTODO QUE LA SUSCRIPCIÓN NO ADMITE (28-oct-2026).
+ *
+ * Las suscripciones nacen en Checkout con `payment_method_types: ['card']`, y
+ * Stripe guarda esa lista en `subscription.payment_settings`. El portal, en
+ * cambio, ofrece los métodos dinámicos de la cuenta, Link entre ellos: quien
+ * elige Link deja como predeterminado del cliente un método de tipo `link`.
+ * Al copiarlo a la suscripción, Stripe rechaza la actualización entera («The
+ * `default_payment_method` provided has a payment method type (link) that is
+ * not included in `payment_settings[payment_method_types]`») y la ruta
+ * devolvía 500: cuatro veces el 28-oct, todas de la misma cuenta, que ya
+ * había hecho lo que el muro le pedía y se quedó viendo «No pudimos completar
+ * el paso».
+ *
+ * Se eligió NO copiar lo que la suscripción no admite, en vez de añadir
+ * `link` a su lista: ampliar los métodos de una suscripción viva cambia cómo
+ * cobra Stripe en adelante —reintentos automáticos y página de la factura
+ * incluidos— y eso es una decisión de cobro, no un arreglo. Así nada cambia
+ * en Stripe y el cliente sabe exactamente qué hacer.
+ *
+ * Devuelve el tipo rechazado, o null si todas las suscripciones lo admiten.
+ * Una suscripción sin lista propia (`payment_method_types` null) sigue la
+ * configuración de la cuenta, y ésa ya dejó guardar el método: se admite.
+ */
+function tipoNoAdmitido(
+    metodo: Stripe.PaymentMethod | null, morosas: Stripe.Subscription[],
+): string | null {
+    if (!metodo) return null;
+    const rechaza = morosas.some((s) => {
+        const admitidos = s.payment_settings?.payment_method_types;
+        return !!admitidos?.length && !(admitidos as string[]).includes(metodo.type);
+    });
+    return rechaza ? metodo.type : null;
+}
+
+function mensajeMetodoNoAdmitido(tipo: string): string {
+    const nombre = tipo === 'link' ? 'Link' : 'Ese método de pago';
+    return `${nombre} no se puede usar para cobrar tu suscripción, que sólo admite tarjeta. `
+        + 'Vuelve a actualizar tu método de pago y escribe directamente los datos de una '
+        + 'tarjeta de crédito o débito' + (tipo === 'link' ? ', sin entrar con Link.' : '.');
+}
+
+/**
  * Cobrar ya, al volver del portal. La tarjeta predeterminada del cliente —la
  * que acaba de dar de alta— pasa a sus suscripciones en mora y con ella se
  * pagan sus facturas abiertas, de la más vieja a la más nueva.
@@ -205,9 +247,25 @@ export async function reintentarCobro(email: string): Promise<ResultadoCobro> {
         return { estado: 'rechazado', mensaje: 'No encontramos cómo cobrar tu adeudo. Escríbenos a soporte@iurexia.com.' };
     }
 
-    const cliente = await stripe.customers.retrieve(adeudo.customerId);
+    // Se expande el método para conocer su TIPO antes de copiarlo: ver
+    // `tipoNoAdmitido`.
+    const cliente = await stripe.customers.retrieve(adeudo.customerId, {
+        expand: ['invoice_settings.default_payment_method'],
+    });
     const pred = 'deleted' in cliente ? null : cliente.invoice_settings?.default_payment_method;
     const nueva = (typeof pred === 'string' ? pred : pred?.id) || null;
+    const metodo = pred && typeof pred !== 'string' ? pred : null;
+
+    // Antes de tocar nada: si la suscripción no admite el método nuevo, ni se
+    // copia ni se cobra con él. La factura hereda la misma lista, así que
+    // `invoices.pay` con ese método tampoco pasaría, y su error caería en
+    // `motivoDelRechazo` como «tu banco rechazó el cargo», que es falso: el
+    // banco ni se enteró.
+    const noAdmitido = tipoNoAdmitido(metodo, adeudo.morosas);
+    if (noAdmitido) {
+        console.warn(`💳 ${email} eligió un método de tipo ${noAdmitido}, que su suscripción no admite: no se copia ni se cobra`);
+        return { estado: 'rechazado', mensaje: mensajeMetodoNoAdmitido(noAdmitido) };
+    }
 
     for (const sub of adeudo.morosas) {
         const actual = typeof sub.default_payment_method === 'string'

@@ -64,7 +64,12 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Save to Supabase using admin client (bypasses RLS)
+        // LLAVE DE SERVICIO, A PROPÓSITO. `authenticated` no tiene privilegio
+        // UPDATE sobre user_profiles (sólo SELECT, acotado por la política
+        // «auth.uid() = id»), así que con el cliente de la sesión esta
+        // escritura nunca pasaría. La llave de servicio se salta RLS: lo único
+        // que acota la fila es el filtro de abajo, y su valor sale del token
+        // verificado por `auth.getUser`, nunca del cuerpo de la petición.
         const supabaseAdmin = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -81,15 +86,31 @@ export async function POST(request: NextRequest) {
                 uso_cfdi: uso_cfdi || 'G03',
                 updated_at: new Date().toISOString(),
             })
-            .eq('user_id', user.id)
+            // LA LLAVE ES `id`, NO `user_id` (28-oct-2026). user_profiles no
+            // tiene columna user_id: su llave es `id`, la misma de auth.users.
+            // Con `.eq('user_id', …)` Postgres respondía 42703 «column does
+            // not exist» y la ruta devolvía 500 SIEMPRE, en el GET y en el
+            // POST, desde que nació (a396fdd, 8-feb). Lo medido el 28-oct:
+            // 0 de 3,884 perfiles con RFC, y 14 respuestas 500 ese día sólo
+            // por abrir la página de perfil.
+            .eq('id', user.id)
             .select('stripe_customer_id')
-            .single();
+            .maybeSingle();
 
         if (updateError) {
             console.error('Error saving fiscal data:', updateError);
             return NextResponse.json(
                 { error: 'Error al guardar datos fiscales' },
                 { status: 500 }
+            );
+        }
+        // Sin perfil no hay fila que actualizar: el UPDATE afecta 0 filas y
+        // Postgres no lo trata como error. Se dice, en vez de responder
+        // «guardado» sin haber guardado nada.
+        if (!profile) {
+            return NextResponse.json(
+                { error: 'No encontramos tu perfil. Escríbenos a soporte@iurexia.com.' },
+                { status: 404 }
             );
         }
 
@@ -191,8 +212,11 @@ export async function GET(request: NextRequest) {
         const { data, error } = await supabaseAdmin
             .from('user_profiles')
             .select('rfc, razon_social, regimen_fiscal, codigo_postal_fiscal, uso_cfdi')
-            .eq('user_id', user.id)
-            .single();
+            // `id`, no `user_id`: ver el POST. `maybeSingle` porque un perfil
+            // que todavía no existe no es un fallo del servidor; la página de
+            // perfil ya pinta el formulario vacío cuando `data` llega en null.
+            .eq('id', user.id)
+            .maybeSingle();
 
         if (error) {
             console.error('Error fetching fiscal data:', error);

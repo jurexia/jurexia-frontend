@@ -137,7 +137,7 @@ export async function GET(req: NextRequest) {
             if (restante <= 0) break;
             if (Date.now() > plazoHasta) break;
 
-            const destinatarios = await segmento(campania);
+            let destinatarios = await segmento(campania);
             if (destinatarios.length === 0) continue;
 
             // El enlace de invitación se DERIVA del id del usuario, pero el
@@ -149,13 +149,30 @@ export async function GET(req: NextRequest) {
             // Pasó de verdad: 151 de los 161 correos de la primera tanda
             // salieron con un enlace irresoluble, porque el código sólo se
             // guardaba cuando el abogado abría su panel de referidos.
+            //
+            // Y POR LOTES, NO EN RÁFAGA (28-oct-2026). Aquí había un
+            // `Promise.all` de un PATCH por destinatario: 1,001 PATCH en cinco
+            // segundos que no cambiaban nada, y otros ~1,700 que nunca
+            // llegaban. Ver `asegurarCodigos`. Si no se puede comprobar quién
+            // tiene código, esta tanda se salta hoy en vez de mandar a ciegas;
+            // y a quien no se le pudo guardar no se le manda el enlace.
             if (campania === 'referidos') {
-                const { asegurarCodigo } = await import('@/lib/referidos-backend');
-                await Promise.all(
-                    destinatarios
-                        .filter(d => d.id)
-                        .map(d => asegurarCodigo(d.id as string).catch(() => null)),
-                );
+                const { asegurarCodigos } = await import('@/lib/referidos-backend');
+                try {
+                    const codigos = await asegurarCodigos(
+                        destinatarios.map(d => d.id).filter((id): id is string => !!id),
+                    );
+                    if (codigos.guardados) {
+                        console.log(`🎟️ ${codigos.guardados} códigos de invitación guardados antes de enviar (${codigos.revisados} revisados)`);
+                    }
+                    if (codigos.fallidos.length) {
+                        const fuera = new Set(codigos.fallidos);
+                        destinatarios = destinatarios.filter(d => !d.id || !fuera.has(d.id));
+                    }
+                } catch (e) {
+                    console.error('🎟️ referidos se salta hoy: no se pudo comprobar quién tiene código', e);
+                    continue;
+                }
             }
 
             const r = await enviarCampania({

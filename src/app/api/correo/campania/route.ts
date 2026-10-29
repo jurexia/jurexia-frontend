@@ -125,15 +125,22 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const destinatarios = await segmento(cual);
+        let destinatarios = await segmento(cual);
 
         // Igual que el cron: el enlace de invitación apunta a un código que
         // tiene que estar GUARDADO antes de enviar, o el referido se pierde.
+        // Por lotes y sólo a quien le falta, no un PATCH por destinatario a la
+        // vez (ver `asegurarCodigos`); si la comprobación falla, lanza y la
+        // corrida se detiene antes de mandar nada.
         if ((cual === 'referidos' || cual === 'actualizacion') && modo === 'real') {
-            const { asegurarCodigo } = await import('@/lib/referidos-backend');
-            await Promise.all(
-                destinatarios.filter(d => d.id).map(d => asegurarCodigo(d.id as string).catch(() => null)),
+            const { asegurarCodigos } = await import('@/lib/referidos-backend');
+            const codigos = await asegurarCodigos(
+                destinatarios.map(d => d.id).filter((id): id is string => !!id),
             );
+            if (codigos.fallidos.length) {
+                const fuera = new Set(codigos.fallidos);
+                destinatarios = destinatarios.filter(d => !d.id || !fuera.has(d.id));
+            }
         }
 
         // `entregar` (ISO 8601): hora a la que Resend soltará los correos.

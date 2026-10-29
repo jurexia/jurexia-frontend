@@ -107,6 +107,80 @@ export async function asegurarCodigo(usuarioId: string): Promise<string> {
     return codigo;
 }
 
+/** Ids por consulta al buscar quién no tiene código: 100 uuid son ~3.7 KB de
+ *  URL, holgado bajo los 8 KB por línea que admiten los proxys más estrictos.
+ *  El segmento de 2,723 sale en 28 consultas. */
+const IDS_POR_CONSULTA = 100;
+/** Escrituras simultáneas, como máximo. */
+const ESCRITURAS_EN_PARALELO = 10;
+
+/**
+ * `asegurarCodigo` para una lista entera, sin ráfaga (28-oct-2026).
+ *
+ * El cron y la ruta de campañas hacían `Promise.all` de `asegurarCodigo` sobre
+ * TODO el segmento: un PATCH por destinatario, a la vez. Lo medido el 28-oct
+ * (y el 22, idéntico) a las 13:00Z: salieron exactamente 1,001 PATCH en cinco
+ * segundos, con mediana de 5.4 s cada uno por la cola de PostgREST, y TODOS
+ * eran para ids ya con código —no cambiaron una sola fila—. Los otros ~1,700
+ * destinatarios del segmento (2,723) ni siquiera llegaron a Supabase: con
+ * miles de conexiones abiertas a la vez la función choca con su tope de
+ * sockets (lo probable: los ~1,024 descriptores de la lambda), y el
+ * `.catch(() => null)` se tragaba el fallo. Como el segmento va ordenado por
+ * id, siempre llegaban los mismos mil, del 000d… al 5de6…; de los demás, 528
+ * seguían sin código guardado, y 262 correos de referidos ya habían salido
+ * con un enlace que no ata a nadie: el defecto exacto que este paso existe
+ * para impedir.
+ *
+ * Ahora: primero se PREGUNTA quién no tiene código, por lotes; después se
+ * escribe sólo a ésos, de diez en diez. Un día normal son unas decenas de
+ * altas nuevas, no miles de escrituras.
+ *
+ * Devuelve los ids cuyo código NO se pudo guardar, para que el llamador no les
+ * mande un enlace que no resolvería. Si la consulta falla, lanza: el llamador
+ * decide, pero no debe mandar a ciegas.
+ */
+export async function asegurarCodigos(ids: string[]): Promise<{
+    revisados: number; sin_codigo: number; guardados: number; fallidos: string[];
+}> {
+    const cliente = admin();
+    const unicos = Array.from(new Set(ids.filter(Boolean)));
+
+    const faltan: string[] = [];
+    for (let i = 0; i < unicos.length; i += IDS_POR_CONSULTA) {
+        const { data, error } = await cliente
+            .from('user_profiles')
+            .select('id')
+            .in('id', unicos.slice(i, i + IDS_POR_CONSULTA))
+            .is('codigo_referido', null);
+        if (error) throw new Error(`asegurarCodigos: ${error.message}`);
+        faltan.push(...(data ?? []).map((r) => r.id as string));
+    }
+
+    const fallidos: string[] = [];
+    for (let i = 0; i < faltan.length; i += ESCRITURAS_EN_PARALELO) {
+        const tanda = faltan.slice(i, i + ESCRITURAS_EN_PARALELO);
+        const errores = await Promise.all(tanda.map(async (id) => {
+            const { error } = await cliente
+                .from('user_profiles')
+                .update({ codigo_referido: codigoReferido(id) })
+                .eq('id', id)
+                .is('codigo_referido', null);
+            return error ? id : null;
+        }));
+        fallidos.push(...errores.filter((id): id is string => !!id));
+    }
+
+    if (fallidos.length) {
+        console.warn(`🎟️ asegurarCodigos: ${fallidos.length} de ${faltan.length} códigos no se guardaron`);
+    }
+    return {
+        revisados: unicos.length,
+        sin_codigo: faltan.length,
+        guardados: faltan.length - fallidos.length,
+        fallidos,
+    };
+}
+
 /** Busca al dueño de un código de invitación. */
 export async function padrinoDelCodigo(codigo: string): Promise<{ id: string; email: string } | null> {
     const limpio = (codigo || '').trim().toUpperCase();
