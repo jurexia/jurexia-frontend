@@ -50,7 +50,16 @@ interface UseChatOptions {
      *  `user_id` (el servidor sólo cobra cuando lo recibe). Lo usan las partes
      *  de un flujo, que ya se pagó con UN flujo del mes al empezar. */
     sinCobro?: () => boolean;
+    /** La red retuvo la respuesta y la soltó entera al final (28-oct-2026):
+     *  el primer trozo —el servidor manda uno al instante— tardó medio minuto
+     *  y lo demás llegó de golpe. Ver `AvisoRedRetiene`. */
+    onRedRetuvo?: () => void;
 }
+
+/* Lo que delata a una red que retiene: el primer trozo tarde, y el resto
+   enseguida detrás de él. */
+const RETENCION_PRIMER_TROZO_MS = 30_000;
+const RETENCION_RAFAGA_MS = 3_000;
 
 interface UseChatReturn {
     messages: Message[];
@@ -323,6 +332,8 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                servidor queda para la recuperación. */
             let ultimoTrozo = Date.now();
             let lecturaAvisada = false;
+            let inicioFlujo = Date.now();
+            let primerTrozo = 0;
             vigilaLectura = setInterval(() => {
                 if (!lecturaAvisada && Date.now() - ultimoTrozo > TOPE_LECTURA_MS) {
                     lecturaAvisada = true;
@@ -348,6 +359,10 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 },
             )) {
                 ultimoTrozo = Date.now();
+                // El marcador de reintento lo pone streamChat, no el servidor: el
+                // reloj de la retención vuelve a empezar con el envío nuevo.
+                if (chunk.startsWith('<!--RETRY:')) { inicioFlujo = ultimoTrozo; primerTrozo = 0; }
+                else if (!primerTrozo) primerTrozo = ultimoTrozo;
                 // Filter keepalive heartbeat from backend (<!--PING-->)
                 // This is sent immediately to prevent mobile carriers from
                 // closing the TCP connection when no data flows for >15s.
@@ -515,6 +530,11 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             // Flush any remaining buffered text
             parser.finish();
 
+            if (primerTrozo && primerTrozo - inicioFlujo >= RETENCION_PRIMER_TROZO_MS
+                && ultimoTrozo - primerTrozo <= RETENCION_RAFAGA_MS) {
+                options.onRedRetuvo?.();
+            }
+
             // Final update — also handle edge case where thinking produced
             // reasoning but ZERO content (model exhausted max_tokens in reasoning)
             let finalDisplay = parser.getDisplayContent();
@@ -644,7 +664,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             sendingRef.current = false;
         }
         return respuestaFinal;
-    }, [messages, isLoading, options.estado, options.topK, options.fuero?.join(','), options.onQuotaExceeded, options.onQueryCompleted, options.genioIds, options.onCacheActive, options.contextoSistema, options.todoElAcervo, options.sinCobro]);
+    }, [messages, isLoading, options.estado, options.topK, options.fuero?.join(','), options.onQuotaExceeded, options.onQueryCompleted, options.genioIds, options.onCacheActive, options.contextoSistema, options.todoElAcervo, options.sinCobro, options.onRedRetuvo]);
 
     const clearMessages = useCallback(() => {
         setMessages([]);
