@@ -21,11 +21,21 @@
  * QUINCE del usuario sin solución —o antes, si el modelo declara que no sabe— la
  * conversación se manda a soporte@iurexia.com y se le dice al usuario que ya
  * está en manos del equipo. Nunca se le deja esperando sin saber.
+ *
+ * TODO REPORTE LLEGA (29-oct-2026)
+ * --------------------------------
+ * Escalar ya no es la única puerta a soporte@: la conversación que el
+ * asistente atiende sin escalar también llega, una vez, cuando lleva veinte
+ * minutos quieta (cron /api/cron/reportes). Y cada conversación tiene estado
+ * —pendiente, respondido, cerrado— en `reportes_soporte`. Ver
+ * `@/lib/soporte/atencion-logica` para las reglas y el porqué.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { conocimientoParaPrompt, temaDelicado, MAPA_PLATAFORMA } from '@/lib/soporte/conocimiento';
+import { enviarConReintento, correoDeAviso, claveDeAviso } from '@/lib/soporte/aviso';
+import { registrarTurno, anotarAviso } from '@/lib/soporte/reportes';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -39,7 +49,6 @@ const MODELO = process.env.SOPORTE_MODELO || 'google/gemini-2.5-flash-lite';
 const MAX_TURNOS_USUARIO = 15;
 /** Lo que ve el modelo: los quince turnos de cada lado más el saludo. */
 const VENTANA_TURNOS = 2 * MAX_TURNOS_USUARIO + 2;
-const CORREO_SOPORTE = 'soporte@iurexia.com';
 
 interface Turno { rol: 'usuario' | 'soporte'; texto: string }
 
@@ -163,60 +172,39 @@ function admin() {
     );
 }
 
-function escaparHtml(s: string): string {
-    return String(s || '')
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
+/**
+ * El aviso a soporte@. Ya no confía en que Resend lance: mira `{ error }`,
+ * reintenta, prueba el remitente de respaldo y deja anotado en
+ * `reportes_soporte` si salió o no, para que el cron recoja lo que falló.
+ * Ver `@/lib/soporte/aviso`.
+ */
 async function avisarAlEquipo(datos: {
+    folio: string | null; folios: string[]; turnos: number;
     correo?: string | null; nombre?: string | null; userId?: string | null;
     plan?: string | null; conversacion: Turno[]; motivo: string; navegador?: string | null;
-}) {
+}, conTabla: boolean) {
     const clave = process.env.RESEND_API_KEY;
-    if (!clave) return false;
-
-    const hilo = datos.conversacion
-        .map(t => `<p style="margin:0 0 10px"><strong style="color:${t.rol === 'usuario' ? '#1a1a1a' : '#8a6d2e'}">` +
-            `${t.rol === 'usuario' ? 'Usuario' : 'Soporte'}:</strong> ${escaparHtml(t.texto)}</p>`)
-        .join('');
-
-    const html = `
-<div style="font-family:-apple-system,Segoe UI,sans-serif;max-width:640px;color:#1a1a1a">
-  <p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8a6d2e;margin:0 0 6px">Soporte · escalado automático</p>
-  <h2 style="font-family:Georgia,serif;font-size:19px;margin:0 0 14px">${escaparHtml(datos.motivo)}</h2>
-  <table style="font-size:13px;border-collapse:collapse;margin-bottom:18px">
-    <tr><td style="padding:3px 14px 3px 0;color:#666">Usuario</td><td>${escaparHtml(datos.nombre || '—')}</td></tr>
-    <tr><td style="padding:3px 14px 3px 0;color:#666">Correo</td><td><a href="mailto:${escaparHtml(datos.correo || '')}">${escaparHtml(datos.correo || '—')}</a></td></tr>
-    <tr><td style="padding:3px 14px 3px 0;color:#666">Plan</td><td>${escaparHtml(datos.plan || '—')}</td></tr>
-    <tr><td style="padding:3px 14px 3px 0;color:#666">ID</td><td style="font-family:monospace;font-size:11px">${escaparHtml(datos.userId || '—')}</td></tr>
-    <tr><td style="padding:3px 14px 3px 0;color:#666">Navegador</td><td style="font-size:11px">${escaparHtml((datos.navegador || '—').slice(0, 120))}</td></tr>
-  </table>
-  <div style="border-left:3px solid #c9a962;padding-left:14px;font-size:13px;line-height:1.6">${hilo}</div>
-  <p style="margin-top:20px;font-size:12px;color:#888">
-    Responda directamente a este correo: llega al abogado.
-  </p>
-</div>`;
-
-    try {
-        await new Resend(clave).emails.send({
-            from: 'Soporte Iurexia <soporte@iurexia.com>',
-            to: [CORREO_SOPORTE],
-            replyTo: datos.correo || undefined,
-            subject: `[Soporte] ${datos.motivo} — ${datos.correo || 'sin correo'}`,
-            html,
-        });
-        return true;
-    } catch (e) {
-        console.error('[soporte] no pude avisar al equipo:', e);
-        return false;
+    const aviso = { ...datos, tipo: 'escalado' as const };
+    const res = await enviarConReintento(clave ? new Resend(clave) : null, correoDeAviso(aviso), {
+        idempotencia: claveDeAviso(aviso),
+    });
+    if (!res.ok) {
+        // Queda asentado para el reintento del cron. Y en el registro, entero:
+        // sin la tabla es lo único que queda de este reporte fuera de user_feedback.
+        console.error('[soporte] AVISO NO ENVIADO', JSON.stringify({
+            folio: datos.folio, correo: datos.correo, motivo: datos.motivo, error: res.error, intentos: res.intentos,
+        }));
     }
+    if (conTabla && datos.folio) await anotarAviso(admin(), datos.folio, datos.turnos, res);
+    return res.ok;
 }
 
 export async function POST(req: NextRequest) {
     let cuerpo: {
         conversacion?: Turno[]; userId?: string; email?: string;
         nombre?: string; plan?: string;
+        /** Identificador de esta conversación en el widget; cambia con «Nueva». */
+        sesion?: string;
     };
     try {
         cuerpo = await req.json();
@@ -235,6 +223,8 @@ export async function POST(req: NextRequest) {
     // habría llegado a dispararse.
     const turnosUsuario = (cuerpo.conversacion || []).filter(t => t.rol === 'usuario').length;
     const navegador = req.headers.get('user-agent');
+    const sesion = typeof cuerpo.sesion === 'string' && /^[A-Za-z0-9-]{8,64}$/.test(cuerpo.sesion)
+        ? cuerpo.sesion : null;
 
     const comun = {
         correo: cuerpo.email, nombre: cuerpo.nombre,
@@ -242,13 +232,21 @@ export async function POST(req: NextRequest) {
         conversacion, navegador,
     };
 
+    // Y los turnos del propio soporte. Hasta hoy sobrevivía UNA línea,
+    // por eso la cola tiene reportes que dicen «pro» o «uno por uno»:
+    // el hilo que los hacía comprensibles se tiraba al guardar.
+    const hilo = (cuerpo.conversacion || []).slice(-VENTANA_TURNOS)
+        .map((t: { rol: string; texto: string }) =>
+            `${t.rol === 'usuario' ? 'Usuario' : 'Soporte'}: ${(t.texto || '').slice(0, 700)}`)
+        .join('\n');
+
     // Se guarda SIEMPRE, responda quien responda, y CON FOLIO: número de
     // usuario + contador de sus reportes desde 01 («1850-02» = segundo
     // reporte del usuario 1850). El folio identifica al usuario y al reporte
     // de un vistazo, se le dice al usuario para que sepa que quedó asentado,
     // y se guarda escrito para que no cambie aunque se borren filas.
-    const guardar = async (texto: string, categoria: string): Promise<string | null> => {
-        if (!cuerpo.userId) return null;
+    const guardar = async (texto: string, categoria: string): Promise<{ folio: string | null; id: string | null }> => {
+        if (!cuerpo.userId) return { folio: null, id: null };
         try {
             const sb = admin();
             const [{ data: perfil }, { count }, { data: ultimaConv }] = await Promise.all([
@@ -277,15 +275,9 @@ export async function POST(req: NextRequest) {
                 ? `${perfil.numero_usuario}-${String((count || 0) + 1).padStart(2, '0')}`
                 : null;
 
-            // Y los turnos del propio soporte. Hasta hoy sobrevivía UNA línea,
-            // por eso la cola tiene reportes que dicen «pro» o «uno por uno»:
-            // el hilo que los hacía comprensibles se tiraba al guardar.
-            const hilo = (cuerpo.conversacion || []).slice(-VENTANA_TURNOS)
-                .map((t: { rol: string; texto: string }) =>
-                    `${t.rol === 'usuario' ? 'Usuario' : 'Soporte'}: ${(t.texto || '').slice(0, 700)}`)
-                .join('\n');
-
-            await sb.from('user_feedback').insert({
+            // supabase-js NO lanza si el insert falla: devuelve { error }. Sin
+            // mirarlo, un reporte rechazado se daba por guardado.
+            const { data: fila, error } = await sb.from('user_feedback').insert({
                 user_id: cuerpo.userId,
                 user_email: cuerpo.email || null,
                 user_name: cuerpo.nombre || null,
@@ -294,12 +286,60 @@ export async function POST(req: NextRequest) {
                 folio,
                 contexto_soporte: hilo || null,
                 conversation_id: ultimaConv?.id ?? null,
-            });
-            return folio;
+            }).select('id').single();
+            if (error) console.error('[soporte] no pude guardar el reporte:', error.message);
+            return { folio, id: (fila as { id: string } | null)?.id ?? null };
         } catch (e) {
             console.error('[soporte] no pude guardar el reporte:', e);
-            return null;
+            return { folio: null, id: null };
         }
+    };
+
+    /**
+     * Guarda el mensaje, lo asienta en su conversación de `reportes_soporte`
+     * y, si se escala, avisa en el acto. Devuelve el folio que se le dice al
+     * abogado: el de la CONVERSACIÓN —el mismo que lleva el asunto del aviso
+     * a soporte@—, no el de este mensaje suelto.
+     *
+     * Lo que no se escala también avisa, pero después: el cron
+     * /api/cron/reportes lo manda cuando la conversación lleva veinte minutos
+     * quieta, con la conversación entera y la última respuesta del asistente.
+     */
+    const asentar = async (o: {
+        categoria: string; escalado: boolean; motivo: string | null; delicado: boolean; respuesta: string;
+    }): Promise<string | null> => {
+        const { folio, id } = await guardar(ultimo.texto.trim(), o.categoria);
+        let folioConversacion = folio;
+        let conTabla = false;
+        if (cuerpo.userId) {
+            try {
+                const r = await registrarTurno(admin(), {
+                    userId: cuerpo.userId,
+                    email: cuerpo.email || null,
+                    nombre: cuerpo.nombre || null,
+                    plan: cuerpo.plan || null,
+                    sesion,
+                    folio,
+                    feedbackId: id,
+                    turnos: turnosUsuario,
+                    mensaje: ultimo.texto.trim(),
+                    hilo: [hilo, `Soporte: ${o.respuesta.slice(0, 700)}`].filter(Boolean).join('\n'),
+                    escalado: o.escalado,
+                    motivo: o.motivo,
+                    delicado: o.delicado,
+                });
+                if (r && 'folio' in r) { folioConversacion = r.folio; conTabla = true; }
+            } catch (e) {
+                console.error('[soporte] no pude asentar la conversación:', e);
+            }
+        }
+        if (o.escalado && o.motivo) {
+            const folios = [folioConversacion, folio].filter((f, i, xs): f is string => !!f && xs.indexOf(f) === i);
+            await avisarAlEquipo({
+                ...comun, folio: folioConversacion, folios, turnos: turnosUsuario, motivo: o.motivo,
+            }, conTabla);
+        }
+        return folioConversacion;
     };
 
     /** La coletilla que cierra el círculo: el usuario se va con su folio. */
@@ -308,49 +348,37 @@ export async function POST(req: NextRequest) {
 
     // ── Blindaje determinista: un error interno no llega al modelo ────────
     if (esErrorInterno(ultimo.texto)) {
-        const folio = await guardar(ultimo.texto.trim(), 'error');
-        await avisarAlEquipo({
-            ...comun,
-            motivo: `Usuario vio un error interno${folio ? ` — folio ${folio}` : ''}`,
+        const respuesta =
+            'Eso que está viendo es un fallo interno de la plataforma: no es algo que ' +
+            'usted deba corregir y no requiere ningún pago ni configuración de su parte. ' +
+            'Ya lo pasé al equipo con el detalle técnico completo y le escribirán a su correo.';
+        const folio = await asentar({
+            categoria: 'error', escalado: true, motivo: 'Usuario vio un error interno', delicado: false, respuesta,
         });
-        return NextResponse.json({
-            respuesta: conFolio(
-                'Eso que está viendo es un fallo interno de la plataforma: no es algo que ' +
-                'usted deba corregir y no requiere ningún pago ni configuración de su parte. ' +
-                'Ya lo pasé al equipo con el detalle técnico completo y le escribirán a su correo.',
-                folio),
-            escalado: true,
-            cerrado: true,
-        });
+        return NextResponse.json({ respuesta: conFolio(respuesta, folio), escalado: true, cerrado: true });
     }
 
     // ── Tope duro: pasado el turno quince se escala, diga lo que diga el modelo ──
     if (turnosUsuario > MAX_TURNOS_USUARIO) {
-        const folio = await guardar(ultimo.texto.trim(), 'error');
-        await avisarAlEquipo({
-            ...comun,
-            motivo: `Sin resolver tras ${MAX_TURNOS_USUARIO} mensajes${folio ? ` — folio ${folio}` : ''}`,
+        const respuesta =
+            'Prefiero no hacerle perder más tiempo: esto lo tiene que ver el equipo. ' +
+            'Ya les pasé toda nuestra conversación y le escribirán a su correo. Disculpe la vuelta.';
+        const folio = await asentar({
+            categoria: 'error', escalado: true, motivo: `Sin resolver tras ${MAX_TURNOS_USUARIO} mensajes`,
+            delicado: false, respuesta,
         });
-        return NextResponse.json({
-            respuesta: conFolio(
-                'Prefiero no hacerle perder más tiempo: esto lo tiene que ver el equipo. ' +
-                'Ya les pasé toda nuestra conversación y le escribirán a su correo. Disculpe la vuelta.',
-                folio),
-            escalado: true,
-            cerrado: true,
-        });
+        return NextResponse.json({ respuesta: conFolio(respuesta, folio), escalado: true, cerrado: true });
     }
 
     const clave = process.env.OPENROUTER_API_KEY;
     if (!clave) {
-        const folioSM = await guardar(ultimo.texto.trim(), 'error');
-        await avisarAlEquipo({ ...comun, motivo: `Soporte sin motor configurado${folioSM ? ` — folio ${folioSM}` : ''}` });
-        return NextResponse.json({
-            respuesta: conFolio(
-                'Ahora mismo no puedo atenderle por aquí, así que mandé su mensaje directamente al equipo. ' +
-                'Le escribirán a su correo.', folioSM),
-            escalado: true, cerrado: true,
+        const respuesta =
+            'Ahora mismo no puedo atenderle por aquí, así que mandé su mensaje directamente al equipo. ' +
+            'Le escribirán a su correo.';
+        const folioSM = await asentar({
+            categoria: 'error', escalado: true, motivo: 'Soporte sin motor configurado', delicado: false, respuesta,
         });
+        return NextResponse.json({ respuesta: conFolio(respuesta, folioSM), escalado: true, cerrado: true });
     }
 
     let texto = '';
@@ -382,26 +410,28 @@ export async function POST(req: NextRequest) {
     } catch (e) {
         // El motor falló: NO se le deja sin respuesta. Se escala y se le dice.
         console.error('[soporte] motor caído:', e);
-        const folio = await guardar(ultimo.texto.trim(), 'error');
-        await avisarAlEquipo({ ...comun, motivo: `Soporte no disponible — escalado directo${folio ? ` — folio ${folio}` : ''}` });
-        return NextResponse.json({
-            respuesta: conFolio(
-                'Se me complicó revisarlo desde aquí, así que ya mandé su mensaje al equipo con todo el detalle. ' +
-                'Le responderán a su correo.', folio),
-            escalado: true, cerrado: true,
+        const respuesta =
+            'Se me complicó revisarlo desde aquí, así que ya mandé su mensaje al equipo con todo el detalle. ' +
+            'Le responderán a su correo.';
+        const folio = await asentar({
+            categoria: 'error', escalado: true, motivo: 'Soporte no disponible — escalado directo', delicado: false, respuesta,
         });
+        return NextResponse.json({ respuesta: conFolio(respuesta, folio), escalado: true, cerrado: true });
     }
 
-    // ── El correo sale UNA vez, y sólo si no se resolvió ──────────────
+    // ── Escalar es inmediato; avisar, siempre (29-oct-2026) ──────────────
     //
     // Antes bastaba con que el tema fuese delicado para mandar correo, así que
     // soporte@iurexia.com recibía uno POR CADA MENSAJE desde el primero,
     // aunque la respuesta resolviera el caso en el acto. El buzón se llenó de
     // conversaciones ya resueltas y el escalado dejó de significar nada.
     //
-    // Ahora sólo escala cuando el modelo declara que no puede —o cuando se
-    // agotan los quince turnos, más arriba—, y va UN correo con la
-    // conversación entera, que es lo único útil para quien la lee.
+    // Luego se pasó al otro extremo: sólo avisaba lo escalado, y de 118
+    // conversaciones en 30 días llegaron 21. Las demás —24 de ellas fallos—
+    // morían cuando el abogado dejaba de contestar a una pregunta del
+    // asistente. Ahora cada CONVERSACIÓN avisa una vez: la escalada aquí y al
+    // momento; las demás desde el cron, cuando llevan veinte minutos quietas.
+    // Un correo por conversación, no por mensaje.
     const pidioEscalar = /\[ESCALAR\]/i.test(texto);
     const delicado = temaDelicado(ultimo.texto);
 
@@ -411,12 +441,14 @@ export async function POST(req: NextRequest) {
     }
 
     // El reporte SÍ se guarda siempre: el panel de admin tiene que ver todo lo
-    // que reporta la gente, se haya escalado o no. Guardar no es avisar.
-    const folio = await guardar(ultimo.texto.trim(), pidioEscalar || delicado ? 'error' : 'otro');
-
-    if (pidioEscalar) {
-        await avisarAlEquipo({ ...comun, motivo: `Soporte no pudo resolverlo${folio ? ` — folio ${folio}` : ''}` });
-    }
+    // que reporta la gente, se haya escalado o no.
+    const folio = await asentar({
+        categoria: pidioEscalar || delicado ? 'error' : 'otro',
+        escalado: pidioEscalar,
+        motivo: pidioEscalar ? 'Soporte no pudo resolverlo' : null,
+        delicado,
+        respuesta: texto,
+    });
 
     return NextResponse.json({
         respuesta: pidioEscalar ? conFolio(texto, folio) : texto,
