@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
+import { fetchConSesion } from '@/lib/sesion-api';
 
 /**
  * El redactor de sentencias de primera instancia, APARTADO (3-sep-2026).
@@ -230,7 +231,7 @@ export default function RedaccionSentenciasPage() {
                 formData.append('instrucciones', instrucciones.trim());
             }
 
-            const res = await fetch(`${API_URL}/redaccion-sentencias`, {
+            const res = await fetchConSesion(`${API_URL}/redaccion-sentencias`, {
                 method: 'POST',
                 body: formData,
             });
@@ -294,7 +295,7 @@ export default function RedaccionSentenciasPage() {
                 formData.append('instrucciones', instrucciones.trim());
             }
 
-            const res = await fetch(`${API_URL}/redaccion-sentencias-estatal`, {
+            const res = await fetchConSesion(`${API_URL}/redaccion-sentencias-estatal`, {
                 method: 'POST',
                 body: formData,
             });

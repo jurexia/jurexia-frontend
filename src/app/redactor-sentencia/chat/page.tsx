@@ -19,6 +19,7 @@ import {
     Check,
 } from 'lucide-react';
 import { checkCanSentenciaQuery, incrementSentenciaQueryCount, getSession } from '@/lib/supabase';
+import { fetchConSesion } from '@/lib/sesion-api';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import ChatMessage from '@/components/ChatMessage';
@@ -373,7 +374,7 @@ export default function ChatSentenciaPage() {
                 body.attached_document = attachedText;
             }
 
-            const response = await fetch(`${API_URL}/chat-sentencia`, {
+            const response = await fetchConSesion(`${API_URL}/chat-sentencia`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),

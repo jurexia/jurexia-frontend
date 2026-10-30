@@ -6,6 +6,7 @@ import { fuentesElegidas, fuentesParaEnviar, FUENTES } from './fuentes';
 import { esfuerzoParaEnviar } from './esfuerzo';
 import { clasificarFallo, type DatosReintento } from './fallosChat';
 import { bovedaParaEnviar } from './boveda';
+import { fetchConSesion, tokenRenovado } from './sesion-api';
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1390';
 
@@ -255,6 +256,7 @@ export async function* streamChat(
     const maxRetries = 3;
     let attempt = 0;
     let reintento: DatosReintento | undefined;
+    let sesionRenovada = false;
 
     while (attempt < maxRetries) {
         try {
@@ -272,6 +274,20 @@ export async function* streamChat(
             // QUÉ PASÓ, DICHO CON VERDAD (30-sep-2026): la red del abogado, el
             // servidor ocupado (429/502/503/504) o un error. Ver `./fallosChat`.
             const fallo = clasificarFallo(err);
+
+            // LA SESIÓN QUE CADUCÓ SE RENUEVA UNA VEZ (29-oct-2026). La API ya
+            // no cree el `user_id` sin el token de esa misma cuenta: un token
+            // vencido —una pestaña que estuvo dormida— es un 401 antes de que
+            // salga una sola letra, y renovarlo basta. Ver lib/sesion-api.ts.
+            if (fallo.status === 401 && !sesionRenovada) {
+                sesionRenovada = true;
+                const nuevo = await tokenRenovado(accessToken);
+                if (nuevo) {
+                    accessToken = nuevo;
+                    attempt--;
+                    continue;
+                }
+            }
 
             // Un 4xx (salvo 408 y 429) es un error de la petición: no se repite.
             if (!fallo.reintentable) {
@@ -607,7 +623,9 @@ export async function privacyCheck(content: string): Promise<PrivacyCheckRespons
 }
 
 /**
- * Index a lawyer profile for semantic search
+ * Index a lawyer profile for semantic search.
+ * Con la sesión (29-oct-2026): la API sólo actualiza el perfil de quien llama
+ * y sólo sus campos editables; sin token contesta 401.
  */
 export async function indexLawyerProfile(profile: {
     cedula_number: string;
@@ -617,7 +635,7 @@ export async function indexLawyerProfile(profile: {
     office_address: { estado?: string; municipio?: string; cp?: string };
     avatar_url?: string;
 }): Promise<{ indexed: boolean; point_id: string }> {
-    const response = await fetch(`${API_URL}/connect/lawyers/index`, {
+    const response = await fetchConSesion(`${API_URL}/connect/lawyers/index`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(profile),

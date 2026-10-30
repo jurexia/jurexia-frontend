@@ -10,6 +10,7 @@
  * confirma quien los tiene delante.
  */
 
+import { fetchConSesion } from '@/lib/sesion-api';
 import type { ApoyoDeLaVia, ConceptosOmitidos, FichaProcesal, FuerzaDelApoyo, ProbabilidadDeLaTarjeta, SolucionPosible, SuerteDelSecundario, TarjetaDecision, ViaDeLaTarjeta } from './tipos';
 
 export interface EncargoAdelanto {
@@ -74,6 +75,19 @@ export interface ResultadoAdelanto {
 }
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || '';
+
+/* ═══ LA SESIÓN VIAJA CON CADA PETICIÓN AL TALLER (29-oct-2026) ═══
+   El servidor decidía de quién era el expediente por el `user_email` que
+   mandaba esta pantalla, y ese correo lo puede escribir cualquiera: sin token
+   devolvía el estado, los asuntos y hasta el .docx de otro secretario. Ahora
+   /taller/* exige el token de la sesión de Supabase y comprueba que su correo
+   sea el `user_email`; sin token contesta 401 y con el de otra cuenta, 403.
+
+   Por eso TODA llamada al taller sale por `pedir`, y no por `fetch`: lleva el
+   token, pedido en cada llamada (la pantalla se queda abierta horas y
+   `getSession()` lo renueva), y si el servidor lo rechaza se renueva y se
+   repite una vez. Ver lib/sesion-api.ts. */
+const pedir = fetchConSesion;
 
 export async function generarAdelanto(
     encargo: EncargoAdelanto,
@@ -143,7 +157,7 @@ export async function generarAdelanto(
     if (Object.keys(tramite).length) fd.append('tramite_json', JSON.stringify(tramite));
     if (documentos.admision) fd.append('admision', documentos.admision);
 
-    const res = await fetch(`${BASE}/taller/adelanto`, { method: 'POST', body: fd });
+    const res = await pedir(`${BASE}/taller/adelanto`, { method: 'POST', body: fd });
 
     if (!res.ok) {
         // El backend contesta 403 sin plan y 400 si no pudo leer un documento.
@@ -473,7 +487,7 @@ export async function leerConReintento(url: string, init?: RequestInit): Promise
     const esperas = [1_000, 3_000, 6_000];
     for (let i = 0; ; i++) {
         try {
-            return await fetch(url, init);
+            return await pedir(url, init);
         } catch (e) {
             if (!esErrorDeRed(e) || i >= esperas.length) throw e;
             await new Promise<void>((r) => setTimeout(r, esperas[i]));
@@ -483,7 +497,7 @@ export async function leerConReintento(url: string, init?: RequestInit): Promise
 
 /** Si el piloto sigue abierto y cuántas plazas quedan. */
 export async function estadoPiloto(userEmail: string): Promise<EstadoPiloto> {
-    const res = await fetch(
+    const res = await pedir(
         `${BASE}/taller/estado?user_email=${encodeURIComponent(userEmail)}`);
     if (!res.ok) return _fallo(res);
     return res.json();
@@ -502,7 +516,7 @@ export async function consultarAcervo(
     fd.append('user_email', userEmail);
     fd.append('coleccion_estatal', coleccionEstatal);
     if (contexto.trim()) fd.append('contexto', contexto.trim());
-    const res = await fetch(`${BASE}/taller/consultar`, { method: 'POST', body: fd });
+    const res = await pedir(`${BASE}/taller/consultar`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
     return res.json();
 }
@@ -566,7 +580,7 @@ export async function leerOpinion(
     numero: string, userEmail: string, version = 0,
 ): Promise<{ opinion: (OpinionProyecto & { version: number }) | null; aspectos: AspectoCalificable[] }> {
     const q = new URLSearchParams({ numero, user_email: userEmail, version: String(version || 0) });
-    const res = await fetch(`${BASE}/taller/opinion?${q.toString()}`);
+    const res = await pedir(`${BASE}/taller/opinion?${q.toString()}`);
     if (!res.ok) return _fallo(res);
     const j = await res.json();
     return { opinion: j.opinion ?? null, aspectos: (j.aspectos ?? []) as AspectoCalificable[] };
@@ -584,7 +598,7 @@ export async function guardarOpinion(
     fd.append('aspectos_json', JSON.stringify(o.aspectos || {}));
     fd.append('sobre_sentencia', o.sobre_sentencia || '');
     fd.append('sobre_taller', o.sobre_taller || '');
-    const res = await fetch(`${BASE}/taller/opinion`, { method: 'POST', body: fd });
+    const res = await pedir(`${BASE}/taller/opinion`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
 }
 
@@ -611,7 +625,7 @@ export async function aportarContexto(
     if (documento) fd.append('documento', documento);
     if (numero) fd.append('numero', numero);
     if (etiqueta) fd.append('etiqueta', etiqueta);
-    const res = await fetch(`${BASE}/taller/contexto`, { method: 'POST', body: fd });
+    const res = await pedir(`${BASE}/taller/contexto`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
     const j = await res.json();
     return { texto: j.texto ?? '', caracteres: j.caracteres ?? 0,
@@ -723,7 +737,7 @@ export async function recalificar(
     numero: string, userEmail: string, opciones: OpcionesResolver, signal?: AbortSignal,
 ): Promise<RespuestaRecalificar> {
     const fd = formularioDelResolver(numero, userEmail, opciones);
-    const res = await fetch(`${BASE}/taller/recalificar`, { method: 'POST', body: fd, signal });
+    const res = await pedir(`${BASE}/taller/recalificar`, { method: 'POST', body: fd, signal });
     if (!res.ok) return _fallo(res);
     return respuestaRecalificarDe(await res.json().catch(() => null));
 }
@@ -742,7 +756,7 @@ export async function repartirCriterios(
     fd.append('user_email', userEmail);
     fd.append('criterios_json', JSON.stringify(criterios));
     if (global) fd.append('global_json', JSON.stringify(global));
-    const res = await fetch(`${BASE}/taller/reparto`, { method: 'POST', body: fd });
+    const res = await pedir(`${BASE}/taller/reparto`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
     const j = await res.json();
     return { criterios: (j.criterios ?? []) as CriterioRepartido[], avisos: j.avisos ?? [] };
@@ -761,7 +775,7 @@ export async function corregirProblema(
     fd.append('indice', String(indice));
     if (pregunta.trim()) fd.append('pregunta', pregunta.trim());
     if (jerarquia) fd.append('jerarquia', jerarquia);
-    const res = await fetch(`${BASE}/taller/problema`, { method: 'POST', body: fd });
+    const res = await pedir(`${BASE}/taller/problema`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
     const j = await res.json();
     return { problemas: j.problemas ?? [], aviso: j.aviso ?? '' };
@@ -994,7 +1008,7 @@ export async function proponerSolucion(
     fd.append('numero', numero);
     fd.append('user_email', userEmail);
     if (contexto) fd.append('contexto', contexto);
-    const res = await fetch(`${BASE}/taller/proponer`, { method: 'POST', body: fd });
+    const res = await pedir(`${BASE}/taller/proponer`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
     const j = await res.json();
     const formato = Number(j.formato) || 2;
@@ -1093,7 +1107,7 @@ class ErrorDelMotor extends Error {}
 
 /** La ficha del último proyecto del asunto, o null si no hay ninguno. */
 export async function fichaProyecto(numero: string, userEmail: string): Promise<FichaProyecto | null> {
-    const res = await fetch(
+    const res = await pedir(
         `${BASE}/taller/proyecto?numero=${encodeURIComponent(numero)}`
         + `&user_email=${encodeURIComponent(userEmail)}`);
     if (!res.ok) return _fallo(res);
@@ -1377,7 +1391,7 @@ export async function resolverEnVivo(
         reloj = setTimeout(() => control.abort(), SILENCIO_MAXIMO_MS);
     };
 
-    const res = await fetch(`${BASE}/taller/resolver/stream`,
+    const res = await pedir(`${BASE}/taller/resolver/stream`,
                             { method: 'POST', body: fd, signal: control.signal });
     if (!res.ok) return _fallo(res);
     if (!res.body) throw new Error('El servidor no devolvió un flujo.');
@@ -1553,7 +1567,7 @@ export async function resolverConCriterio(
         fd.append('resolvio_declarado', resolvioDeclarado.trim());
     }
     if (globalJson?.trim()) fd.append('global_json', globalJson.trim());
-    const res = await fetch(`${BASE}/taller/resolver`, { method: 'POST', body: fd });
+    const res = await pedir(`${BASE}/taller/resolver`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
 
     const h = res.headers;
@@ -1653,6 +1667,7 @@ export async function obtenerTipos(): Promise<TipoAsunto[]> {
     for (const espera of esperas) {
         if (espera) await new Promise((r) => setTimeout(r, espera));
         try {
+            // El catálogo no es de nadie: va sin token (y sin el preflight que pide).
             const r = await fetch(`${BASE}/taller/tipos`, { cache: 'no-cache' });
             if (r.ok) {
                 const d = await r.json();
@@ -1704,7 +1719,7 @@ export interface PendienteSISE {
 /** Lo que el secretario tiene esperando, traído por la extensión. */
 export async function sisePendiente(userEmail: string): Promise<PendienteSISE[]> {
     const url = `${BASE}/taller/sise-pendiente?user_email=${encodeURIComponent(userEmail)}`;
-    const res = await fetch(url);
+    const res = await pedir(url);
     if (!res.ok) return [];
     const j = await res.json().catch(() => ({}));
     return ((j?.pendientes ?? []) as Record<string, unknown>[]).map((p) => ({
@@ -1786,7 +1801,7 @@ export async function generarDesdeExpediente(
     const tramite = tramiteParaEnviar(extra?.tramite ?? {}, extra?.tipoAsunto ?? '');
     if (Object.keys(tramite).length) fd.append('tramite_json', JSON.stringify(tramite));
 
-    const res = await fetch(`${BASE}/taller/desde-expediente`, { method: 'POST', body: fd });
+    const res = await pedir(`${BASE}/taller/desde-expediente`, { method: 'POST', body: fd });
 
     if (res.status === 422) {
         // El 422 de la fecha viaja como JSON DENTRO de `detail`, porque así lo
@@ -1854,7 +1869,7 @@ export async function descartarPendiente(numero: string, userEmail: string): Pro
     const fd = new FormData();
     fd.append('numero', numero);
     fd.append('user_email', userEmail);
-    const res = await fetch(`${BASE}/taller/sise-descartar`, { method: 'POST', body: fd });
+    const res = await pedir(`${BASE}/taller/sise-descartar`, { method: 'POST', body: fd });
     if (!res.ok) {
         let detalle = `Error ${res.status}`;
         try { detalle = (await res.json())?.detail ?? detalle; } catch { /* no JSON */ }
@@ -1883,7 +1898,7 @@ export async function razonarSentido(
     fd.append('problema', problema);
     fd.append('sentido', sentido);
     if (directriz.trim()) fd.append('directriz', directriz.trim());
-    const res = await fetch(`${BASE}/taller/razonar`, { method: 'POST', body: fd });
+    const res = await pedir(`${BASE}/taller/razonar`, { method: 'POST', body: fd });
     if (!res.ok) return '';
     const j = await res.json().catch(() => ({}));
     return String(j?.razon ?? '');
@@ -2202,7 +2217,7 @@ export interface AsuntoEnCurso {
 export async function asuntosEnCurso(userEmail: string): Promise<AsuntoEnCurso[]> {
     if (!userEmail) return [];
     try {
-        const res = await fetch(
+        const res = await pedir(
             `${BASE}/taller/en-curso?user_email=${encodeURIComponent(userEmail)}`);
         if (!res.ok) return [];
         const j = await res.json().catch(() => null);
@@ -2246,8 +2261,8 @@ export async function asuntosEnCurso(userEmail: string): Promise<AsuntoEnCurso[]
    guarda como Blob. Desde el HISTORIAL no hay Blob: el documento vive en el
    almacén y se pide por su número. El servidor lo busca primero en el disco de
    su proceso y luego en el almacén, así que funciona con los dos workers. */
-export function descargarDelAlmacen(numero: string, userEmail: string,
-                                    version = 0): void {
+export async function descargarDelAlmacen(numero: string, userEmail: string,
+                                          version = 0): Promise<void> {
     // `version` abre un proyecto ANTERIOR del mismo expediente: los que quedan
     // guardados cada vez que el secretario cambia de sentido y vuelve a
     // generar. Sin él viene el último, como siempre.
@@ -2255,10 +2270,34 @@ export function descargarDelAlmacen(numero: string, userEmail: string,
         + `?numero=${encodeURIComponent(numero)}`
         + `&user_email=${encodeURIComponent(userEmail)}`
         + (version ? `&version=${version}` : '');
-    // Se navega en una pestaña nueva en vez de pedirlo con fetch: así el
-    // navegador hace su descarga de siempre y un 404 se ve como un 404, no
-    // como un botón que no hace nada.
-    window.open(u, '_blank', 'noopener');
+    await bajarConSesion(u, `${(numero || 'proyecto').replace(/\//g, '-')}`
+        + (version ? `-v${version}` : '') + '.docx');
+}
+
+/** Baja un fichero del taller con la sesión y lo ofrece al navegador.
+
+    Antes se abría la URL en una pestaña nueva, que hacía la descarga de
+    siempre; pero una navegación no lleva cabeceras, y desde el 29-oct-2026 el
+    servidor no entrega un proyecto ni un documento sin el token de su dueño.
+    Así que se pide con la sesión y se guarda como blob. El nombre sale del
+    `Content-Disposition` (la API lo expone por CORS); si no viene, el de
+    respaldo. Un 404 ya no se ve como página: se lanza, y la pantalla lo pinta
+    en su aviso en vez de dejar un botón que no hace nada. */
+async function bajarConSesion(url: string, respaldo: string): Promise<void> {
+    const res = await pedir(url);
+    if (!res.ok) return _fallo(res);
+    const disp = res.headers.get('Content-Disposition') || '';
+    const nombre = /filename="?([^";]+)"?/i.exec(disp)?.[1] || respaldo;
+    const enlace = URL.createObjectURL(await res.blob());
+    const a = document.createElement('a');
+    a.href = enlace;
+    a.download = nombre;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    // Se suelta después, no en el acto: Safari cancela la descarga si el
+    // enlace desaparece antes de que empiece.
+    setTimeout(() => URL.revokeObjectURL(enlace), 60_000);
 }
 
 /* ═══ LOS DOCUMENTOS DEL ASUNTO, Y LA PRIVACIDAD ═══
@@ -2280,7 +2319,7 @@ export async function documentosDelAsunto(
 ): Promise<DocumentosDelAsunto | null> {
     if (!numero || !userEmail) return null;
     try {
-        const res = await fetch(`${BASE}/taller/documentos`
+        const res = await pedir(`${BASE}/taller/documentos`
             + `?numero=${encodeURIComponent(numero)}`
             + `&user_email=${encodeURIComponent(userEmail)}`);
         if (!res.ok) return null;
@@ -2288,14 +2327,15 @@ export async function documentosDelAsunto(
     } catch { return null; }
 }
 
-/** Abre uno de los documentos guardados. */
-export function descargarDocumento(
+/** Baja uno de los documentos guardados (con la sesión: ver `bajarConSesion`). */
+export async function descargarDocumento(
     numero: string, rol: string, userEmail: string,
-): void {
-    window.open(`${BASE}/taller/documento`
+): Promise<void> {
+    await bajarConSesion(`${BASE}/taller/documento`
         + `?numero=${encodeURIComponent(numero)}`
         + `&rol=${encodeURIComponent(rol)}`
-        + `&user_email=${encodeURIComponent(userEmail)}`, '_blank', 'noopener');
+        + `&user_email=${encodeURIComponent(userEmail)}`,
+        `${(numero || 'asunto').replace(/\//g, '-')}-${rol}.pdf`);
 }
 
 /** LO QUE CONVIERTE LA PROMESA EN GARANTÍA. Destruye documentos, proyecto y
@@ -2306,7 +2346,7 @@ export async function olvidarAsunto(
     const fd = new FormData();
     fd.append('numero', numero);
     fd.append('user_email', userEmail);
-    const res = await fetch(`${BASE}/taller/olvidar`, { method: 'POST', body: fd });
+    const res = await pedir(`${BASE}/taller/olvidar`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
     const j = await res.json().catch(() => null);
     return String(j?.mensaje ?? 'Se borró todo lo de ese asunto.');
@@ -2319,7 +2359,7 @@ export async function contextoDelAsunto(
     const u = `${BASE}/taller/contexto-del-asunto`
         + `?numero=${encodeURIComponent(numero)}`
         + `&user_email=${encodeURIComponent(userEmail)}`;
-    const res = await fetch(u);
+    const res = await pedir(u);
     if (!res.ok) return null;
     const j = await res.json().catch(() => null);
     if (!j) return null;
@@ -2381,7 +2421,7 @@ export async function contextoDelAsunto(
 export async function guardarOrigen(
     numero: string, userEmail: string, cambios: CambiosDelOrigen,
 ): Promise<OrigenDelActoReclamado | null> {
-    const res = await fetch(`${BASE}/taller/origen`, {
+    const res = await pedir(`${BASE}/taller/origen`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ numero, user_email: userEmail, ...cambios }),
@@ -2439,6 +2479,7 @@ export async function reglasSurtimiento(
     if (papel.trim()) q.set('papel', papel.trim());
     if (tribunal.trim()) q.set('tribunal', tribunal.trim());
     if (ciudad.trim()) q.set('ciudad', ciudad.trim());
+    // Catálogo: sin token, como /taller/tipos.
     const res = await fetch(`${BASE}/taller/reglas-surtimiento?${q.toString()}`);
     if (!res.ok) return _fallo(res);
     return (await res.json()) as ReglasOfrecidas;
@@ -3111,7 +3152,7 @@ export async function fichaDesdeAdmision(
     const fd = new FormData();
     fd.append('user_email', userEmail);
     fd.append('admision', archivo);
-    const res = await fetch(`${BASE}/taller/desde-admision`,
+    const res = await pedir(`${BASE}/taller/desde-admision`,
                             { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
     const j = await res.json();
@@ -3560,7 +3601,7 @@ export async function pedirPlan(
     numero: string, userEmail: string, opciones: OpcionesResolver,
 ): Promise<RespuestaPlan> {
     const fd = formularioDelResolver(numero, userEmail, opciones);
-    const res = await fetch(`${BASE}/taller/plan/pedir`, { method: 'POST', body: fd });
+    const res = await pedir(`${BASE}/taller/plan/pedir`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
     return _respuestaPlanDe(await res.json().catch(() => null));
 }
@@ -3936,7 +3977,7 @@ function probabilidadDeLaTarjetaDe(x: unknown): ProbabilidadDeLaTarjeta | null {
 /** Pide la tarjeta del asunto. null = el servidor aún no la sirve (404/405) o
  *  no trae nada legible: la pantalla sigue con la suya. */
 export async function leerTarjeta(numero: string, userEmail: string): Promise<TarjetaDecision | null> {
-    const res = await fetch(
+    const res = await pedir(
         `${BASE}/taller/tarjeta?numero=${encodeURIComponent(numero)}`
         + `&user_email=${encodeURIComponent(userEmail)}`);
     if (res.status === 404 || res.status === 405) return null;
@@ -4174,7 +4215,7 @@ export async function responderPreguntas(
        insumos distintos. Si hay, se manda; si no, el campo no va (un servidor
        anterior no lo espera). */
     if (contexto.trim()) fd.append('contexto', contexto);
-    const res = await fetch(`${BASE}/taller/responder`, { method: 'POST', body: fd });
+    const res = await pedir(`${BASE}/taller/responder`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
     const j = _o(await res.json().catch(() => null)) ?? {};
     return {

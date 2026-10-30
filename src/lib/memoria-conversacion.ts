@@ -1,5 +1,5 @@
 import type { Message } from '@/lib/api'
-import { getSession } from '@/lib/supabase'
+import { fetchConSesion } from '@/lib/sesion-api'
 import { quitarBloques } from '@/lib/idsDeCita'
 
 /**
@@ -142,12 +142,12 @@ export async function pedirContinuacion(opciones: { userId: string; titulo: stri
     const controlador = new AbortController()
     const reloj = setTimeout(() => controlador.abort(), TOPE_CONTINUAR_MS)
     try {
-        const sesion = await getSession().catch(() => null)
+        // Con la sesión, y con tope (29-oct-2026): la API ya no cree el
+        // `user_id` sin el token de esa cuenta. Ver lib/sesion-api.ts.
         const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-        if (sesion?.access_token) headers.Authorization = `Bearer ${sesion.access_token}`
         let res: Response
         try {
-            res = await fetch(`${API_URL}/conversacion/continuar`, {
+            res = await fetchConSesion(`${API_URL}/conversacion/continuar`, {
                 method: 'POST',
                 headers,
                 signal: controlador.signal,

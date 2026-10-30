@@ -5,6 +5,7 @@ import { Upload, FileText, Gavel, Scale, Shield, AlertTriangle, Loader2, Copy, D
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRequireAuth } from '@/lib/useAuth';
+import { fetchConSesion } from '@/lib/sesion-api';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
 import { UserAvatar } from '@/components/UserAvatar';
 import LemaOpenAI from '@/components/LemaOpenAI';
@@ -486,7 +487,7 @@ export default function RedactorSentenciaPage() {
 
             setStreamingPhase({ step: 'Iniciando conexión segura...', progress: 5 })
 
-            const response = await fetch(`${API_URL}/redactor/v2/analyze`, {
+            const response = await fetchConSesion(`${API_URL}/redactor/v2/analyze`, {
                 method: 'POST',
                 body: formData,
             });
@@ -601,7 +602,7 @@ export default function RedactorSentenciaPage() {
             // V4: Send empty problems — backend auto-derives from text
             formData.append('problemas_json', '[]');
 
-            const response = await fetch(`${API_URL}/redactor/v3/generate_comprehensive`, {
+            const response = await fetchConSesion(`${API_URL}/redactor/v3/generate_comprehensive`, {
                 method: 'POST',
                 body: formData,
             });
@@ -742,7 +743,7 @@ export default function RedactorSentenciaPage() {
             formData.append('tipo', selectedTipo?.id || 'amparo_directo');
             formData.append('user_email', user?.email || '');
 
-            const res = await fetch(`${API_URL}/merge-sentencia-docx`, {
+            const res = await fetchConSesion(`${API_URL}/merge-sentencia-docx`, {
                 method: 'POST',
                 body: formData,
             });
@@ -772,7 +773,7 @@ export default function RedactorSentenciaPage() {
         if (!result || exportLoading) return;
         setExportLoading(true);
         try {
-            const res = await fetch(`${API_URL}/export-sentencia-docx`, {
+            const res = await fetchConSesion(`${API_URL}/export-sentencia-docx`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

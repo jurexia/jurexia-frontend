@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { streamChat } from './api'
+import { fetchConSesion } from './sesion-api'
 import { expandirCitasAgrupadas, quitarBloques, sinComentarios } from './idsDeCita'
 
 /**
@@ -685,7 +686,10 @@ async function extraerDeArchivo(
         // la carpeta lo apaga expresamente.
         form.append('usar_acervo', '0')
 
-        const res = await fetch(`${API_URL}/analyze-document`, { method: 'POST', body: form })
+        // CON LA SESIÓN (29-oct-2026): la API ya no cree un `user_id` sin el
+        // token de esa cuenta. Sin token lo atiende como anónimo —límites del
+        // gratuito— y la carpeta de un Platinum leería como gratuita.
+        const res = await fetchConSesion(`${API_URL}/analyze-document`, { method: 'POST', body: form })
         if (!res.ok) {
             // El 413 lo manda el backend cuando el documento tiene más hojas de
             // las que lee el plan. No es un fallo: es una respuesta que el

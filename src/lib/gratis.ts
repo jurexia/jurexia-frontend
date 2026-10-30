@@ -21,6 +21,8 @@
  * Vive en este navegador para que la misma visita conserve su cuenta del día.
  */
 
+import { fetchConSesion } from './sesion-api';
+
 const BASE = process.env.NEXT_PUBLIC_API_URL || '';
 const LLAVE = 'iurexia-basico-testigo';
 
@@ -168,11 +170,16 @@ export async function preguntarBasico(consulta: string, correo?: string): Promis
         cuerpo.testigo = await abrirSesionBasica();
     }
 
-    const res = await fetch(`${BASE}/precedentes/gratis`, {
+    // Con `correo`, la sesión (29-oct-2026): la API ya no gasta el uso
+    // diario de una cuenta sin su token. La visita anónima va con su testigo.
+    const peticion: RequestInit = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(cuerpo),
-    });
+    };
+    const res = correo
+        ? await fetchConSesion(`${BASE}/precedentes/gratis`, peticion)
+        : await fetch(`${BASE}/precedentes/gratis`, peticion);
 
     if (!res.ok) {
         let detalle = 'No pudimos consultar el acervo.';

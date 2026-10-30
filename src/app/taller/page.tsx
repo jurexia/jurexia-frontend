@@ -2392,8 +2392,10 @@ export default function TallerDeSentencias() {
                                 {guardados!.documentos.map((d) => (
                                     <li key={d.rol}>
                                         <button type="button"
-                                                onClick={() => descargarDocumento(
-                                                    encargo.numero, d.rol, correo)}
+                                                onClick={() => void descargarDocumento(
+                                                    encargo.numero, d.rol, correo).catch((e) =>
+                                                    setError(e instanceof Error ? e.message
+                                                             : 'No se pudo bajar el documento.'))}
                                                 className="group flex w-full items-center gap-2.5 rounded-lg
                                                            border border-white/[0.07] bg-white/[0.02] px-3 py-2
                                                            text-left transition-colors
@@ -2526,7 +2528,9 @@ export default function TallerDeSentencias() {
                                        enCurso={enCurso}
                                        onReanudar={reanudar}
                                        onDescargarVersion={(n, v) =>
-                                           void descargarDelAlmacen(n, correo, v)}
+                                           void descargarDelAlmacen(n, correo, v).catch((e) =>
+                                               setError(e instanceof Error ? e.message
+                                                        : 'No se pudo bajar el proyecto.'))}
                                        puedeSise={!!piloto?.puede_sise}
                                        ficha={fichaJsx}
                                        documentos={documentosJsx}
@@ -3845,7 +3849,9 @@ export default function TallerDeSentencias() {
 
                                 <div className="mt-4 flex flex-wrap gap-2">
                                     <button className={cn(boton, 'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90')}
-                                            onClick={() => descargarDelAlmacen(encargo.numero, correo)}>
+                                            onClick={() => void descargarDelAlmacen(encargo.numero, correo)
+                                                .catch((e) => setError(e instanceof Error ? e.message
+                                                                       : 'No se pudo bajar el proyecto.'))}>
                                         <Download className="h-4 w-4" />
                                         Descargar el proyecto
                                     </button>

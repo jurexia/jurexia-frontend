@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { fetchConSesion } from '@/lib/sesion-api';
 import { X, Upload, FileText, BarChart2, AlertCircle, ChevronRight, ExternalLink, Loader2 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -220,7 +221,7 @@ export default function JurimetriaModal({ isOpen, onClose, userEmail }: Jurimetr
             if (fileRD) form.append('ratio_decidendi', fileRD);
             if (fileCP) form.append('causa_petendi', fileCP);
 
-            const res = await fetch(`${API_URL}/api/jurimetria`, {
+            const res = await fetchConSesion(`${API_URL}/api/jurimetria`, {
                 method: 'POST',
                 body: form,
             });
