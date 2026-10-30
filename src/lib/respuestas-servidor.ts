@@ -2,7 +2,8 @@
 
 import { API_URL, type Message } from './api';
 import { supabase } from './supabase';
-import { addMessageBatch, generateTitle } from './conversations';
+import { addMessageBatch, addMessageToConversation, generateTitle, unMsDespues } from './conversations';
+import type { CopiaDeRespuesta, EstadoCopia, FuenteDeCopias } from './analisis-documento';
 
 /**
  * LA RESPUESTA QUE EL SERVIDOR YA ESCRIBIÓ NO SE PIERDE (14-oct-2026).
@@ -26,6 +27,15 @@ import { addMessageBatch, generateTitle } from './conversations';
  *
  * Si la tabla aún no existe (la migración va aparte) o Supabase falla, todo
  * esto se aparta en silencio y el guardado sigue como antes.
+ *
+ * SIN TEXTO NO SE RECLAMA (28-oct-2026). La pestaña reclamaba aunque su
+ * stream no hubiera traído nada —el abogado detuvo la consulta, cambió de
+ * conversación o la red retuvo el flujo—, y la copia que el servidor terminaba
+ * después ya no la recuperaba nadie. Así se perdieron en catorce días cuatro
+ * respuestas de entre 29 y 74 mil caracteres; la del 26-oct a las 16:14 UTC,
+ * tras Cisco Umbrella, se reclamó 38 s antes de que el servidor la terminara.
+ * Ahora esa pestaña guarda sólo la pregunta, y la recuperación pone la
+ * respuesta justo detrás, sin repetir la pregunta.
  */
 
 /** Lo que la pestaña debe hacer con su respuesta. */
@@ -82,6 +92,52 @@ export async function reclamarRespuesta(peticionId: string): Promise<Reclamo> {
     return conLimite(intento, ESPERA_RECLAMO_MS, 'desconocida');
 }
 
+/**
+ * ¿Ya pasó alguien esta copia al historial? Sin reclamarla: lo pregunta la
+ * pestaña que terminó sin texto antes de guardar la pregunta sola, por si la
+ * recuperación —en otra pestaña— ya guardó la pregunta con su respuesta.
+ * Ante la duda, no: guardar la pregunta es lo de siempre.
+ */
+export async function copiaYaGuardada(peticionId: string): Promise<boolean> {
+    const intento = (async () => {
+        const { data, error } = await supabase
+            .from('respuestas_chat')
+            .select('guardada_at')
+            .eq('peticion_id', peticionId)
+            .maybeSingle();
+        return !error && !!data?.guardada_at;
+    })();
+    return conLimite(intento, ESPERA_RECLAMO_MS, false);
+}
+
+const COLUMNAS_COPIA = 'peticion_id, conversation_id, expediente_id, estado_mx, pregunta, respuesta, estado, guardada_at';
+
+/** Las copias de `respuestas_chat`, para la espera de `analizarDocumento`. */
+export const copiasDelServidor: FuenteDeCopias = {
+    async estado(peticionId) {
+        const intento = (async () => {
+            const { data, error } = await supabase
+                .from('respuestas_chat')
+                .select('estado')
+                .eq('peticion_id', peticionId)
+                .maybeSingle();
+            return { estado: error ? null : ((data?.estado as EstadoCopia | undefined) ?? null), error: !!error };
+        })();
+        return conLimite(intento, ESPERA_RECLAMO_MS, { estado: null, error: true });
+    },
+    async completa(peticionId) {
+        const intento = (async () => {
+            const { data, error } = await supabase
+                .from('respuestas_chat')
+                .select(COLUMNAS_COPIA)
+                .eq('peticion_id', peticionId)
+                .maybeSingle();
+            return error ? null : ((data as CopiaDeRespuesta | null) ?? null);
+        })();
+        return conLimite(intento, 20_000, null);
+    },
+};
+
 interface FilaRespaldo {
     peticion_id: string;
     conversation_id: string | null;
@@ -90,9 +146,58 @@ interface FilaRespaldo {
     pregunta: string;
     respuesta: string | null;
     estado: 'terminada' | 'interrumpida';
+    creada_at: string;
 }
 
 const NOTA_INCOMPLETA = '\n\n*[Respuesta incompleta — por favor intenta de nuevo]*';
+
+/** El texto de una copia tal como se enseña y se guarda: si el servidor la
+ *  dejó a medias, con la nota de siempre. Vacío si no hay nada que salvar. */
+export function textoDeCopia(fila: Pick<CopiaDeRespuesta, 'respuesta' | 'estado'>): string {
+    const texto = (fila.respuesta || '').trim();
+    if (!texto) return '';
+    return fila.estado === 'interrumpida' ? texto + NOTA_INCOMPLETA : texto;
+}
+
+/* LA PREGUNTA QUE LA PÁGINA YA GUARDÓ SOLA. Sin texto la página no reclama:
+   guarda la pregunta y deja la respuesta a la recuperación. Para no repetirla,
+   aquí se busca esa pregunta —la misma, guardada desde poco antes de que
+   empezara la consulta— sin respuesta pegada. La de un par guardado de una vez
+   comparte EXACTAMENTE su `created_at`, y la que pone la recuperación va
+   EXACTAMENTE 1 ms detrás: no basta «cerca», porque lo siguiente que pregunta
+   el abogado puede guardarse en el mismo milisegundo. */
+const MARGEN_PREGUNTA_MS = 5_000;
+/** El tope con que la API guarda la pregunta (TOPE_PREGUNTA, respuesta_guardada.py). */
+const TOPE_PREGUNTA_SERVIDOR = 200_000;
+
+function esLaMismaPregunta(guardada: string, delServidor: string): boolean {
+    return guardada === delServidor
+        || (delServidor.length >= TOPE_PREGUNTA_SERVIDOR && guardada.startsWith(delServidor));
+}
+
+async function preguntaGuardadaSola(convId: string, fila: FilaRespaldo): Promise<string | null> {
+    const desde = new Date(Date.parse(fila.creada_at) - MARGEN_PREGUNTA_MS).toISOString();
+    const { data, error } = await supabase
+        .from('messages')
+        .select('content, created_at')
+        .eq('conversation_id', convId)
+        .eq('role', 'user')
+        .gte('created_at', desde)
+        .order('created_at', { ascending: true })
+        .limit(10);
+    if (error || !data) return null;
+    for (const m of data as { content: string; created_at: string }[]) {
+        if (!esLaMismaPregunta(m.content, fila.pregunta)) continue;
+        const { count, error: e2 } = await supabase
+            .from('messages')
+            .select('id', { count: 'exact', head: true })
+            .eq('conversation_id', convId)
+            .eq('role', 'assistant')
+            .in('created_at', [m.created_at, unMsDespues(m.created_at)]);
+        if (!e2 && !count) return m.created_at;
+    }
+    return null;
+}
 
 /** La conversación de la copia, o una nueva con su mismo id si ya no existe. */
 async function conversacionPara(fila: FilaRespaldo, userId: string): Promise<string | null> {
@@ -138,7 +243,7 @@ export function recuperarRespuestas(): Promise<string[]> {
             const desde = new Date(Date.now() - VENTANA_DIAS * 86_400_000).toISOString();
             const { data, error } = await supabase
                 .from('respuestas_chat')
-                .select('peticion_id, conversation_id, expediente_id, estado_mx, pregunta, respuesta, estado')
+                .select('peticion_id, conversation_id, expediente_id, estado_mx, pregunta, respuesta, estado, creada_at')
                 .eq('user_id', userId)
                 .is('guardada_at', null)
                 .in('estado', ['terminada', 'interrumpida'])
@@ -149,21 +254,31 @@ export function recuperarRespuestas(): Promise<string[]> {
             if (error || !data?.length) return [];
 
             for (const fila of data as FilaRespaldo[]) {
-                const texto = (fila.respuesta || '').trim();
-                // Una interrumpida sin nada escrito no tiene nada que salvar.
-                if (!texto && fila.estado === 'interrumpida') continue;
+                const texto = textoDeCopia(fila);
+                /* Sin nada escrito no hay nada que salvar, y se reclama igual:
+                   desde que la pestaña sin texto ya no reclama, estas copias se
+                   quedarían para siempre entre las 20 que se miran aquí, por
+                   delante de las que sí tienen respuesta. */
+                if (!texto) {
+                    await reclamarRespuesta(fila.peticion_id);
+                    continue;
+                }
                 if ((await reclamarRespuesta(fila.peticion_id)) !== 'mia') continue;
                 const convId = await conversacionPara(fila, userId);
                 if (!convId) continue;
-                const pregunta: Message = { role: 'user', content: fila.pregunta };
-                const respuesta: Message = {
-                    role: 'assistant',
-                    content: fila.estado === 'interrumpida' ? texto + NOTA_INCOMPLETA : texto,
-                };
-                // Si esto falla, addMessageBatch lo deja en localStorage y
+                const respuesta: Message = { role: 'assistant', content: texto };
+                // Si esto falla, addMessage* lo deja en localStorage y
                 // `recoverPendingMessages` lo reintenta: la copia ya está
                 // reclamada y no se vuelve a intentar desde aquí.
-                await addMessageBatch(convId, pregunta, respuesta);
+                const sola = await preguntaGuardadaSola(convId, fila);
+                if (sola) {
+                    // La pregunta ya está: la respuesta, justo detrás de ella.
+                    await addMessageToConversation(convId, respuesta, { creadaEn: unMsDespues(sola) });
+                } else {
+                    // El par entero, en el sitio de la conversación en que se preguntó.
+                    await addMessageBatch(convId, { role: 'user', content: fila.pregunta }, respuesta,
+                        { creadaEn: fila.creada_at });
+                }
                 tocadas.add(convId);
                 console.info(`[respaldo] respuesta recuperada del servidor → ${convId.slice(0, 8)}…`);
             }
