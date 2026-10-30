@@ -8,9 +8,11 @@ interface FileUploadModalProps {
     isOpen: boolean;
     onClose: () => void;
     onTextExtracted: (file: File, fileName: string) => void;
+    /** El peso máximo por archivo del plan (Platinum 50 MB, los demás 25). */
+    limiteMb?: number;
 }
 
-export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: FileUploadModalProps) {
+export default function FileUploadModal({ isOpen, onClose, onTextExtracted, limiteMb }: FileUploadModalProps) {
     const [isDragging, setIsDragging] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -22,7 +24,7 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
     /* La regla vive en un solo sitio: aquí y en el arrastre sobre la pantalla
        se acepta y se rechaza lo mismo (18-sep-2026). */
     const validateFile = (file: File): boolean => {
-        const fallo = validarAdjunto(file);
+        const fallo = validarAdjunto(file, limiteMb);
         if (fallo) { setError(fallo); return false; }
         return true;
     };
@@ -74,7 +76,7 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
                 `únelos en un solo PDF si forman parte del mismo escrito.`
             );
         }
-    }, []);
+    }, [limiteMb]);
 
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();

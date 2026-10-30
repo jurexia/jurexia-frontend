@@ -65,7 +65,8 @@ import {
     sesionDelAlmacen,
     textoDeCopia,
 } from '@/lib/respuestas-servidor';
-import { analizarDocumento, type FinDelAnalisis } from '@/lib/analisis-documento';
+import { analizarDocumento, esFalloDeRed, type FinDelAnalisis, type LimitePlan } from '@/lib/analisis-documento';
+import { AVISO_PANTALLA_VIEJA, pantallaDesactualizada } from '@/lib/version';
 import { getSession } from '@/lib/supabase';
 import AvisoRedRetiene from '@/components/AvisoRedRetiene';
 /* Carpetas y flujos de trabajo en el chat (25-sep-2026): ver ChatSidebar. */
@@ -552,6 +553,8 @@ export default function ChatPage() {
     const [adjuntoDevuelto, setAdjuntoDevuelto] = useState<{ file: File; prompt: string; nonce: number } | null>(null);
     /** Tras un documento del plan gratuito: cuánto le queda y qué abre Pro (ver `AvisoDocumentoGratis`). */
     const [avisoDocGratis, setAvisoDocGratis] = useState<DatosAvisoDocumentoGratis | null>(null);
+    /** El archivo de la última lectura parcial, para el botón de las hojas siguientes. */
+    const hojasSiguientesRef = useRef<{ file: File; prompt: string; desde: number } | null>(null);
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [activeConversationId, setActiveConvId] = useState<string | null>(null);
     const [conversationsLoading, setConversationsLoading] = useState(true);
@@ -588,6 +591,8 @@ export default function ChatPage() {
     // documentos listos en su Bóveda y el plan es Platinum, «Fuentes» suma la
     // fila «Bóveda» (encendida al entrar). La API lo vuelve a comprobar.
     const esPlatinumBoveda = isAdmin(user?.email) || PLANES_PLATINUM.includes(profile?.subscription_type ?? '');
+    /** El peso máximo por archivo del plan: el mismo que aplica la API (16-ago-2026). */
+    const topeAdjuntoMb = esPlatinumBoveda ? 50 : 25;
     useEffect(() => {
         if (!carpetaActivaId || !esPlatinumBoveda) { fijarCarpetaConBoveda(null); return; }
         let vigente = true;
@@ -1039,7 +1044,10 @@ export default function ChatPage() {
     }, [authLoading, hayTestigo, modoBasico, user, profile, selectedEstado, handleSendMessage]);
 
     // Document analysis via Gemini Flash (streaming from /analyze-document)
-    const handleDocumentSubmit = useCallback(async (file: File, prompt: string, displayMessage: string) => {
+    const handleDocumentSubmit = useCallback(async (file: File, prompt: string, displayMessage: string,
+        /* LAS HOJAS SIGUIENTES (29-oct-2026): la tarjeta de la lectura parcial
+           vuelve a mandar el mismo archivo pidiendo que se lea desde esa hoja. */
+        opciones?: { desdeHoja?: number }) => {
         if (!user) return;
         setAvisoDocGratis(null);
         setAvisoRed(false);
@@ -1097,12 +1105,16 @@ export default function ChatPage() {
         }
 
         // ── Client-side validation ──
-        const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+        // El tope del PLAN, el mismo de la API (Platinum 50 MB, los demás 25):
+        // con 25 fijos aquí, el derecho de Platinum no cabía por la puerta.
+        const MAX_FILE_SIZE = topeAdjuntoMb * 1024 * 1024;
         if (file.size > MAX_FILE_SIZE) {
             const sizeMB = (file.size / 1024 / 1024).toFixed(1);
             setMessages(prev => [
                 ...prev,
-                { role: 'assistant' as const, content: `⚠️ **Archivo demasiado grande** (${sizeMB} MB)\n\nEl límite es de 25 MB. Por favor, reduce el tamaño del archivo o divide el documento en partes más pequeñas.` }
+                { role: 'assistant' as const, content: `⚠️ **Archivo demasiado grande** (${sizeMB} MB)\n\n`
+                    + `Su plan acepta hasta ${topeAdjuntoMb} MB por archivo. Divídalo en partes (en su visor de PDF, `
+                    + '«Imprimir → Guardar como PDF» con un rango de hojas) y adjunte cada parte por separado.' }
             ]);
             setIsDocumentAnalyzing(false);
             setAnalisisEnVuelo(false);   // salida temprana: no hay stream que esperar
@@ -1121,6 +1133,7 @@ export default function ChatPage() {
         // entidad la búsqueda no abre el silo estatal. Es justo el fallo de
         // Puebla: diez artículos federales con etiqueta de otro estado.
         if (selectedEstado) formData.append('estado', selectedEstado);
+        if (opciones?.desdeHoja && opciones.desdeHoja > 1) formData.append('desde_hoja', String(opciones.desdeHoja));
         if (fuentesWebActivas()) {
             formData.append('fuentes_web', '1');
         }
@@ -1155,7 +1168,7 @@ export default function ChatPage() {
         let huboRespuesta = false;
         let huboError = false;
         // Con `as`: se asigna dentro de un evento, y TS lo daría por null para siempre.
-        let limitePlan = null as { leidas: number; total: number; plan: string | null } | null;
+        let limitePlan = null as LimitePlan | null;
         /* Lo que se guarda como respuesta: lo mismo que se pinta, llevado aquí y
            no releído del estado, que si el abogado cambió de conversación ya es
            el de la otra. */
@@ -1268,6 +1281,18 @@ export default function ChatPage() {
                 huboError = true;
                 pintarRespuesta(ANALISIS_SIGUE_EN_EL_SERVIDOR);
                 programarRecuperacion();
+            } else if (!fin.terminado && !huboRespuesta && !huboError) {
+                /* EL FLUJO SE CERRÓ SIN DECIR NADA (29-oct-2026). Sin `done`, sin
+                   error y sin una letra: antes se guardaba la pregunta sola y el
+                   abogado veía su documento sin respuesta y sin explicación (19
+                   veces en la web en 30 días). Ahora se dice y el documento
+                   vuelve a la caja. */
+                huboError = true;
+                setAdjuntoDevuelto({ file, prompt, nonce: Date.now() });
+                textoRespuesta = '🔌 **La respuesta no llegó a su pantalla.**\n\n'
+                    + 'La conexión se cerró antes de recibir el análisis. Su documento sigue adjunto en la caja: '
+                    + 'pulse enviar para intentarlo otra vez. Si se repite, recargue la página.';
+                pintarRespuesta(textoRespuesta);
             }
         } catch (err: any) {
             huboError = true;
@@ -1276,10 +1301,17 @@ export default function ChatPage() {
             const errMsg = err?.message || '';
 
             if (err?.name === 'AbortError' || errMsg.includes('abort')) {
+                /* Desde el 28-oct esto sólo pasa cuando no hay copia del
+                   servidor que esperar (sin sesión), así que el análisis no se
+                   puede recuperar: se dice qué hacer. Medido: en 20 de 24 casos
+                   de la última semana el servidor SÍ terminó; lo que callaba
+                   era la red (un proxy o antivirus que retiene la respuesta). */
+                setAdjuntoDevuelto({ file, prompt, nonce: Date.now() });
                 userMessage = '⏱️ **Se perdió el contacto con el servidor.**\n\n'
-                    + 'Dejó de llegar información durante más de un minuto mientras se '
-                    + 'analizaba tu documento. Puede que el análisis sí se haya completado: '
-                    + 'vuelve a intentarlo y, si se repite, escríbenos a soporte@iurexia.com.';
+                    + 'Dejó de llegar información durante más de un minuto. Si su red pasa por un proxy o un '
+                    + 'antivirus que revisa las páginas (común en oficinas y tribunales), es probable que esté '
+                    + 'reteniendo la respuesta: pruebe desde otra red, por ejemplo los datos de su teléfono. '
+                    + 'Su documento sigue adjunto en la caja: pulse enviar para intentarlo otra vez.';
             } else if (err?.status === 402) {
                 /* SIN CONSULTAS: el aviso del plan, no un error. La cuenta de
                    pantalla podía ir atrasada respecto de la base. */
@@ -1290,14 +1322,25 @@ export default function ChatPage() {
             } else if (err?.status === 413) {
                 /* MÁS HOJAS DE LAS QUE LEE SU PLAN: el detalle de la API ya dice
                    cuántas tiene, cuántas lee el plan y cuál las cubre. Antes
-                   salía como «Error al analizar documento» y sin salida. */
+                   salía como «Error al analizar documento» y sin salida. Desde
+                   el 29-oct la API lee en parte y esto sólo llega si se apaga
+                   (DOCUMENTO_LECTURA_PARCIAL=0). */
+                setAdjuntoDevuelto({ file, prompt, nonce: Date.now() });
                 userMessage = `📄 **${errMsg}**\n\nNo se le descontó la consulta. `
                     + '[Ver qué plan lee su documento completo →](/precios)';
-            } else if (/Failed to fetch|NetworkError|ERR_CONNECTION|Load failed/i.test(errMsg)) {
+            } else if (esFalloDeRed(err) || /Failed to fetch|NetworkError|ERR_CONNECTION|Load failed/i.test(errMsg)) {
                 /* EL DOCUMENTO VUELVE A LA CAJA (25-oct-2026). Ya se reintentó
                    una vez; ahora el usuario reintenta con un toque, sin volver
                    a buscar el archivo en el teléfono. */
                 setAdjuntoDevuelto({ file, prompt, nonce: Date.now() });
+                /* Y SE CUENTA (29-oct-2026): 7 de 16 de la última semana nunca
+                   llegaron a Render y desde allá no se ve por qué. */
+                avisarTraba('fetch', 0, {
+                    peticionId, userId: user.id,
+                    detalle: `doc|${errMsg.slice(0, 40)}|${(file.size / 1048576).toFixed(1)}MB|`
+                        + `${(file.name.split('.').pop() || '').toLowerCase()}|${file.type || 'sin-tipo'}`,
+                });
+                const pantallaVieja = await pantallaDesactualizada();
                 // ESTA RAMA ES SÓLO RED, y el mensaje decía otra cosa.
                 //
                 // Aquí se entra únicamente con Failed to fetch / NetworkError /
@@ -1309,6 +1352,7 @@ export default function ChatPage() {
                 // era malo, lo volvió a subir sin cambiar nada y funcionó. Lo
                 // que se rompió fue la conexión, y decirlo es lo mínimo.
                 userMessage = '🔌 **Se cortó la conexión al enviar el documento.**\n\n'
+                    + (pantallaVieja ? AVISO_PANTALLA_VIEJA + '\n\n' : '')
                     + 'No es su archivo: la petición no llegó a completarse. '
                     + 'Su documento sigue adjunto en la caja: pulse enviar para intentarlo otra vez. '
                     + 'Si está con datos móviles, pruebe con wifi o con mejor señal.\n\n'
@@ -1316,9 +1360,14 @@ export default function ChatPage() {
             } else if (errMsg.includes('Formato no soportado')) {
                 userMessage = `📋 **Formato no soportado.**\n\nSolo se aceptan archivos PDF, DOCX y DOC. Convierte tu documento a uno de estos formatos e intenta de nuevo.`;
             } else if (errMsg.includes('muy grande') || errMsg.includes('too large') || errMsg.includes('25MB')) {
-                userMessage = `⚠️ **Archivo demasiado grande.**\n\nEl límite es de 25 MB. Reduce el tamaño del archivo o divide el documento en partes más pequeñas.`;
+                userMessage = `⚠️ **Archivo demasiado grande.**\n\nSu plan acepta hasta ${topeAdjuntoMb} MB por archivo. Divídalo en partes y adjunte cada una por separado.`;
+            } else if (err?.status === 400 && errMsg) {
+                /* El 400 de la API ya dice qué pasó y qué hacer (peso del plan,
+                   PDF con contraseña, hoja de inicio que no existe…). */
+                setAdjuntoDevuelto({ file, prompt, nonce: Date.now() });
+                userMessage = `📄 **No pudimos analizar este documento.**\n\n${errMsg}`;
             } else if (errMsg.includes('No se pudo extraer texto') || errMsg.includes('vacío')) {
-                userMessage = '📄 **No se pudo extraer el texto del documento.**\n\nEl archivo parece estar vacío, corrupto, o es una imagen sin texto reconocible. Intenta con un PDF que tenga texto seleccionable o con mejor calidad de escaneo.';
+                userMessage = '📄 **No se pudo extraer el texto del documento.**\n\nÁbralo y use «Guardar como → PDF» (o escanéelo de nuevo a 300 ppp) y adjunte ese PDF.';
             } else {
                 userMessage = `❌ **Error al analizar documento.**\n\n${errMsg || 'Ocurrió un error inesperado. Intenta de nuevo en unos momentos.'}`;
             }
@@ -1383,16 +1432,38 @@ export default function ChatPage() {
                documento que se respondió bien, cuánto le queda y qué abre Pro;
                si se leyó en muestra, cuántas hojas y qué plan lo lee entero. */
             const esGratuito = (profile?.subscription_type || 'gratuito') === 'gratuito';
-            if (esGratuito && !isAdmin(user?.email) && huboRespuesta && !huboError) {
+            const lp = limitePlan as LimitePlan | null;
+            if ((esGratuito || lp) && !isAdmin(user?.email) && huboRespuesta && !huboError) {
+                /* Y LOS PLANES DE PAGO (29-oct-2026): si la API leyó en parte,
+                   la misma tarjeta dice cuántas hojas y ofrece las siguientes. */
                 setAvisoDocGratis({
                     restantes,
                     limite: limiteMes,
-                    ...(limitePlan ? { leidas: limitePlan.leidas, total: limitePlan.total, plan: limitePlan.plan } : {}),
+                    ...(lp ? {
+                        leidas: lp.leidas, total: lp.total, plan: lp.plan,
+                        planActual: lp.plan_actual, tope: lp.tope, desde: lp.desde, hasta: lp.hasta,
+                        siguiente: lp.siguiente ?? null,
+                    } : {}),
                 });
+                hojasSiguientesRef.current = lp?.siguiente ? { file, prompt, desde: lp.siguiente } : null;
             }
         }
     }, [user, profile, activeConversationId, selectedEstado, queriesLimit, queriesUsed, setMessages, vincularNueva,
-        alRetenerLaRed, programarRecuperacion]);
+        alRetenerLaRed, programarRecuperacion, topeAdjuntoMb]);
+
+    /* Las hojas siguientes del documento que se leyó en parte: el mismo archivo,
+       la misma instrucción, desde la hoja que dijo la API. */
+    const analizarHojasSiguientes = useCallback(() => {
+        const s = hojasSiguientesRef.current;
+        if (!s) return;
+        hojasSiguientesRef.current = null;
+        const tope = avisoDocGratis?.tope || avisoDocGratis?.leidas || 0;
+        const total = avisoDocGratis?.total || s.desde;
+        const hasta = tope ? Math.min(total, s.desde + tope - 1) : total;
+        const tramo = hasta > s.desde ? `hojas ${s.desde} a ${hasta}` : `hoja ${s.desde}`;
+        void handleDocumentSubmit(s.file, s.prompt,
+            `📄 **Documento adjunto:** ${s.file.name} (${tramo})\n\n${s.prompt}`, { desdeHoja: s.desde });
+    }, [avisoDocGratis, handleDocumentSubmit]);
 
     /* ═══ CONTINUAR EN UNA CONVERSACIÓN NUEVA (7-oct-2026) ═══════════════
        El botón del aviso de memoria llena (`AvisoMemoriaLlena`). El API
@@ -2094,6 +2165,7 @@ export default function ChatPage() {
                                     onSubmit={handleSendMessage}
                                     onDocumentSubmit={handleDocumentSubmit}
                                     adjuntoDevuelto={adjuntoDevuelto}
+                                    limiteAdjuntoMb={topeAdjuntoMb}
                                     onStop={stopGeneration}
                                     isLoading={isLoading || basicoCargando}
                                     basico={modoBasico}
@@ -2271,7 +2343,8 @@ export default function ChatPage() {
                                 </div>
                             )}
                             {avisoDocGratis && !modoBasico && !analisisEnVuelo && (
-                                <AvisoDocumentoGratis datos={avisoDocGratis} onCerrar={() => setAvisoDocGratis(null)} />
+                                <AvisoDocumentoGratis datos={avisoDocGratis} onCerrar={() => setAvisoDocGratis(null)}
+                                    onSiguientes={avisoDocGratis.siguiente ? analizarHojasSiguientes : undefined} />
                             )}
                             {avisoRed && !isLoading && !analisisEnVuelo && (
                                 <AvisoRedRetiene onCerrar={cerrarAvisoRed} />
@@ -2300,6 +2373,7 @@ export default function ChatPage() {
                             onSubmit={handleSendMessage}
                             onDocumentSubmit={handleDocumentSubmit}
                             adjuntoDevuelto={adjuntoDevuelto}
+                            limiteAdjuntoMb={topeAdjuntoMb}
                             onStop={stopGeneration}
                             isLoading={isLoading || basicoCargando}
                             basico={modoBasico}

@@ -69,6 +69,8 @@ interface ChatInputProps {
      *  instrucción, para reintentar con un toque. `nonce` distingue dos
      *  devoluciones seguidas del mismo archivo. */
     adjuntoDevuelto?: { file: File; prompt: string; nonce: number } | null;
+    /** El peso máximo por archivo del plan (Platinum 50 MB, los demás 25). */
+    limiteAdjuntoMb?: number;
 }
 
 export default function ChatInput({
@@ -91,6 +93,7 @@ export default function ChatInput({
     basico = false,
     sinCuenta = false,
     adjuntoDevuelto = null,
+    limiteAdjuntoMb,
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
     const [isListening, setIsListening] = useState(false);
@@ -455,7 +458,7 @@ export default function ChatInput({
             e.preventDefault();
             const archivos = Array.from(e.dataTransfer?.files || []);
             if (!archivos.length) return;
-            const fallo = validarAdjunto(archivos[0]);
+            const fallo = validarAdjunto(archivos[0], limiteAdjuntoMb);
             if (fallo) { anunciarAdjunto(fallo); return; }
             const primero = archivos[0];
             void fijarAdjunto(primero).then((fijo) => {
@@ -483,7 +486,7 @@ export default function ChatInput({
             window.removeEventListener('dragend', terminar);
             window.removeEventListener('drop', soltar);
         };
-    }, [showFileModal]);
+    }, [showFileModal, limiteAdjuntoMb]);
 
     const handleFileExtracted = (file: File, fileName: string) => {
         // El archivo crudo va al backend, que extrae y analiza; se fija en
@@ -616,7 +619,7 @@ ${draftRequest.descripcion}`;
                         <UploadCloud className="h-9 w-9 text-accent-brown" />
                         <p className="font-serif text-lg text-charcoal-900">Suelte aquí su documento</p>
                         <p className="text-[12px] text-charcoal-600">
-                            {EXTENSIONES_ADJUNTO.join(' · ')} — hasta {LIMITE_ADJUNTO_MB} MB, uno por consulta
+                            {EXTENSIONES_ADJUNTO.join(' · ')} — hasta {limiteAdjuntoMb ?? LIMITE_ADJUNTO_MB} MB, uno por consulta
                         </p>
                     </div>
                 </div>
@@ -1226,6 +1229,7 @@ ${draftRequest.descripcion}`;
                     setActiveMode('search');
                 }}
                 onTextExtracted={handleFileExtracted}
+                limiteMb={limiteAdjuntoMb}
             />
 
             <TextEnhanceModal

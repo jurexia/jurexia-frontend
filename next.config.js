@@ -44,6 +44,9 @@ const nextConfig = {
     // Environment variables accessible client-side
     env: {
         NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+        // La versión de esta construcción, para saber si una pestaña quedó
+        // con código viejo (ver src/lib/version.ts y /api/version).
+        NEXT_PUBLIC_VERSION: process.env.VERCEL_GIT_COMMIT_SHA || '',
     },
 }
 

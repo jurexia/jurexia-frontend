@@ -299,7 +299,8 @@ export function recuperarRespuestas(): Promise<string[]> {
    y `sendBeacon`: sin preflight, y sale aunque la pestaña se esté cerrando. */
 export type EtapaEnvio = 'sesion' | 'cuota' | 'contexto' | 'fetch' | 'primer_trozo' | 'lectura' | 'guardado';
 
-export function avisarTraba(etapa: EtapaEnvio, ms: number, datos: { peticionId?: string; userId?: string } = {}) {
+export function avisarTraba(etapa: EtapaEnvio, ms: number,
+    datos: { peticionId?: string; userId?: string; detalle?: string } = {}) {
     try {
         const cuerpo = JSON.stringify({
             etapa,
@@ -307,6 +308,9 @@ export function avisarTraba(etapa: EtapaEnvio, ms: number, datos: { peticionId?:
             peticion_id: datos.peticionId,
             user_id: datos.userId,
             oculta: typeof document !== 'undefined' && document.visibilityState === 'hidden',
+            // El documento que no salió (29-oct-2026): error, peso, tipo e
+            // intento, para verlo en Render (la API lo recorta).
+            ...(datos.detalle ? { detalle: datos.detalle.slice(0, 160) } : {}),
         });
         const url = `${API_URL}/chat/traba`;
         if (typeof navigator !== 'undefined' && navigator.sendBeacon

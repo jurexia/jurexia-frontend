@@ -46,14 +46,17 @@ export const AVISO_ADJUNTO_ILEGIBLE =
     'No pudimos abrir el archivo desde su teléfono. Si lo recibió por WhatsApp, guárdelo '
     + 'primero en Descargas (o en Archivos) y vuelva a adjuntarlo desde ahí.';
 
-/** Devuelve el motivo del rechazo, o null si el archivo sirve. */
-export function validarAdjunto(archivo: File): string | null {
+/** Devuelve el motivo del rechazo, o null si el archivo sirve. `limiteMb` es
+ *  el del plan (Platinum 50, los demás 25, como la API): con 25 fijos aquí el
+ *  derecho de Platinum a 50 MB no cabía por la puerta (29-oct-2026). */
+export function validarAdjunto(archivo: File, limiteMb: number = LIMITE_ADJUNTO_MB): string | null {
     const extension = '.' + (archivo.name.split('.').pop() || '').toLowerCase();
     if (!(EXTENSIONES_ADJUNTO as readonly string[]).includes(extension)) {
         return `Formato no admitido. Se aceptan ${EXTENSIONES_ADJUNTO.join(', ')}.`;
     }
-    if (archivo.size > LIMITE_ADJUNTO_MB * 1024 * 1024) {
-        return `El archivo pesa demasiado. El máximo son ${LIMITE_ADJUNTO_MB} MB.`;
+    if (archivo.size > limiteMb * 1024 * 1024) {
+        return `El archivo pesa ${(archivo.size / 1048576).toFixed(0)} MB y su plan acepta hasta ${limiteMb} MB. `
+            + 'Divídalo en partes y adjunte cada una por separado.';
     }
     return null;
 }

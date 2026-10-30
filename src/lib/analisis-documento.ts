@@ -21,7 +21,19 @@
  */
 
 export interface DocumentoLeido { nombre?: string; texto: string; recortado?: boolean }
-export interface LimitePlan { leidas: number; total: number; plan: string | null }
+/** La lectura parcial (gratuito desde el 25-oct; todos los planes desde el
+ *  29-oct): cuántas hojas se leyeron de cuántas, el plan que lo lee entero y,
+ *  desde el 29-oct, el plan del abogado, su tope y desde qué hoja seguir. */
+export interface LimitePlan {
+    leidas: number;
+    total: number;
+    plan: string | null;
+    plan_actual?: string;
+    tope?: number;
+    desde?: number;
+    hasta?: number;
+    siguiente?: number | null;
+}
 
 /** Lo que la pantalla hace con cada evento del flujo. */
 export interface EventosAnalisis {
@@ -312,6 +324,16 @@ export async function analizarDocumento(o: {
         }
         return { via: 'flujo', terminado: vioFin, redRetuvo: retuvo() };
     } catch (err) {
+        /* EL ANÁLISIS YA HABÍA TERMINADO (29-oct-2026). Si el `done` (o el
+           `error`) ya llegó y la red falla al cerrar —Chrome dice «network
+           error»—, el análisis está entero en pantalla. Antes se lanzaba igual
+           y la página lo SUSTITUÍA por «❌ Error al analizar documento.
+           network error»: el abogado veía su análisis y luego un error en su
+           lugar, y eso era lo que se guardaba. */
+        if (vioFin && esFalloDeRed(err)) {
+            console.warn('[analyze-document] la red falló al cerrar, con el análisis ya completo', err);
+            return { via: 'flujo', terminado: true, redRetuvo: retuvo() };
+        }
         if (copias && !vioFin) {
             // El aborto lo pidió la vigilancia: su resultado ya está.
             if (esAborto(err) && espera) {
