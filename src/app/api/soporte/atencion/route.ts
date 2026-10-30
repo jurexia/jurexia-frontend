@@ -42,7 +42,10 @@ export const maxDuration = 60;
 const MAXIMO = 500;
 
 /** Los `aud` aceptados (client ID del proyecto «Soporte automático»). Vacía: cualquiera, y se registra. */
-const AUDIENCIAS: readonly string[] = [];
+const AUDIENCIAS: readonly string[] = [
+    // «Soporte automático» en soporte@iurexia.com: el de su primera llamada (29-oct-2026, hd=iurexia.com).
+    '416982491944-k8dc8oedacluuq924b8k708mi9u7usmn.apps.googleusercontent.com',
+];
 
 function limpia(o: unknown): Observacion | null {
     if (!o || typeof o !== 'object') return null;
