@@ -11,15 +11,42 @@
  *   2. Mira lo que ENTRÓ de abogados (no automático, no un «gracias») y lo cuenta también: si
  *      alguien vuelve a escribir después de que se le respondió, su reporte regresa a «pendiente».
  *
- * No lee ni manda nada más. No escribe en Supabase: llama a /api/soporte/atencion con una clave
- * que sólo sirve para mover el estado de atención.
+ * No lee ni manda nada más. No escribe en Supabase: llama a /api/soporte/atencion, que sólo sirve
+ * para mover el estado de atención.
  *
- * INSTALAR (lo hace David; nada de esto está aplicado):
- *   1. En Vercel (producción) crear SOPORTE_ATENCION_KEY con un valor largo al azar y redesplegar.
- *   2. En el proyecto de Apps Script: Configuración del proyecto › Propiedades de la secuencia de
- *      comandos › ATENCION_KEY = el mismo valor.
- *   3. Pegar este archivo como Atencion.gs, ejecutar revisarAtencionHistorica() una vez (mira 35
- *      días hacia atrás, para los reportes que ya se habían contestado) y luego instalarAtencion().
+ * SIN CLAVE: cada llamada lleva `Authorization: Bearer <ScriptApp.getIdentityToken()>`, el token de
+ * identidad de la cuenta que ejecuta el script (soporte@). Lo firma Google, dura una hora y el
+ * servidor sólo acepta el de soporte@iurexia.com con el correo verificado. No hay nada que guardar
+ * ni que copiar en Vercel. La propiedad ATENCION_KEY ya no hace falta; si existe, se manda además
+ * como x-atencion-key (sólo sirve si Vercel tiene SOPORTE_ATENCION_KEY).
+ *
+ * INSTALAR (en script.google.com con la sesión de soporte@, proyecto «Soporte automático»; después
+ * de que esté desplegada la ruta que acepta la identidad):
+ *   1. Archivos › «+» › Secuencia de comandos › nombre «Atencion»; pegar este archivo entero y guardar.
+ *   2. Configuración del proyecto (el engrane) › marcar «Mostrar el archivo de manifiesto
+ *      "appsscript.json" en el editor». En Editor, abrir appsscript.json, reemplazar TODO su
+ *      contenido por scripts/soporte-atencion/appsscript.json y guardar.
+ *   3. Abrir Atencion.gs, elegir revisarAtencionHistorica en el menú de funciones y pulsar
+ *      «Ejecutar», una vez (mira 35 días hacia atrás, para los reportes que ya se habían
+ *      contestado). Google vuelve a pedir permisos —ahora también «ver su dirección de correo
+ *      electrónico»—: aceptarlos con soporte@. El registro debe decir
+ *      «atención: {"observaciones":…}», no «atención: 401 …».
+ *      Hacer 2 y 3 seguidos: hasta aceptar los permisos nuevos, el disparador de Codigo.gs puede fallar.
+ *   4. Elegir instalarAtencion y pulsar «Ejecutar»: crea el disparador de cada 10 minutos.
+ *   Ojo: instalar() de Codigo.gs borra TODOS los disparadores; si se vuelve a ejecutar, ejecutar
+ *   también instalarAtencion().
+ *
+ * LOS PERMISOS (oauthScopes de appsscript.json). Al declararlos, Apps Script deja de deducirlos del
+ * código: la lista lleva todo lo que usan Codigo.gs y este archivo.
+ *   https://mail.google.com/                                  GmailApp, en los dos archivos: search,
+ *       getMessages, getFrom/To/Cc/Date/Subject/PlainBody, getLabels, getUserLabelByName,
+ *       createLabel, addLabel, markRead, reply, createDraftReply. Su referencia sólo admite este
+ *       scope: con gmail.readonly, .modify, .send o .compose, GmailApp falla. Ya lo tenía concedido.
+ *   https://www.googleapis.com/auth/script.scriptapp          disparadores: instalar() e instalarAtencion().
+ *   https://www.googleapis.com/auth/script.external_request   UrlFetchApp.fetch (este archivo).
+ *   openid                                                    ScriptApp.getIdentityToken() (este archivo).
+ *   https://www.googleapis.com/auth/userinfo.email            que el token traiga email y email_verified.
+ *   PropertiesService, Utilities y console no piden permiso.
  */
 
 const ATENCION_URL = 'https://www.iurexia.com/api/soporte/atencion';
@@ -50,9 +77,6 @@ function instalarAtencion() {
 }
 
 function atencionEnviar_(dias) {
-  const clave = PropertiesService.getScriptProperties().getProperty('ATENCION_KEY');
-  if (!clave) { console.warn('Falta la propiedad ATENCION_KEY: no se cuenta nada.'); return; }
-
   const obs = [];
 
   // 1. Lo que salió de soporte@ hacia un abogado.
@@ -93,19 +117,42 @@ function atencionEnviar_(dias) {
     });
 
   if (!obs.length) return;
+  // El token se pide al final, ya con todo contado: dura una hora y así llega fresco.
+  const cabeceras = atencionCabeceras_();
+  if (!cabeceras) return;
   // El servidor acepta 500 por llamada; lo más reciente es lo que importa.
   obs.sort((a, b) => a.fecha < b.fecha ? -1 : 1);
   for (let i = Math.max(0, obs.length - 1500); i < obs.length; i += 500) {
     const r = UrlFetchApp.fetch(ATENCION_URL, {
       method: 'post',
       contentType: 'application/json',
-      headers: { 'x-atencion-key': clave },
+      headers: cabeceras,
       payload: JSON.stringify({ observaciones: obs.slice(i, i + 500) }),
       muteHttpExceptions: true,
     });
     if (r.getResponseCode() !== 200) console.error(`atención: ${r.getResponseCode()} ${r.getContentText().slice(0, 300)}`);
     else console.log(`atención: ${r.getContentText().slice(0, 300)}`);
   }
+}
+
+/**
+ * Quién llama: el token de identidad de la cuenta que ejecuta el script (soporte@), que pide
+ * «openid» y «userinfo.email» en appsscript.json. La clave vieja sólo va si existe la propiedad.
+ */
+function atencionCabeceras_() {
+  const cabeceras = {};
+  let token = null;
+  try { token = ScriptApp.getIdentityToken(); }
+  catch (e) { console.warn(`atención: getIdentityToken falló: ${e}`); }
+  if (token) cabeceras.Authorization = 'Bearer ' + token;
+  const clave = PropertiesService.getScriptProperties().getProperty('ATENCION_KEY');
+  if (clave) cabeceras['x-atencion-key'] = clave;
+  if (!token && !clave) {
+    console.error('atención: sin token de identidad. Faltan «openid» y «https://www.googleapis.com/auth/userinfo.email» '
+      + 'en appsscript.json, o no se aceptaron los permisos (ejecute revisarAtencionHistorica a mano). No se cuenta nada.');
+    return null;
+  }
+  return cabeceras;
 }
 
 function atencionCorreos_(texto) {
@@ -141,4 +188,4 @@ function atencionTextoPropio_(cuerpo) {
 }
 
 // Para probar sin Gmail (node): exporta las funciones puras.
-if (typeof module !== 'undefined') module.exports = { atencionFolios_, atencionCorreos_, atencionTextoPropio_ };
+if (typeof module !== 'undefined') module.exports = { atencionFolios_, atencionCorreos_, atencionTextoPropio_, atencionCabeceras_ };

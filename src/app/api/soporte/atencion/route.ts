@@ -7,23 +7,42 @@
  * pendiente → respondido, o respondido → pendiente si el abogado insiste.
  * Nadie marca nada a mano: contestar desde soporte@ ES marcarlo.
  *
- * Por qué una clave propia (`SOPORTE_ATENCION_KEY`) y no ADMIN_KEY: el script
- * vive en otra cuenta y sólo debe poder hacer esto. Con esta clave no se
- * manda un correo ni se lee un dato: sólo se cambia el estado de atención.
+ * QUIÉN PUEDE LLAMAR: la cuenta de Google soporte@iurexia.com, y sin secreto
+ * compartido. El script manda `Authorization: Bearer <token>`, con el token
+ * de identidad que Google firma para la cuenta que lo ejecuta
+ * (`ScriptApp.getIdentityToken()`); aquí se verifica la firma con las llaves
+ * públicas de Google y se exige ese correo, verificado (`autorizarAtencion`,
+ * en lib/soporte/identidad-google.ts). No hay clave que escribir en Vercel ni
+ * en el script. Si Vercel tiene SOPORTE_ATENCION_KEY, la clave de antes
+ * (`x-atencion-key`) sigue valiendo; si no, la identidad es la única vía.
+ * Todo lo demás: 401 (503 sólo si Google no dio sus llaves).
  *
- * El script manda las mismas observaciones en varias vueltas; aplicarlas dos
- * veces no cambia nada (ver `aplicarObservacion`).
+ * LA AUDIENCIA. El `aud` del token es el client ID del proyecto de Apps
+ * Script. Mientras `AUDIENCIAS` esté vacía se acepta cualquiera, y con ello
+ * también un token de soporte@ emitido para otra aplicación; la primera que
+ * llega a cada instancia se escribe en el registro de Vercel
+ * («[soporte/atencion] identidad aceptada … aud=…»). Para fijarla se copia
+ * aquí: no es un secreto.
+ *
+ * Con esta vía no se manda un correo ni se lee un dato: sólo se cambia el
+ * estado de atención. El script manda las mismas observaciones en varias
+ * vueltas; aplicarlas dos veces no cambia nada (ver `aplicarObservacion`).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { aplicarObservaciones } from '@/lib/soporte/reportes';
+import { autorizarAtencion, audienciaNueva } from '@/lib/soporte/identidad-google';
 import type { Observacion } from '@/lib/soporte/atencion-logica';
 
+export const runtime = 'nodejs';   // node:crypto verifica la firma
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 const MAXIMO = 500;
+
+/** Los `aud` aceptados (client ID del proyecto «Soporte automático»). Vacía: cualquiera, y se registra. */
+const AUDIENCIAS: readonly string[] = [];
 
 function limpia(o: unknown): Observacion | null {
     if (!o || typeof o !== 'object') return null;
@@ -44,9 +63,24 @@ function limpia(o: unknown): Observacion | null {
 }
 
 export async function POST(req: NextRequest) {
-    const clave = process.env.SOPORTE_ATENCION_KEY;
-    if (!clave) return NextResponse.json({ error: 'sin configurar' }, { status: 503 });
-    if (req.headers.get('x-atencion-key') !== clave) return NextResponse.json({ error: 'no autorizado' }, { status: 401 });
+    const quien = await autorizarAtencion(
+        { authorization: req.headers.get('authorization'), clave: req.headers.get('x-atencion-key') },
+        { clave: process.env.SOPORTE_ATENCION_KEY, audiencias: AUDIENCIAS },
+    );
+    if (!quien.ok) {
+        console.warn(`[soporte/atencion] ${quien.status}: ${quien.motivo}`
+            + `${quien.email ? ` · email=${quien.email}` : ''}${quien.aud ? ` · aud=${quien.aud}` : ''}`);
+        return NextResponse.json(
+            { error: quien.status === 503 ? 'no se pudo verificar la identidad' : 'no autorizado', motivo: quien.motivo },
+            { status: quien.status },
+        );
+    }
+    if (quien.via === 'identidad' && audienciaNueva(quien.identidad.aud)) {
+        const { email, aud, azp, hd } = quien.identidad;
+        console.log(`[soporte/atencion] identidad aceptada: ${email} · aud=${aud}`
+            + `${azp && azp !== aud ? ` · azp=${azp}` : ''}${hd ? ` · hd=${hd}` : ''}`
+            + (AUDIENCIAS.length ? '' : ' · sin fijar: cópiela en AUDIENCIAS de src/app/api/soporte/atencion/route.ts'));
+    }
 
     let cuerpo: { observaciones?: unknown[] };
     try { cuerpo = await req.json(); } catch { return NextResponse.json({ error: 'JSON inválido' }, { status: 400 }); }
