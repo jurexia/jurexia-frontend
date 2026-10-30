@@ -642,6 +642,16 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     }
 }
 
+/** La suscripción que el perfil tiene por vigente, o null si no se pudo leer. */
+async function suscripcionVigente(email: string): Promise<string | null> {
+    const { data } = await getSupabaseAdmin()
+        .from('user_profiles')
+        .select('stripe_subscription_id')
+        .eq('email', email)
+        .maybeSingle();
+    return (data?.stripe_subscription_id as string | null | undefined) ?? null;
+}
+
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     console.log('💰 Payment succeeded:', {
         invoiceId: invoice.id,
@@ -653,8 +663,18 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     // Reset monthly query + draft count on successful renewal payment
     const email = (invoice.customer_email || '').toLowerCase().trim();
     if (email && invoice.billing_reason === 'subscription_cycle') {
-        console.log(`📧 Resetting query + draft count for ${email} (subscription renewal)`);
-        await resetUserQueries(email);
+        // SÓLO LA RENOVACIÓN DE LA SUSCRIPCIÓN VIGENTE (30-oct-2026). Al mejorar
+        // de plan, la vieja se cierra con una factura de crédito de 0 pesos que
+        // Stripe marca «subscription_cycle», y reiniciaba el contador del plan
+        // nuevo. Una factura de otra suscripción no renueva nada.
+        const deLaFactura = suscripcionDeLaFactura(invoice);
+        const vigente = await suscripcionVigente(email);
+        if (deLaFactura && vigente && deLaFactura !== vigente) {
+            console.log(`⏭️ No se reinicia el contador de ${email}: la factura ${invoice.id} es de ${deLaFactura}, no de la vigente ${vigente}`);
+        } else {
+            console.log(`📧 Resetting query + draft count for ${email} (subscription renewal)`);
+            await resetUserQueries(email);
+        }
     }
 
     // Y si estaba suspendido por impago, el pago lo reactiva EN EL ACTO. No se

@@ -80,21 +80,31 @@ export async function reactivarSiPagoFacturaVieja(
     const subId = suscripcionDeLaFactura(invoice);
     if (!subId) return { resultado: 'no_aplica' };
 
+    // UN CRÉDITO NO ES PAGAR UNA DEUDA (30-oct-2026). Al mejorar de plan, Stripe
+    // cancela la suscripción vieja y la cierra con una factura de 0 pesos —el
+    // tiempo no usado, como saldo a favor— que llega aquí «pagada». No se cobró
+    // nada: no hay nada que reactivar. Con patybustosacosta248 (Pro → Platinum)
+    // eso mandó a soporte@ «Pagó una factura vieja y NO se reactivó» con su
+    // Platinum ya activo.
+    if ((invoice.amount_paid ?? 0) <= 0) return { resultado: 'no_aplica' };
+
     const vieja = await stripe.subscriptions.retrieve(subId);
     if (vieja.status !== 'canceled') return { resultado: 'no_aplica' };
-
-    const motivo = vieja.cancellation_details?.reason || 'sin motivo';
-    if (motivo !== 'payment_failed') {
-        return { resultado: 'revisar', motivo: `la suscripción se canceló por «${motivo}», no por falta de pago`, suscripcionVieja: subId };
-    }
 
     const customerId = idDe(invoice.customer as string | { id: string } | null)
         || idDe(vieja.customer as string | { id: string });
     if (!customerId) return { resultado: 'revisar', motivo: 'la factura no trae cliente', suscripcionVieja: subId };
 
+    // ANTES QUE EL MOTIVO: si ya tiene otra suscripción viva, no hay nada que
+    // revivir ni que avisar, se haya cancelado la vieja como se haya cancelado.
     const todas = await stripe.subscriptions.list({ customer: customerId, status: 'all', limit: 20 });
     const viva = todas.data.find((s) => s.id !== subId && VIVAS.includes(s.status));
     if (viva) return { resultado: 'ya_tiene', suscripcion: viva.id };
+
+    const motivo = vieja.cancellation_details?.reason || 'sin motivo';
+    if (motivo !== 'payment_failed') {
+        return { resultado: 'revisar', motivo: `la suscripción se canceló por «${motivo}», no por falta de pago`, suscripcionVieja: subId };
+    }
 
     const item = vieja.items.data[0];
     const precio = item?.price;
