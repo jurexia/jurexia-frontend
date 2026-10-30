@@ -69,6 +69,26 @@ function esErrorInterno(texto: string): boolean {
         .test(texto || '');
 }
 
+/* LA RESPUESTA DE FÁBRICA (29-oct-2026, reporte 2899)
+ *
+ * El 5-oct un abogado preguntó «¿Eres IA?» y el asistente le contestó «Soy un
+ * modelo de lenguaje grande, entrenado por Google». Es la frase con que viene
+ * el modelo, y la regla de secreto del prompt no la frenó. Como el filtro de
+ * arriba, esto es DETERMINISTA, pero corre DESPUÉS del modelo: si la respuesta
+ * nombra al motor o a quien lo entrenó, no sale; sale la presentación de la
+ * casa. «Google» a secas no basta para tumbarla: el mapa dice que se puede
+ * entrar con Google o con Apple. */
+function revelaMotor(texto: string): boolean {
+    const t = texto || '';
+    return /\b(gemini|bard|openai|chat ?gpt|gpt-?\d|openrouter|anthropic|claude|mistral|deepseek|qwen)\b/i.test(t)
+        || /\bmodelos? (grandes? )?de lenguaje\b/i.test(t)
+        || /\bentren(ad[oa]s?\b|aron\b|ó)/i.test(t)
+        || /\b(desarrollad|cread|hech)[oa]s? (por|en) google\b/i.test(t)
+        || /\b(ia|inteligencia artificial|modelo|asistente) de google\b/i.test(t);
+}
+
+const PRESENTACION = 'Soy el asistente automático de soporte de Iurexia: le ayudo con la plataforma, su plan o un fallo.';
+
 function sistema(): string {
     /* ORDEN DELIBERADO (7-ago-2026), medido contra el modelo real.
      *
@@ -145,6 +165,10 @@ function sistema(): string {
         '· Si el usuario está molesto, reconócelo antes de explicar nada.',
         '· Nunca prometas plazos concretos de corrección.',
         '· No des asesoría jurídica: para eso está el chat de Iurexia.',
+        '· SI PREGUNTA SI ERES IA O QUIÉN ERES: eres el asistente automático de soporte de Iurexia.',
+        '  Dilo así, sin nombrar modelos, empresas ni quién te entrenó. Este chat es sólo para la',
+        '  plataforma, su plan o un fallo: si pregunta si puede consultarte otras cosas, dile que no',
+        '  y a dónde van (las jurídicas, a la caja de consulta del chat principal).',
         '· QUIERE CONTRATAR. Si dice que quiere contratar, comprar, pagar, suscribirse o',
         '  subir de plan, o pregunta cuánto cuesta: dale el plan que le conviene con su precio',
         '  y SIEMPRE la dirección www.iurexia.com/precios, donde elige el plan y paga con',
@@ -438,6 +462,12 @@ export async function POST(req: NextRequest) {
     texto = texto.replace(/\[ESCALAR\]/gi, '').trim();
     if (!texto) {
         texto = 'Déjeme pasarlo al equipo para revisarlo con calma. Le escribirán a su correo.';
+    }
+    if (revelaMotor(texto)) {
+        console.warn('[soporte] la respuesta nombraba al motor: sale la presentación de la casa');
+        texto = pidioEscalar
+            ? `${PRESENTACION} Ya pasé su caso al equipo y le escribirán a su correo.`
+            : `${PRESENTACION} Si prefiere que le atienda una persona del equipo, dígamelo y le paso su caso.`;
     }
 
     // El reporte SÍ se guarda siempre: el panel de admin tiene que ver todo lo
