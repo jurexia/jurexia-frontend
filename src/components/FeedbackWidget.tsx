@@ -34,6 +34,15 @@ interface FeedbackWidgetProps {
 interface Turno { rol: 'usuario' | 'soporte'; texto: string }
 
 const CLAVE_POSICION = 'iurexia-soporte-pos';
+
+/** Identifica la conversación ante el servidor: todos sus mensajes son UN
+ *  reporte con UN folio, y «Nueva» empieza otro (29-oct-2026). */
+function nuevaSesion(): string {
+    try {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+    } catch { }
+    return `s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+}
 /* El saludo dice para qué SÍ es (17-oct-2026): usuarios nuevos escribían aquí su
    consulta jurídica creyendo que era el chat, y la respuesta nunca llegaba. */
 const SALUDO =
@@ -60,6 +69,8 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
     const [texto, setTexto] = useState('');
     const [pensando, setPensando] = useState(false);
     const [cerrado, setCerrado] = useState(false);
+    const sesion = useRef<string>('');
+    if (!sesion.current) sesion.current = nuevaSesion();
 
     // Posición del botón: su esquina inferior derecha, en píxeles desde la
     // esquina inferior derecha de la ventana. Se guarda igual que antes, así
@@ -210,6 +221,7 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
         setTurnos([{ rol: 'soporte', texto: SALUDO }]);
         setTexto('');
         setCerrado(false);
+        sesion.current = nuevaSesion();
         setTimeout(() => entradaRef.current?.focus(), 100);
     };
 
@@ -229,6 +241,7 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
                 body: JSON.stringify({
                     conversacion: nuevos,
                     userId, email: userEmail, nombre: userName, plan,
+                    sesion: sesion.current,
                 }),
             });
             const d = await r.json();
