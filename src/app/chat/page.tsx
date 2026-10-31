@@ -62,6 +62,7 @@ import {
     nuevoId,
     reclamarRespuesta,
     recuperarRespuestas,
+    respuestasPendientes,
     sesionDelAlmacen,
     textoDeCopia,
 } from '@/lib/respuestas-servidor';
@@ -69,6 +70,8 @@ import { analizarDocumento, esFalloDeRed, type FinDelAnalisis, type LimitePlan }
 import { AVISO_PANTALLA_VIEJA, pantallaDesactualizada } from '@/lib/version';
 import { getSession } from '@/lib/supabase';
 import AvisoRedRetiene from '@/components/AvisoRedRetiene';
+import AvisoRespuestasEnCurso from '@/components/AvisoRespuestasEnCurso';
+import { usePantallaEncendida } from '@/hooks/usePantallaEncendida';
 /* Carpetas y flujos de trabajo en el chat (25-sep-2026): ver ChatSidebar. */
 import FlujosDeTrabajo, { type InicioDeFlujo } from '@/components/FlujosDeTrabajo';
 import ContextoConsulta from '@/components/ContextoConsulta';
@@ -501,7 +504,7 @@ export default function ChatPage() {
     }, []);
 
     // Chat Hook
-    const { messages, isLoading, error, sendMessage, stopGeneration, clearMessages, setMessages, retryMessage, retryType, sourcesCount, pasos, limpiarPasos } = useChat({
+    const { messages, isLoading, error, sendMessage, stopGeneration, seCortoLaRed, clearMessages, setMessages, retryMessage, retryType, sourcesCount, pasos, limpiarPasos } = useChat({
         estado: selectedEstado || undefined,
         topK: 30,
         fuero: selectedFuero.length ? selectedFuero : undefined,
@@ -681,6 +684,15 @@ export default function ChatPage() {
        No detiene la carga de la barra: corre aparte. */
     const ocupadoRef = useRef(false);
     ocupadoRef.current = isLoading || isDocumentAnalyzing || analisisEnVuelo;
+    // En el teléfono, la pantalla no se apaga mientras Iurexia escribe.
+    usePantallaEncendida(isLoading || isDocumentAnalyzing || analisisEnVuelo);
+    /* LO QUE EL SERVIDOR SIGUE ESCRIBIENDO (30-oct-2026). La API termina lo
+       pedido aunque la pantalla se haya ido; tras una recarga se avisa que viene
+       en camino y se mira cada 20 s hasta que la recuperación lo ponga en su
+       conversación. Ver `AvisoRespuestasEnCurso`. */
+    const [pendientesServidor, setPendientesServidor] = useState(0);
+    const relojPendientes = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => () => { if (relojPendientes.current) clearTimeout(relojPendientes.current); }, []);
     const activaRef = useRef<string | null>(null);
     activaRef.current = activeConversationId;
     /* SIN ESPERAR A QUE CAMBIE DE PESTAÑA (28-oct-2026). Tras un envío que
@@ -698,25 +710,49 @@ export default function ChatPage() {
     useEffect(() => {
         if (authLoading || !isAuthenticated) return;
         let ultima = 0;
+        let vivo = true;
+        const otraMirada = () => {
+            if (relojPendientes.current) clearTimeout(relojPendientes.current);
+            relojPendientes.current = setTimeout(() => {
+                relojPendientes.current = null;
+                void recuperar(true);
+            }, 20_000);
+        };
+        const mirarPendientes = async () => {
+            // Lo que escribe esta misma pestaña ya se ve: no es «pendiente».
+            if (ocupadoRef.current) {
+                setPendientesServidor(0);
+                otraMirada();
+                return;
+            }
+            const n = await respuestasPendientes();
+            if (!vivo) return;
+            setPendientesServidor(n);
+            if (n > 0) otraMirada();
+        };
         const recuperar = async (programada = false) => {
             if (!programada && Date.now() - ultima < 60_000) return;
             ultima = Date.now();
             const tocadas = await recuperarRespuestas();
-            if (!tocadas.length) return;
-            setConversations(await getConversations());
-            // La abierta se recarga, salvo que esté escribiendo una respuesta.
-            const activa = activaRef.current;
-            if (activa && tocadas.includes(activa) && !ocupadoRef.current) {
-                const conv = await getConversation(activa);
-                if (conv && activaRef.current === activa && !ocupadoRef.current) setMessages(conv.messages);
+            if (tocadas.length) {
+                setConversations(await getConversations());
+                // La abierta se recarga, salvo que esté escribiendo una respuesta.
+                const activa = activaRef.current;
+                if (activa && tocadas.includes(activa) && !ocupadoRef.current) {
+                    const conv = await getConversation(activa);
+                    if (conv && activaRef.current === activa && !ocupadoRef.current) setMessages(conv.messages);
+                }
             }
+            if (vivo) await mirarPendientes();
         };
         void recuperar();
         recuperarRef.current = () => recuperar(true);
         const alVolver = () => { if (document.visibilityState === 'visible') void recuperar(); };
         document.addEventListener('visibilitychange', alVolver);
         return () => {
+            vivo = false;
             recuperarRef.current = null;
+            if (relojPendientes.current) { clearTimeout(relojPendientes.current); relojPendientes.current = null; }
             document.removeEventListener('visibilitychange', alVolver);
         };
     }, [authLoading, isAuthenticated, setMessages]);
@@ -938,6 +974,11 @@ export default function ChatPage() {
             conversationId: convId ?? convIdNuevo,
             expedienteId: consultaCtxRef.current.expedienteId,
         });
+        /* La red cortó la respuesta y el servidor la sigue escribiendo
+           (30-oct-2026): lo que hay en pantalla es un trozo con su aviso, y la
+           respuesta entera la pondrá la recuperación. Se guarda como «sin
+           texto»: la pregunta sola, sin reclamar la copia. */
+        const cortadaPorLaRed = seCortoLaRed(peticionId);
         if (creacion) convId = await creacion;
 
         // ── DIRECT SAVE: Save user+assistant pair AFTER streaming completes ──
@@ -975,7 +1016,7 @@ export default function ChatPage() {
                 const textoAsistente = (respuesta && respuesta.trim())
                     || (delEstadoEsDeEsta && delEstado ? delEstado.content.trim() : '');
 
-                if (textoAsistente) {
+                if (textoAsistente && !cortadaPorLaRed) {
                     /* ¿LA GUARDÓ YA OTRA PESTAÑA? La API guardó su copia de esta
                        respuesta; quien la reclama primero es quien la pasa al
                        historial. Si la recuperación (otra pestaña, o ésta al volver)
@@ -1005,6 +1046,9 @@ export default function ChatPage() {
                         await addMessageToConversation(convId, userMsg);
                     }
                     programarRecuperacion();
+                    // Cortada por la red: el aviso de «viene en camino» y la
+                    // mirada cada 20 s empiezan ya, no a los 2 minutos.
+                    if (cortadaPorLaRed) setTimeout(() => { void recuperarRef.current?.(); }, 3_000);
                 }
 
                 // Refresh sidebar
@@ -1017,7 +1061,7 @@ export default function ChatPage() {
 
         lastSentUserMsgRef.current = null;
     }, [user, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed,
-        modoBasico, enviarBasico, profile?.subscription_type, vincularNueva, estadoDeMensajes, programarRecuperacion]);
+        modoBasico, enviarBasico, profile?.subscription_type, vincularNueva, estadoDeMensajes, programarRecuperacion, seCortoLaRed]);
 
     /* LA VENTANA DEL ESTADO SALÍA DOS VECES (20-oct-2026). Al confirmar el estado,
        la consulta pendiente se mandaba con el `handleSendMessage` del render en que
@@ -2353,6 +2397,11 @@ export default function ChatPage() {
                         </div>
                     </>)}
                 </main>
+
+                {/* Fijo arriba: se ve también con la página en blanco, tras una recarga. */}
+                {!isLoading && !analisisEnVuelo && !isDocumentAnalyzing && (
+                    <AvisoRespuestasEnCurso cuantas={pendientesServidor} />
+                )}
 
                 {hasMessages && (
                     <div ref={pieRef} className="fixed bottom-0 left-0 right-0 md:left-[var(--sidebar-w,18rem)] lg:right-[var(--constructor-w,0px)] bg-gradient-to-t from-cream-300 via-cream-300 pt-3 pb-3 px-4 z-20">

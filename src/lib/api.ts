@@ -148,6 +148,27 @@ export interface OpcionesEnvio {
     peticionId?: string;
     conversationId?: string | null;
     expedienteId?: string | null;
+    /** ¿El servidor ya tiene esta petición? (su copia existe). Con ella, un
+     *  corte de red no se reintenta a ciegas: ver `CorteDeRed`. */
+    copiaEnServidor?: () => Promise<boolean>;
+}
+
+/**
+ * SE CORTÓ LA RED, NO LA RESPUESTA (30-oct-2026). Desde ese día la API sigue
+ * escribiendo aunque la pantalla se desconecte (respuesta_guardada.py), y
+ * `streamChat` reintentaba un corte de red reenviando la consulta entera:
+ * tras un corte a media respuesta eso escribiría —y cobraría— la misma
+ * consulta dos veces, la segunda pisando la copia de la primera. Cuando el
+ * servidor ya la tiene (llegó su respuesta, o existe su copia), en vez de
+ * reenviar se lanza esto, y quien llama espera la copia (useChat).
+ */
+export class CorteDeRed extends Error {
+    peticionId: string;
+    constructor(peticionId: string, causa?: unknown) {
+        super(`Se cortó la conexión (${String((causa as Error)?.message ?? causa ?? '')})`);
+        this.name = 'CorteDeRed';
+        this.peticionId = peticionId;
+    }
 }
 
 async function* streamChatInternal(
@@ -161,6 +182,8 @@ async function* streamChatInternal(
     genioIds?: string[],
     signal?: AbortSignal,
     extra?: OpcionesEnvio,
+    /** Se pone en true en cuanto llegan las cabeceras: el servidor la tiene. */
+    marca?: { respuesta: boolean },
 ): AsyncGenerator<string, void, unknown> {
     console.log('[API] Calling chat endpoint:', API_URL + '/chat');
     console.log('[API] Messages:', messages);
@@ -212,6 +235,7 @@ async function* streamChatInternal(
     });
 
     console.log('[API] Response status:', response.status);
+    if (marca) marca.respuesta = true;
 
     if (!response.ok) {
         const errorText = await response.text();
@@ -259,21 +283,32 @@ export async function* streamChat(
     let sesionRenovada = false;
 
     while (attempt < maxRetries) {
+        const marca = { respuesta: false };
         try {
             // El reintento lleva al servidor por qué falló el intento anterior.
             yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId, fuero, genioIds, signal,
-                reintento ? { ...extra, reintento } : extra);
+                reintento ? { ...extra, reintento } : extra, marca);
             return; // Success - exit
         } catch (err) {
             // User-initiated stop — exit silently without retry
             if ((err as Error)?.name === 'AbortError') throw err;
 
-            attempt++;
-            console.error(`[API] Attempt ${attempt}/${maxRetries} failed:`, err);
-
             // QUÉ PASÓ, DICHO CON VERDAD (30-sep-2026): la red del abogado, el
             // servidor ocupado (429/502/503/504) o un error. Ver `./fallosChat`.
             const fallo = clasificarFallo(err);
+
+            // Ver `CorteDeRed`: lo que el servidor ya tiene no se reenvía.
+            if (fallo.tipo === 'red' && extra?.peticionId && extra.copiaEnServidor) {
+                if (marca.respuesta) throw new CorteDeRed(extra.peticionId, err);
+                // No llegaron ni las cabeceras: casi siempre no salió nada, pero
+                // pudo llegar y cortarse la vuelta. Su copia lo dice; se le da un
+                // momento porque la API la abre en segundo plano.
+                await sleep(1_500);
+                if (await extra.copiaEnServidor().catch(() => false)) throw new CorteDeRed(extra.peticionId, err);
+            }
+
+            attempt++;
+            console.error(`[API] Attempt ${attempt}/${maxRetries} failed:`, err);
 
             // LA SESIÓN QUE CADUCÓ SE RENUEVA UNA VEZ (29-oct-2026). La API ya
             // no cree el `user_id` sin el token de esa misma cuenta: un token

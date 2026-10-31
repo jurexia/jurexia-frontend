@@ -49,7 +49,13 @@ function pythonDeLaApi(): string {
 }
 
 const USR = randomUUID();
-const TOKEN = 'token-de-prueba';
+/* UN TOKEN CON FORMA DE JWT (30-oct-2026). Desde la puerta de sesión de la API
+   (puerta_sesion.py, 29-oct) lo que no es un JWT o ya venció se rechaza sin
+   preguntar a Supabase, y con «token-de-prueba» todos los análisis salían
+   401: la prueba fallaba igual en main. La firma no se mira aquí; la base de
+   mentira lo reconoce por su texto, como Supabase por su firma. */
+const b64url = (o: object) => Buffer.from(JSON.stringify(o)).toString('base64url');
+const TOKEN = `${b64url({ alg: 'HS256', typ: 'JWT' })}.${b64url({ sub: USR, exp: Math.floor(Date.now() / 1000) + 6 * 3600 })}.firma-de-prueba`;
 const SESION = { access_token: TOKEN, user: { id: USR, email: 'prueba@ejemplo.mx' } };
 const ESPERA_MOTOR_S = 85;           // el servidor tarda > 75 s en contestar
 
@@ -252,16 +258,94 @@ async function chatDetenidoALaMitad(puerto: number, comoAntes: boolean, espera: 
     return { convId, peticion, textoAntesDeDetener: texto, terminada, tocadas, otraVez };
 }
 
+// ── (c) El teléfono que se va (30-oct-2026) ──────────────────────────────
+// Rubén Ávila, Android: la página se recargó al volver de WhatsApp a los
+// 1.8 s del envío, y el servidor dejaba de escribir. Aquí la conexión se
+// cierra DE VERDAD —sin proxy que la sostenga—, la página «recargada» no
+// guarda nada, y lo que sabe es lo que le diga el servidor.
+
+async function documentoYLaPantallaSeVa() {
+    const convId = nuevaConversacion();
+    const peticion = rs.nuevoId();
+    const cuerpo = new FormData();
+    cuerpo.append('file', new Blob([PDF], { type: 'application/pdf' }), 'agravios.pdf');
+    cuerpo.append('prompt', PREGUNTA_DOC);
+    cuerpo.append('user_id', USR);
+    cuerpo.append('estado', 'TLAXCALA');
+    cuerpo.append('fuentes', '');
+    cuerpo.append('peticion_id', peticion);
+    cuerpo.append('mensaje_visible', VISIBLE);
+    cuerpo.append('conversation_id', convId);
+    const corte = new AbortController();
+    let primerosBytes = 0;
+    try {
+        const r = await fetch(`http://127.0.0.1:${PUERTO_API}/analyze-document`, {
+            method: 'POST', body: cuerpo, headers: { Authorization: `Bearer ${TOKEN}` }, signal: corte.signal,
+        });
+        const { value } = await r.body!.getReader().read();      // el primer avance
+        primerosBytes = value?.length ?? 0;
+    } catch { /* */ }
+    corte.abort();                                               // se va a WhatsApp
+    await dormir(4_000);
+    const pendientesDurante = await rs.respuestasPendientes();
+    const enCursoDurante = fila(peticion)?.estado;
+    for (let i = 0; i < 400 && fila(peticion)?.estado === 'en_curso'; i++) await dormir(500);
+    const terminada = { ...fila(peticion) } as Fila | undefined;
+    const f = fila(peticion);
+    if (f?.terminada_at) f.terminada_at = ahora(Date.parse(f.terminada_at) - Date.now() - 61_000);
+    const tocadas = await rs.recuperarRespuestas();
+    return { convId, peticion, primerosBytes, pendientesDurante, enCursoDurante, terminada, tocadas };
+}
+
+// ── (d) Detener de verdad (30-oct-2026) ──────────────────────────────────
+// Con el servidor escribiendo sin pantalla, cerrar la conexión ya no lo para:
+// «Detener» se lo dice (`detenerEnServidor`, lo que hace `stopGeneration`).
+
+async function chatDetenidoDeVerdad() {
+    const convId = nuevaConversacion();
+    const peticion = rs.nuevoId();
+    const parado = new AbortController();
+    const lectura = (async () => {
+        try {
+            const r = await fetch(`http://127.0.0.1:${PUERTO_API}/_prueba/chat`, {
+                method: 'POST', signal: parado.signal,
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TOKEN}` },
+                body: JSON.stringify({ peticion_id: peticion, conversation_id: convId, pregunta: PREGUNTA_CHAT,
+                    espera: 25, trozos: ['Esto ', 'no ', 'debería ', 'escribirse.'] }),
+            });
+            const lector = r.body!.getReader();
+            for (;;) { const { done } = await lector.read(); if (done) break; }
+        } catch { /* detenida */ }
+    })();
+    await dormir(5_000);
+    const pedida = rs.detenerEnServidor(peticion);   // stopGeneration: primero al servidor…
+    parado.abort();                                   // …y luego corta la conexión
+    await Promise.all([lectura, pedida]);
+    // La página: sin texto, guarda la pregunta sola.
+    if (!(await rs.copiaYaGuardada(peticion))) {
+        await conv.addMessageToConversation(convId, { role: 'user', content: PREGUNTA_CHAT });
+    }
+    for (let i = 0; i < 60 && fila(peticion)?.estado === 'en_curso'; i++) await dormir(500);
+    const cerrada = { ...fila(peticion) } as Fila | undefined;
+    await dormir(30_000);                             // más que la espera del motor
+    const f = fila(peticion);
+    if (f?.terminada_at) f.terminada_at = ahora(Date.parse(f.terminada_at) - Date.now() - 61_000);
+    await rs.recuperarRespuestas();
+    return { convId, peticion, cerrada, despues: { ...fila(peticion) } as Fila | undefined };
+}
+
 // ── Las corridas, a la vez ────────────────────────────────────────────────
 
 console.log(`\nCorriendo: tres análisis tras proxies que retienen, uno con la espera corta, y dos chats detenidos · ${seg()}`);
-const [alFinal, tarde, nunca, corta, chat, chatAntes] = await Promise.all([
+const [alFinal, tarde, nunca, corta, chat, chatAntes, seVa, detenido] = await Promise.all([
     analizarComoLaPagina(proxies.al_final),
     analizarComoLaPagina(proxies.tarde),
     analizarComoLaPagina(proxies.nunca),
     analizarComoLaPagina(proxies.al_final, { topeCopia: 80_000 }),
     chatDetenidoALaMitad(proxies.al_final, false, 40),
     chatDetenidoALaMitad(proxies.al_final, true, 47),
+    documentoYLaPantallaSeVa(),
+    chatDetenidoDeVerdad(),
 ]);
 console.log(`Terminado · ${seg()}`);
 
@@ -310,6 +394,24 @@ ok(m.map((x) => x.role).join(',') === 'user,assistant,user,assistant,user,assist
 const antes = mensajes(chatAntes.convId);
 ok(!antes.some((x) => x.content === RESPUESTA_LARGA),
     'contraprueba: reclamando sin texto, como antes, la respuesta se pierde');
+
+console.log('\n(c) EL TELÉFONO QUE SE VA: la conexión se cierra de verdad y la página se recarga');
+console.log(`        la pantalla vio ${seVa.primerosBytes} bytes antes de irse; `
+    + `a los 4 s la copia estaba «${seVa.enCursoDurante}» y había ${seVa.pendientesDurante} pendiente(s)`);
+ok(seVa.enCursoDurante === 'en_curso' && seVa.pendientesDurante >= 1,
+    'sin pantalla, el servidor sigue y la página recargada sabe que viene una respuesta');
+ok(seVa.terminada?.estado === 'terminada' && (seVa.terminada?.respuesta || '').includes('**Segundo.** Alega la incompetencia por territorio'),
+    'el servidor terminó el análisis entero aunque nadie lo leyera');
+ok(seVa.tocadas.includes(seVa.convId), 'la recuperación lo pone en su conversación');
+revisarConversacionDelDocumento({ convId: seVa.convId, peticion: seVa.peticion, via: 'recuperacion', ms: 0, avisos: [] },
+    'teléfono que se va');
+
+console.log('\n(d) DETENER DE VERDAD: la página se lo dice al servidor');
+ok(detenido.cerrada?.estado === 'interrumpida' && !(detenido.cerrada?.respuesta || '').includes('debería'),
+    'el servidor paró antes de escribir: la copia queda interrumpida y vacía');
+ok(detenido.despues?.estado === 'interrumpida', 'y no se reanuda: sigue interrumpida pasada la espera del motor');
+const md = mensajes(detenido.convId);
+ok(md.length === 1 && md[0].content === PREGUNTA_CHAT, `la conversación queda con la pregunta sola (${md.map((x) => x.role).join(', ')})`);
 
 console.log('\nLo que vio cada proxy (ms que tardó el servidor · ¿el cliente ya se había ido? · ¿se soltó?):');
 for (const [nombre, pasos] of Object.entries(registros)) {

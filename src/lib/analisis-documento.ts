@@ -136,15 +136,16 @@ function dormir(ms: number, senal?: AbortSignal): Promise<void> {
     });
 }
 
-type EsperaDeCopia =
+export type EsperaDeCopia =
     | { tipo: 'lista'; fila: CopiaDeRespuesta }
     | { tipo: 'sin_copia' }
     | { tipo: 'en_curso' }
     | { tipo: 'cancelada' };
 
 /** Mira la copia hasta que el servidor la termine, hasta `hasta` o hasta que
- *  se cancele. Sin fila tras unas cuantas consultas: no hay copia. */
-async function esperarCopia(peticionId: string, copias: FuenteDeCopias, t: Tiempos,
+ *  se cancele. Sin fila tras unas cuantas consultas: no hay copia. La usa
+ *  también el chat cuando la red corta su respuesta (useChat, 30-oct-2026). */
+export async function esperarCopia(peticionId: string, copias: FuenteDeCopias, t: Tiempos,
     hasta: number, senal: AbortSignal): Promise<EsperaDeCopia> {
     let sinFila = 0;
     let fallos = 0;
@@ -262,9 +263,24 @@ export async function analizarDocumento(o: {
                 break;
             } catch (errEnvio) {
                 if (vigilancia || !esFalloDeRed(errEnvio) || intento >= 2) throw errEnvio;
+                await dormir(t.reintentoEnvio);
+                /* ¿LLEGÓ DE TODOS MODOS? (30-oct-2026). Desde ese día la API
+                   sigue escribiendo aunque la pantalla se desconecte: si la
+                   petición sí llegó —la red se cayó después de mandarla—,
+                   reenviarla sería analizar y cobrar el documento dos veces.
+                   Si ya hay copia, se espera ésa. */
+                if (copias && peticionId) {
+                    const { estado } = await copias.estado(peticionId)
+                        .catch(() => ({ estado: null, error: true }));
+                    if (estado) {
+                        o.eventos.aviso(AVISO_CORTADO);
+                        const fin = deLaCopia(await vigilar());
+                        if (fin) return fin;
+                        throw errEnvio;
+                    }
+                }
                 console.warn('[analyze-document] el envío no salió; se reintenta una vez', errEnvio);
                 o.eventos.aviso('Reintentando el envío del documento…');
-                await dormir(t.reintentoEnvio);
                 rearmar();
             }
         }

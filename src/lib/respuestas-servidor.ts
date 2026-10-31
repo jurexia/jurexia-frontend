@@ -290,6 +290,81 @@ export function recuperarRespuestas(): Promise<string[]> {
     return recuperando;
 }
 
+/* ═══ EL SERVIDOR YA NO SE DETIENE SOLO (30-oct-2026) ═══
+   Desde ese día la API sigue escribiendo aunque la pantalla se desconecte
+   (respuesta_guardada.py, «El trabajo no se va con la pantalla»): Rubén Ávila
+   perdió dos análisis el 29-oct porque su teléfono volvió de WhatsApp con la
+   página recargada, y cerrar la conexión cancelaba el trabajo. Ahora lo
+   pedido se termina y la recuperación lo pone en su conversación. De ahí las
+   tres piezas de abajo. */
+
+/**
+ * «Detener» ya no es sólo cortar la conexión: se le dice al servidor. La copia
+ * que sigue «en_curso» pasa a «interrumpida», y la API —que la mira cada pocos
+ * segundos cuando se quedó sin pantalla— corta el flujo. La política de la
+ * tabla deja a cada quien actualizar sus propias filas. Si la fila todavía no
+ * existe (Detener en el primer instante), se reintenta una vez. Nunca lanza.
+ */
+export async function detenerEnServidor(peticionId: string | null | undefined): Promise<void> {
+    if (!peticionId) return;
+    const intentar = async () => {
+        const { data, error } = await supabase
+            .from('respuestas_chat')
+            .update({ estado: 'interrumpida' })
+            .eq('peticion_id', peticionId)
+            .eq('estado', 'en_curso')
+            .select('peticion_id');
+        return !error && !!data?.length;
+    };
+    try {
+        if (await intentar()) return;
+        await new Promise((r) => setTimeout(r, 2_000));
+        await intentar();
+    } catch (err) {
+        console.warn('[respaldo] no se pudo pedir al servidor que se detuviera:', err);
+    }
+}
+
+/**
+ * ¿El servidor ya recibió esta petición? Lo pregunta la pantalla antes de
+ * reenviar un envío que «no salió»: reenviar una petición que sí llegó sería
+ * escribirla —y cobrarla— dos veces. Ante la duda (sin red), no: reenviar es
+ * lo de siempre.
+ */
+export async function existeCopia(peticionId: string): Promise<boolean> {
+    const { estado, error } = await copiasDelServidor.estado(peticionId);
+    return !error && !!estado;
+}
+
+/** Lo que la API corta por estar sin pantalla (TOPE_SIN_PANTALLA_S). */
+const VENTANA_PENDIENTES_MS = 20 * 60_000;
+
+/**
+ * Cuántas respuestas pidió este abogado que todavía no están en su historial:
+ * las que el servidor sigue escribiendo y las terminadas que la recuperación
+ * aún no pasa. Tras una recarga la página no sabe que pidió algo; con esto se
+ * le avisa que viene en camino —y que no lo vuelva a pedir— y se sigue
+ * mirando hasta que llegue. Nunca lanza: ante un fallo, cero.
+ */
+export async function respuestasPendientes(): Promise<number> {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
+        if (!userId) return 0;
+        const desde = new Date(Date.now() - VENTANA_PENDIENTES_MS).toISOString();
+        const { count, error } = await supabase
+            .from('respuestas_chat')
+            .select('peticion_id', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .in('estado', ['en_curso', 'terminada'])
+            .is('guardada_at', null)
+            .gt('creada_at', desde);
+        return error ? 0 : (count ?? 0);
+    } catch {
+        return 0;
+    }
+}
+
 /* ═══ DÓNDE SE ATORA EL ENVÍO ═══
    El 14-oct a las 05:10 y a las 05:16 la página de Roberto creó la
    conversación, pintó «Leyendo la consulta…» y NUNCA mandó el /chat. Entre el

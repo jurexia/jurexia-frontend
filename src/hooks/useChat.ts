@@ -1,12 +1,16 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import { Message, streamChat, SearchResult, fuentesWebActivas } from '@/lib/api';
+import { Message, streamChat, SearchResult, fuentesWebActivas, CorteDeRed } from '@/lib/api';
 import { unirRecorrido } from '@/lib/fuentes';
 import { getSession } from '@/lib/supabase';
 import { checkCanQuery, getSubscriptionInfo } from '@/lib/supabase';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
-import { avisarTraba, esperaConAviso, sesionDelAlmacen } from '@/lib/respuestas-servidor';
+import {
+    avisarTraba, esperaConAviso, sesionDelAlmacen,
+    copiasDelServidor, detenerEnServidor, existeCopia, textoDeCopia,
+} from '@/lib/respuestas-servidor';
+import { esFalloDeRed, esperarCopia, TIEMPOS } from '@/lib/analisis-documento';
 
 /** Lo que identifica un envío ante la API, que guarda su propia copia de la
  *  respuesta con esto (14-oct-2026). Ver `@/lib/respuestas-servidor`. */
@@ -72,6 +76,8 @@ interface UseChatReturn {
      *  quedaba con la pregunta y sin la respuesta. */
     sendMessage: (content: string, enableReasoning?: boolean, envio?: DatosEnvio) => Promise<string | null>;
     stopGeneration: () => void;
+    /** ¿La red cortó esa respuesta y quedó para la recuperación? Ver `sendMessage`. */
+    seCortoLaRed: (peticionId: string) => boolean;
     clearMessages: () => void;
     setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
     retryMessage: string | null;  // New field for retry status
@@ -215,6 +221,30 @@ function quitarFuentesPrevias(texto: string): string {
     return texto.replace(/\n*<!-- FUENTES_PREVIAS:[\s\S]*?-->\n*/g, '\n\n').trim();
 }
 
+/* Las notas que lleva la burbuja cuando la red corta la respuesta (30-oct-2026).
+   Van en cursiva al final, como la de siempre, y se sustituyen unas a otras. */
+const NOTA_INCOMPLETA = '\n\n*[Respuesta incompleta — por favor intenta de nuevo]*';
+const AVISO_CORTE_ESPERANDO = '\n\n*Se cortó la conexión. Iurexia sigue escribiendo tu respuesta en el servidor; '
+    + 'la traemos en cuanto termine.*';
+const AVISO_CORTE_SIGUE = '\n\n*Se cortó la conexión, pero tu respuesta se sigue escribiendo en el servidor. '
+    + 'Aparecerá en esta conversación en cuanto termine: no hace falta volver a pedirla.*';
+const NOTAS_DE_CORTE = [NOTA_INCOMPLETA, AVISO_CORTE_ESPERANDO, AVISO_CORTE_SIGUE];
+
+function ponerAviso(setMessages: React.Dispatch<React.SetStateAction<Message[]>>, nota: string) {
+    setMessages(prev => {
+        const nuevos = [...prev];
+        const last = nuevos[nuevos.length - 1];
+        if (last?.role === 'assistant') {
+            let base = last.content;
+            for (const n of NOTAS_DE_CORTE) if (base.endsWith(n)) base = base.slice(0, -n.length);
+            nuevos[nuevos.length - 1] = { ...last, content: base + nota };
+        } else {
+            nuevos.push({ role: 'assistant', content: nota.trim() });
+        }
+        return nuevos;
+    });
+}
+
 export function useChat(options: UseChatOptions = {}): UseChatReturn {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -229,7 +259,17 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     // before the first setIsLoading(true) executes. A ref check is synchronous.
     const sendingRef = useRef(false);
 
+    /* La consulta que está saliendo, para que Detener se lo diga al servidor. */
+    const peticionEnCursoRef = useRef<string | null>(null);
+    /* Las respuestas que la red cortó y quedaron en el servidor. */
+    const cortesDeRedRef = useRef<Set<string>>(new Set());
+    const seCortoLaRed = useCallback((peticionId: string) => cortesDeRedRef.current.has(peticionId), []);
+
     const stopGeneration = useCallback(() => {
+        /* DETENER SE LE DICE AL SERVIDOR (30-oct-2026). Desde ese día la API
+           sigue escribiendo aunque la pantalla se desconecte: cortar la
+           conexión ya no es pedirle que pare. Ver `detenerEnServidor`. */
+        void detenerEnServidor(peticionEnCursoRef.current);
         abortControllerRef.current?.abort();
     }, []);
 
@@ -249,6 +289,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 
         setError(null);
         setIsLoading(true);
+        peticionEnCursoRef.current = envio?.peticionId ?? null;
         setRetryMessage(null);  // Reset retry message
         setRetryType(null);
         setSourcesCount(null);
@@ -341,6 +382,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 }
             }, 30_000);
 
+            const pidCopia = envio?.peticionId;
             for await (let chunk of streamChat(
                 paraEnviar,
                 options.estado,
@@ -356,6 +398,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                     peticionId: envio?.peticionId,
                     conversationId: envio?.conversationId,
                     expedienteId: envio?.expedienteId,
+                    ...(pidCopia ? { copiaEnServidor: () => existeCopia(pidCopia) } : {}),
                 },
             )) {
                 ultimoTrozo = Date.now();
@@ -636,6 +679,55 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 setRetryMessage(null);
                 return null;
             }
+
+            /* SE CORTÓ LA RED, NO LA RESPUESTA (30-oct-2026). Desde ese día el
+               servidor termina lo pedido aunque la pantalla se vaya, y guarda su
+               copia. Antes, aquí quedaba «[Respuesta incompleta — por favor
+               intenta de nuevo]» y el abogado lo volvía a pedir (y a pagar): es
+               lo que hizo Rubén Ávila el 29-oct con un análisis que el servidor
+               sí había terminado. Ahora se espera la copia, como el análisis de
+               documentos (`analizarDocumento`), sin soltar el «escribiendo»: si
+               llega, es la respuesta; si el servidor sigue, queda para la
+               recuperación, que la pone en su conversación al terminar. */
+            const cortada = err instanceof CorteDeRed ? err.peticionId
+                : (esFalloDeRed(err) && envio?.peticionId) ? envio.peticionId : null;
+            if (cortada && !signal.aborted) {
+                setRetryMessage(null);
+                ponerAviso(setMessages, AVISO_CORTE_ESPERANDO);
+                const r = await esperarCopia(cortada, copiasDelServidor, TIEMPOS,
+                    Date.now() + TIEMPOS.topeCopia, signal);
+                if (r.tipo === 'lista') {
+                    const texto = textoDeCopia(r.fila);
+                    if (texto) {
+                        setMessages(prev => {
+                            const nuevos = [...prev];
+                            const last = nuevos[nuevos.length - 1];
+                            if (last?.role === 'assistant') nuevos[nuevos.length - 1] = { ...last, content: texto };
+                            else nuevos.push({ role: 'assistant', content: texto });
+                            return nuevos;
+                        });
+                        setError(null);
+                        respuestaFinal = texto;
+                        return respuestaFinal;
+                    }
+                }
+                if (r.tipo === 'en_curso') {
+                    // Lo pasa al historial la recuperación (página del chat).
+                    cortesDeRedRef.current.add(cortada);
+                    ponerAviso(setMessages, AVISO_CORTE_SIGUE);
+                    return null;
+                }
+                if (r.tipo === 'cancelada') {
+                    // Detener durante la espera: ya se le dijo al servidor.
+                    ponerAviso(setMessages, NOTA_INCOMPLETA);
+                    return null;
+                }
+                // Sin copia: como antes.
+                ponerAviso(setMessages, NOTA_INCOMPLETA);
+                setError(err instanceof Error ? err.message : 'Error desconocido');
+                return null;
+            }
+
             const errMsg = err instanceof Error ? err.message : 'Error desconocido';
             setError(errMsg);
             setRetryMessage(null);
@@ -660,6 +752,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             }
         } finally {
             if (vigilaLectura) clearInterval(vigilaLectura);
+            peticionEnCursoRef.current = null;
             setIsLoading(false);
             sendingRef.current = false;
         }
@@ -684,6 +777,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         error,
         sendMessage,
         stopGeneration,
+        seCortoLaRed,
         clearMessages,
         setMessages,
         retryMessage,
