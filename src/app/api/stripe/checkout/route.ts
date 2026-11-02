@@ -20,14 +20,25 @@ export async function POST(request: NextRequest) {
            se haría y el plan no llegaría (y quien venía de Platinum pagaría las
            dos). Aquí no se abre el cobro hasta que la base diga que sí; en
            cuanto se aplique la migración, el botón funciona solo. Ver
-           `lib/estudio-en-la-base.ts`. Los demás planes no pasan por aquí. */
+           `lib/estudio-en-la-base.ts`. Los demás planes no pasan por aquí.
+
+           Con la llave de servicio, que es la que usa el webhook; si faltara
+           (en local no está), con la pública: `limite_flujos` es inmutable y
+           hoy la pueden ejecutar las dos. Y si ni así se puede crear el
+           cliente, tampoco se cobra: el mismo aviso, no un 500 genérico. */
         if (getPlanIdFromPriceId(priceId) === PLAN_ESTUDIO) {
-            const servicio = createClient(
-                process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.SUPABASE_SERVICE_ROLE_KEY!,
-                { auth: { autoRefreshToken: false, persistSession: false } },
-            );
-            if (!(await baseAceptaEstudio(servicio))) {
+            let acepta = false;
+            try {
+                const db = createClient(
+                    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                    (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)!,
+                    { auth: { autoRefreshToken: false, persistSession: false } },
+                );
+                acepta = await baseAceptaEstudio(db);
+            } catch (e) {
+                console.error('⚠️ Sin cliente de Supabase para preguntar por Estudio; no se abre el cobro:', e);
+            }
+            if (!acepta) {
                 return NextResponse.json(
                     { error: MENSAJE_ESTUDIO_NO_DISPONIBLE, code: 'ESTUDIO_NO_DISPONIBLE' },
                     { status: 503 }

@@ -39,7 +39,12 @@ const FALSOS_DIR = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'estudi
 process.on('exit', () => fs.rmSync(FALSOS_DIR, { recursive: true, force: true }));
 const FALSOS = {
     'stripe': `export default class Stripe { constructor() { return globalThis.__falsos.stripe; } }`,
-    '@supabase/supabase-js': `export function createClient() { return globalThis.__falsos.supabase; }`,
+    // Como el de verdad: sin URL o sin llave, lanza al crear el cliente.
+    '@supabase/supabase-js': `export function createClient(url, llave) {
+    if (!url) throw new Error('supabaseUrl is required.');
+    if (!llave) throw new Error('supabaseKey is required.');
+    return globalThis.__falsos.supabase;
+}`,
     'resend': `export class Resend { constructor() { this.emails = { send: async (m) => { globalThis.__falsos.correos.push(m); return { data: { id: 'correo_prueba' }, error: null }; } }; } }`,
     'next/server': `export class NextRequest {}
 export const NextResponse = { json: (body, init) => ({ status: (init && init.status) || 200, body }) };`,
@@ -277,6 +282,26 @@ test('checkout: un «no» no se recuerda; el botón se abre solo al migrar', asy
     assert.equal((await pedirCobro(PRECIO_ESTUDIO)).r.status, 503);
     E.baseMigrada = true;
     assert.equal((await pedirCobro(PRECIO_ESTUDIO)).r.status, 200);
+});
+
+test('checkout: sin llave de servicio pregunta con la pública; sin ninguna, el mismo aviso (no un 500)', async () => {
+    const servicio = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const publica = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    try {
+        delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+        assert.equal((await pedirCobro(PRECIO_ESTUDIO)).r.status, 503, 'sin migrar');
+        E.baseMigrada = true;
+        assert.equal((await pedirCobro(PRECIO_ESTUDIO)).r.status, 200, 'migrada, con la llave pública');
+        Base.olvidarConfirmacionEstudio();
+        delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        const { r } = await pedirCobro(PRECIO_ESTUDIO);
+        assert.equal(r.status, 503);
+        assert.equal(r.body.error, Estudio.MENSAJE_ESTUDIO_NO_DISPONIBLE);
+        assert.equal(E.sesiones.length, 1, 'sólo la de la base migrada');
+    } finally {
+        process.env.SUPABASE_SERVICE_ROLE_KEY = servicio;
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = publica;
+    }
 });
 
 test('checkout: los planes de siempre no preguntan a la base', async () => {
