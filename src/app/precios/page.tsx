@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { ArrowRight, Check, Calendar, Loader2, AlertTriangle, ShieldCheck, Lock, CreditCard, FileText } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import { redirectToCheckout } from '@/lib/stripe-client';
 import Navbar from '@/components/Navbar';
@@ -15,6 +15,19 @@ import PieDePagina from '@/components/PieDePagina';
 import { clasesBoton } from '@/components/web/sistema';
 import { claseWeb } from '@/lib/fuentes-web';
 import { HERRAMIENTAS_PLATINUM } from '@/lib/herramientas-platinum';
+import { FLUJOS_ESTUDIO, CONSULTAS_ELITE_ESTUDIO } from '@/lib/plan-estudio';
+import {
+    EstudioFrentePlatinum,
+    SelectorDeVista,
+    TarjetaEstudio,
+    vistaDeLaDireccion,
+    type VistaDePrecios,
+} from '@/components/TarjetaEstudio';
+
+/* En el servidor `useLayoutEffect` no corre y React lo avisa; en el navegador
+   es el que deja colocar la pestaña de la dirección ANTES del primer cuadro
+   pintado, sin que se vea Individual un instante. */
+const useEfectoAntesDePintar = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 /* ═══════════════════════════════════════════════════════════════════════════
    SUSCRIBIRSE A ULTRA SECRETARIOS
    ═══════════════════════════════════════════════════════════════════════════
@@ -69,6 +82,106 @@ export default function PreciosPage() {
     const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
     const isAnnual = billingPeriod === 'annual';
 
+    /* ═══ INDIVIDUAL | ESTUDIO (2-nov-2026) ═══
+       Las dos vistas están SIEMPRE en la página, una junto a la otra en una
+       banda del doble de ancho: elegir Estudio desliza la banda hacia la
+       izquierda (las cuatro tarjetas salen, la de Estudio entra) y la altura
+       de la sección se ajusta a la vista que queda. Las dos se sirven en el
+       HTML, así que Google lee las cinco tarjetas.
+
+       La pestaña que no se ve queda en `visibility: hidden` al terminar el
+       deslizamiento: fuera del tabulador y del lector de pantalla. */
+    const [vista, setVista] = useState<VistaDePrecios>('individual');
+    // La primera colocación (la que viene de la dirección) no se desliza.
+    const [conMovimiento, setConMovimiento] = useState(false);
+    // prefers-reduced-motion: ni deslizamiento ni entrada escalonada.
+    const [menosMovimiento, setMenosMovimiento] = useState(false);
+    const panelIndividual = useRef<HTMLDivElement>(null);
+    const panelEstudio = useRef<HTMLDivElement>(null);
+    const selector = useRef<HTMLDivElement>(null);
+    const [altos, setAltos] = useState<Record<VistaDePrecios, number> | null>(null);
+
+    useEfectoAntesDePintar(() => {
+        if (vistaDeLaDireccion(window.location.search) === 'estudio') setVista('estudio');
+        // Quien pidió menos movimiento cambia de pestaña sin deslizamiento.
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            setMenosMovimiento(true);
+            return;
+        }
+        const cuadro = requestAnimationFrame(() => setConMovimiento(true));
+        return () => cancelAnimationFrame(cuadro);
+    }, []);
+
+    /* La altura de cada vista, medida por dentro: la de las cuatro tarjetas
+       en el teléfono pasa de 3,000 px y la de Estudio no llega a la mitad, y
+       sin esto la pestaña de Estudio dejaba un hueco del alto de la otra. */
+    useEffect(() => {
+        const a = panelIndividual.current, b = panelEstudio.current;
+        if (!a || !b || typeof ResizeObserver === 'undefined') return;
+        const medir = () => setAltos({ individual: a.offsetHeight, estudio: b.offsetHeight });
+        const ro = new ResizeObserver(medir);
+        ro.observe(a);
+        ro.observe(b);
+        medir();
+        return () => ro.disconnect();
+    }, []);
+
+    /* La dirección dice la pestaña, para que se pueda compartir: Estudio
+       deja `?plan=estudio` (el mismo enlace del aviso de límite) e Individual
+       lo quita. Otros parámetros (utm, `?plan=ultra_secretarios`) se quedan. */
+    const elegirVista = useCallback((v: VistaDePrecios) => {
+        setVista(v);
+        try {
+            const url = new URL(window.location.href);
+            const pedia = vistaDeLaDireccion(url.search) === 'estudio';
+            if (v === 'estudio' && !pedia) {
+                url.searchParams.delete('vista');
+                url.searchParams.set('plan', 'estudio');
+            } else if (v === 'individual' && pedia) {
+                url.searchParams.delete('plan');
+                url.searchParams.delete('vista');
+            } else {
+                return;
+            }
+            window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+        } catch { /* sin History API: la pestaña cambia igual */ }
+    }, []);
+
+    /* Desde abajo de la página (la tabla, el cuadro de Estudio): primero se
+       sube al selector y, al llegar, se cambia, para que el deslizamiento se
+       vea. `scrollend` dice cuándo terminó de subir; el reloj es para los
+       navegadores que no lo tienen. Al final el foco queda en la pestaña,
+       para quien navega con el teclado. */
+    const irAVista = useCallback((v: VistaDePrecios) => {
+        const el = selector.current;
+        const cambiar = () => {
+            elegirVista(v);
+            document.getElementById(`pestana-${v}`)?.focus({ preventScroll: true });
+        };
+        if (!el) { cambiar(); return; }
+        const r = el.getBoundingClientRect();
+        if (r.top >= 0 && r.bottom <= window.innerHeight) { cambiar(); return; }
+        let hecho = false;
+        const alLlegar = () => {
+            if (hecho) return;
+            hecho = true;
+            window.removeEventListener('scrollend', alLlegar);
+            cambiar();
+        };
+        window.addEventListener('scrollend', alLlegar);
+        window.setTimeout(alLlegar, 1100);
+        el.scrollIntoView({ behavior: menosMovimiento ? 'auto' : 'smooth', block: 'start' });
+    }, [elegirVista, menosMovimiento]);
+
+    const curva = 'cubic-bezier(0.16,1,0.3,1)';
+    const estiloPanel = (activo: boolean): React.CSSProperties => ({
+        visibility: activo ? 'visible' : 'hidden',
+        opacity: activo ? 1 : 0,
+        transition: conMovimiento
+            ? `opacity 0.5s ease ${activo ? '0.2s' : '0s'}, visibility 0s linear ${activo ? '0s' : '0.8s'}`
+            : 'none',
+    });
+
     return (
         <main className={`${claseWeb} min-h-screen bg-cream-300`}>
             <Navbar />
@@ -87,6 +200,15 @@ export default function PreciosPage() {
                         <p className="text-xl text-piedra-700 max-w-3xl mx-auto mb-10">
                             Elige el plan que se adapte a tu práctica. Comienza gratis y escala cuando lo necesites. Cancela cuando quieras.
                         </p>
+                    </AnimateOnScroll>
+
+                    {/* INDIVIDUAL | ESTUDIO, encima de todo: es la primera
+                        decisión (¿para mí o para el despacho?); mensual o anual
+                        es la segunda. `scroll-mt` deja la barra fija fuera. */}
+                    <AnimateOnScroll delay={0.25}>
+                        <div ref={selector} className="mb-7 flex scroll-mt-28 justify-center">
+                            <SelectorDeVista vista={vista} onCambio={elegirVista} />
+                        </div>
                     </AnimateOnScroll>
 
                     {/* Billing Period Toggle */}
@@ -115,9 +237,13 @@ export default function PreciosPage() {
                                         Anual
                                     </button>
                                 </div>
+                                {/* Mensual y anual siguen mandando en Individual.
+                                    Estudio se cobra sólo al mes: con «Anual»
+                                    elegido, en su pestaña se dice eso en vez del
+                                    ahorro que no aplica. */}
                                 {isAnnual && (
-                                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-accent-gold/15 border border-accent-gold/30 text-charcoal-900 text-xs font-bold animate-in fade-in slide-in-from-left-2 duration-300">
-                                        Ahorra hasta 17%
+                                    <span key={vista} className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-accent-gold/15 border border-accent-gold/30 text-charcoal-900 text-xs font-bold animate-in fade-in slide-in-from-left-2 duration-300">
+                                        {vista === 'estudio' ? 'Estudio: sólo mensual' : 'Ahorra hasta 17%'}
                                     </span>
                                 )}
                             </div>
@@ -134,8 +260,30 @@ export default function PreciosPage() {
                 </div>
             </section>
 
-            {/* Pricing Cards - Row 1: Gratuito, Pro Mensual, Pro Anual */}
-            <section className="py-8 px-4 overflow-hidden">
+            {/* Las tarjetas: Individual (las cuatro de siempre) y Estudio. */}
+            <section className="py-8 overflow-hidden">
+                <div
+                    className="relative"
+                    style={{
+                        height: altos ? altos[vista] : undefined,
+                        transition: conMovimiento ? `height 0.7s ${curva}` : 'none',
+                    }}
+                >
+                <div
+                    className="flex items-start"
+                    style={{
+                        transform: vista === 'estudio' ? 'translateX(-100%)' : 'none',
+                        transition: conMovimiento ? `transform 0.8s ${curva}` : 'none',
+                    }}
+                >
+                <div
+                    ref={panelIndividual}
+                    id="panel-individual"
+                    role="tabpanel"
+                    aria-labelledby="pestana-individual"
+                    className="w-full shrink-0 px-4"
+                    style={estiloPanel(vista === 'individual')}
+                >
                 <div className="max-w-7xl mx-auto">
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch pt-8">
                         <AnimateOnScroll delay={0} className="h-full">
@@ -222,7 +370,9 @@ export default function PreciosPage() {
                                 originalPrice={isAnnual ? '$9,588' : '$799'}
                                 period={isAnnual ? 'MXN/año' : 'MXN/mes'}
                                 unitPrice={isAnnual ? '$0.89 por consulta' : '$1.07 por consulta'}
-                                description={isAnnual ? 'Máximo poder para tu despacho, todo el año' : 'Para despachos y litigio de volumen'}
+                                /* «Para despachos» es ahora Estudio (2-nov-2026): Platinum
+                                   se queda con el abogado exigente. */
+                                description={isAnnual ? 'Para abogados exigentes, todo el año' : 'Para abogados exigentes'}
                                 savingsBadge={isAnnual ? 'Ahorras $1,198 MXN' : undefined}
                                 features={[
                                     <span className="font-semibold text-white">Todo lo del Plan Pro, y además:</span>,
@@ -256,6 +406,24 @@ export default function PreciosPage() {
                             />
                         </AnimateOnScroll>
                     </div>
+                </div>
+                </div>
+
+                {/* ── Estudio ── */}
+                <div
+                    ref={panelEstudio}
+                    id="panel-estudio"
+                    role="tabpanel"
+                    aria-labelledby="pestana-estudio"
+                    className="w-full shrink-0 px-4"
+                    style={estiloPanel(vista === 'estudio')}
+                >
+                    <div className="max-w-6xl mx-auto pt-8 pb-4">
+                        <TarjetaEstudio activa={vista === 'estudio'} animar={!menosMovimiento} />
+                        <EstudioFrentePlatinum onIndividual={() => irAVista('individual')} />
+                    </div>
+                </div>
+                </div>
                 </div>
             </section>
 
@@ -563,6 +731,22 @@ export default function PreciosPage() {
                             </table>
                         </div>
                     </AnimateOnScroll>
+
+                    {/* La tabla compara los planes individuales; Estudio tiene
+                        su propio cuadro en su pestaña. Desde aquí se llega. */}
+                    <AnimateOnScroll delay={0.1}>
+                        <p className="mt-8 text-center text-sm text-piedra-700">
+                            ¿Un despacho? El Plan Estudio tiene todo lo de Platinum con consultas ilimitadas, {FLUJOS_ESTUDIO} flujos al mes y 20 GB.{' '}
+                            <button
+                                type="button"
+                                onClick={() => irAVista('estudio')}
+                                className="inline-flex items-center gap-1 font-semibold text-charcoal-900 underline-offset-4 hover:underline"
+                            >
+                                Ver el Plan Estudio
+                                <ArrowRight className="h-3.5 w-3.5" />
+                            </button>
+                        </p>
+                    </AnimateOnScroll>
                 </div>
             </section>
 
@@ -579,13 +763,17 @@ export default function PreciosPage() {
 
                     <div className="space-y-4">
                         {[
-                            { question: '¿Qué son los Precedentes Judiciales y en qué planes están disponibles?', answer: 'Precedentes es una función de búsqueda semántica directa sobre sentencias reales de Tribunales Colegiados de Circuito. Actualmente cubre más de 141,000 sentencias de 7 circuitos (1° Ciudad de México, 2° Estado de México, 3° Jalisco, 4° Nuevo León, 6° Puebla, 16° Guanajuato y 22° Querétaro). El corpus crece continuamente: cada mes se ingresan nuevas sentencias y se incorporan más circuitos. Se filtra por circuito y tribunal, y está disponible en el plan Platinum (y en Ultra Secretarios).' },
-                            { question: '¿Qué es el esfuerzo de redacción y qué incluye cada plan?', answer: 'Para redactar no hay que cambiar de modo: basta pedirlo —«Redacta una demanda de…»— y Iurexia entrega el escrito completo, con el mismo acervo y las mismas fuentes que una consulta. El esfuerzo, que se elige en el desplegable junto a «Fuentes», decide con qué fuerza se escribe: Básico, en todos los planes, entrega un escrito completo y bien estructurado; Pro, desde el plan Pro, razona a fondo cada argumento antes de escribir; Platinum, exclusivo del plan Platinum, usa el motor más potente de Iurexia: escritos más extensos, argumentos principales y subsidiarios y la refutación anticipada de lo que opondrá la contraparte.' },
-                            { question: '¿Qué es Jurimetría y en qué plan está disponible?', answer: 'Jurimetría es la herramienta más avanzada de Iurexia: predice el sentido probable de un asunto (Concede / Niega / Sobresee) analizando los precedentes del corpus completo. En modo básico basta describir el asunto; en modo Secretario puedes adjuntar el acto reclamado y los agravios como PDF y la IA analiza argumento por argumento, señalando cuáles son probablemente inoperantes, infundados o fundados — con base en sentencias reales, no en suposiciones. Está disponible exclusivamente en el plan Platinum.' },
+                            { question: '¿Qué son los Precedentes Judiciales y en qué planes están disponibles?', answer: 'Precedentes es una función de búsqueda semántica directa sobre sentencias reales de Tribunales Colegiados de Circuito. Actualmente cubre más de 141,000 sentencias de 7 circuitos (1° Ciudad de México, 2° Estado de México, 3° Jalisco, 4° Nuevo León, 6° Puebla, 16° Guanajuato y 22° Querétaro). El corpus crece continuamente: cada mes se ingresan nuevas sentencias y se incorporan más circuitos. Se filtra por circuito y tribunal, y está disponible en los planes Platinum y Estudio (y en Ultra Secretarios).' },
+                            { question: '¿Qué es el esfuerzo de redacción y qué incluye cada plan?', answer: 'Para redactar no hay que cambiar de modo: basta pedirlo —«Redacta una demanda de…»— y Iurexia entrega el escrito completo, con el mismo acervo y las mismas fuentes que una consulta. El esfuerzo, que se elige en el desplegable junto a «Fuentes», decide con qué fuerza se escribe: Básico, en todos los planes, entrega un escrito completo y bien estructurado; Pro, desde el plan Pro, razona a fondo cada argumento antes de escribir; Platinum, exclusivo de los planes Platinum y Estudio, usa el motor más potente de Iurexia: escritos más extensos, argumentos principales y subsidiarios y la refutación anticipada de lo que opondrá la contraparte.' },
+                            { question: '¿Qué es Jurimetría y en qué plan está disponible?', answer: 'Jurimetría es la herramienta más avanzada de Iurexia: predice el sentido probable de un asunto (Concede / Niega / Sobresee) analizando los precedentes del corpus completo. En modo básico basta describir el asunto; en modo Secretario puedes adjuntar el acto reclamado y los agravios como PDF y la IA analiza argumento por argumento, señalando cuáles son probablemente inoperantes, infundados o fundados — con base en sentencias reales, no en suposiciones. Está disponible exclusivamente en los planes Platinum y Estudio.' },
                             { question: '¿Qué incluye una consulta?', answer: 'Una consulta es cada pregunta o solicitud que haces a Iurexia. Incluye la búsqueda en la base documental, el análisis con IA y la respuesta fundamentada. El análisis de documentos también cuenta como consultas según la complejidad del archivo.' },
-                            { question: '¿Qué son los flujos de trabajo y cuántos incluye mi plan?', answer: 'Un flujo de trabajo construye contigo un escrito completo —una demanda de amparo, una contestación, un escrito de agravios, una revisión de contrato— parte por parte: Iurexia lee tu encargo y tu carpeta, te propone cada dato ya marcado, te pide sólo lo que falta y redacta cada parte con todo el acervo, dejándola en el documento. Cada flujo iniciado cuenta uno de tu mes, sin gastar consultas: el Plan Pro incluye 30 al mes y el Plan Platinum 60. Los planes Gratuito y Básico no incluyen flujos.' },
-                            { question: '¿Qué incluye el Plan Platinum?', answer: 'El Plan Platinum incluye todo lo del Plan Pro y, en exclusiva, sus herramientas: Sentencia (auditoría de una sentencia frente a los precedentes de su tribunal), Precedentes por circuito, Jurimetría, Cronología del expediente, Bóveda (hasta 500 documentos por asunto) y Toulmin (el constructor de demandas y recursos), además de expedientes completos de hasta 600 hojas, bajo nuestra política de uso justo, y asesoría personalizada con el equipo legal de Iurexia vía correo electrónico. Es ideal para despachos y corporativos que necesitan la máxima potencia y volumen.' },
-                            { question: '¿De qué tamaño pueden ser los documentos que subo?', answer: 'Cada plan lee documentos hasta cierto número de hojas: Gratuito 20, Básico 50, Pro 100 y Platinum 600. El límite existe porque leer un documento —sobre todo escaneado, que exige reconocimiento de texto página por página— es la operación más costosa de la plataforma. Si un documento supera el límite de tu plan te lo decimos ANTES de procesarlo, sin consumirte ninguna consulta, y te indicamos qué plan sí lo cubre. También puedes dividirlo y subirlo por partes: dentro de una carpeta, Iurexia lo analiza todo junto.' },
+                            { question: '¿Qué son los flujos de trabajo y cuántos incluye mi plan?', answer: `Un flujo de trabajo construye contigo un escrito completo —una demanda de amparo, una contestación, un escrito de agravios, una revisión de contrato— parte por parte: Iurexia lee tu encargo y tu carpeta, te propone cada dato ya marcado, te pide sólo lo que falta y redacta cada parte con todo el acervo, dejándola en el documento. Cada flujo iniciado cuenta uno de tu mes, sin gastar consultas: el Plan Pro incluye 30 al mes, el Plan Platinum 60 y el Plan Estudio ${FLUJOS_ESTUDIO}. Los planes Gratuito y Básico no incluyen flujos.` },
+                            { question: '¿Qué incluye el Plan Platinum?', answer: 'El Plan Platinum incluye todo lo del Plan Pro y, en exclusiva, sus herramientas: Sentencia (auditoría de una sentencia frente a los precedentes de su tribunal), Precedentes por circuito, Jurimetría, Cronología del expediente, Bóveda (hasta 500 documentos por asunto) y Toulmin (el constructor de demandas y recursos), además de expedientes completos de hasta 600 hojas, bajo nuestra política de uso justo, y asesoría personalizada con el equipo legal de Iurexia vía correo electrónico. Es para el abogado exigente que necesita la máxima potencia; para despachos está el Plan Estudio, con todo lo de Platinum y consultas ilimitadas.' },
+                            /* La pregunta que hará quien lea «ilimitadas», contestada en
+                               llano y con las mismas cifras de la tarjeta y de la
+                               cláusula de /terminos (2-nov-2026). */
+                            { question: '¿Qué significa consultas ilimitadas en Estudio?', answer: `Que en el Plan Estudio no hay un cupo mensual de consultas que se agote: consultas todos los días del mes, sin contarlas. Las primeras ${CONSULTAS_ELITE_ESTUDIO} de cada periodo se responden con la IA Jurídica de Élite, la misma de Platinum, e incluyen la lectura de documentos escaneados, la Bóveda y la Cronología. A partir de ahí sigues consultando, analizando documentos y redactando sin límite con la IA Jurídica Avanzada, la del Plan Pro; la Bóveda, la Cronología y la lectura de documentos escaneados vuelven al empezar el siguiente periodo. El uso razonable es de hasta 100 consultas al día, sin automatizar consultas ni extraer información de forma masiva. Si alguna vez vemos un uso fuera de lo normal, primero hablamos contigo.` },
+                            { question: '¿De qué tamaño pueden ser los documentos que subo?', answer: 'Cada plan lee documentos hasta cierto número de hojas: Gratuito 20, Básico 50, Pro 100, y Platinum y Estudio 600. El límite existe porque leer un documento —sobre todo escaneado, que exige reconocimiento de texto página por página— es la operación más costosa de la plataforma. Si un documento supera el límite de tu plan te lo decimos ANTES de procesarlo, sin consumirte ninguna consulta, y te indicamos qué plan sí lo cubre. También puedes dividirlo y subirlo por partes: dentro de una carpeta, Iurexia lo analiza todo junto.' },
                             { question: '¿Puedo cambiar de plan en cualquier momento?', answer: 'Sí, puedes actualizar o cambiar tu plan en cualquier momento. Si subes de plan, el cambio es inmediato. Si bajas, el cambio aplica al siguiente ciclo de facturación.' },
                             { question: '¿Qué métodos de pago aceptan?', answer: 'Aceptamos tarjetas de crédito y débito (Visa, Mastercard, American Express) a través de Stripe, la plataforma de pagos más segura del mundo.' },
                             { question: '¿Ofrecen reembolsos?', answer: 'Iurexia no ofrece reembolsos. Por eso ofrecemos 5 consultas gratuitas mensuales para que pruebes la plataforma antes de suscribirte. Si decides cancelar, conservas el acceso hasta el final de tu periodo de facturación.' },
@@ -1091,6 +1279,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
         <div className="border border-piedra-200 rounded-xl overflow-hidden bg-white">
             <button
                 onClick={() => setIsOpen(!isOpen)}
+                aria-expanded={isOpen}
                 className="w-full flex items-center justify-between p-6 text-left hover:bg-piedra-50 transition-colors"
             >
                 <span className="font-medium text-charcoal-900">{question}</span>
@@ -1098,15 +1287,21 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
                     +
                 </span>
             </button>
+            {/* La altura se anima de 0 a la del texto (filas de rejilla 0fr →
+                1fr), no hasta un tope fijo: con `max-height: 200px` las
+                respuestas largas se cortaban a media frase en el teléfono, y la
+                de «consultas ilimitadas» (2-nov-2026) es de las largas. */}
             <div
-                className="overflow-hidden transition-all duration-300 ease-in-out"
+                className="grid transition-all duration-300 ease-in-out"
                 style={{
-                    maxHeight: isOpen ? '200px' : '0px',
+                    gridTemplateRows: isOpen ? '1fr' : '0fr',
                     opacity: isOpen ? 1 : 0,
                 }}
             >
-                <div className="px-6 pb-6">
-                    <p className="text-piedra-700 leading-relaxed">{answer}</p>
+                <div className="min-h-0 overflow-hidden">
+                    <div className="px-6 pb-6">
+                        <p className="text-piedra-700 leading-relaxed">{answer}</p>
+                    </div>
                 </div>
             </div>
         </div>

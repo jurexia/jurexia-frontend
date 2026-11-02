@@ -2966,3 +2966,75 @@ html.cajon-abierto .soporte-boton { display: none; }
     .boton-crema:active { transform: none; }
 }
 }
+
+/* ═══ EL PLAN ESTUDIO EN /precios (2-nov-2026) ═══════════════════════════
+   La tarjeta de Estudio tiene que leerse, de un vistazo, como más poderosa
+   que la de Platinum, y sin gritar. Tres recursos:
+   · el marco de oro: un filo con un degradado de oro viejo a oro claro que
+     se desplaza muy despacio, como la luz sobre el canto de un libro dorado;
+   · el brillo: una franja de luz que cruza la tarjeta cada nueve segundos y
+     pasa en menos de dos; el resto del tiempo no hay nada que distraiga;
+   · la obra (`ObraEstudio`): la columnata detrás del nombre y el precio.
+   Quien pidió menos movimiento ve el marco quieto y sin brillo. */
+@keyframes estudioMarco {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+.estudio-marco {
+    background-image: linear-gradient(115deg, #5c4a28 0%, #c9a962 16%, #f5e6bc 30%, #c9a962 44%, #6b5730 58%, #c9a962 74%, #f1dfae 88%, #8a7140 100%);
+    background-size: 300% 300%;
+    animation: estudioMarco 10s ease-in-out infinite alternate;
+    /* La sombra, corta: con 120 px de difuminado la de abajo se leía como
+       una mancha gris sobre el crema en el teléfono. El halo de oro es lo que
+       la levanta del fondo. */
+    box-shadow:
+        0 36px 70px -36px rgba(15,14,13,0.6),
+        0 0 0 1px rgba(201,169,98,0.10),
+        0 0 70px -22px rgba(201,169,98,0.5);
+}
+@keyframes estudioBrillo {
+    0%, 80% { transform: translateX(-130%) skewX(-18deg); }
+    100%    { transform: translateX(300%) skewX(-18deg); }
+}
+.estudio-brillo {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    overflow: hidden;
+    pointer-events: none;
+    border-radius: inherit;
+}
+.estudio-brillo::before {
+    content: "";
+    position: absolute;
+    top: -10%;
+    bottom: -10%;
+    left: 0;
+    width: 38%;
+    background: linear-gradient(90deg, transparent 0%, rgba(245,230,188,0.045) 35%, rgba(255,248,228,0.10) 50%, rgba(245,230,188,0.045) 65%, transparent 100%);
+    animation: estudioBrillo 9s cubic-bezier(0.45, 0, 0.25, 1) 1.2s infinite;
+    transform: translateX(-130%) skewX(-18deg);
+}
+/* La obra: arriba y fundida hacia abajo en el teléfono; la tarjeta entera en
+   escritorio, donde la lista va encima en un cristal oscuro. */
+.estudio-obra {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 470px;
+    -webkit-mask-image: linear-gradient(180deg, #000 28%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 28%, transparent 100%);
+}
+@media (min-width: 1024px) {
+    .estudio-obra {
+        bottom: 0;
+        height: auto;
+        -webkit-mask-image: none;
+        mask-image: none;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .estudio-marco { animation: none; }
+    .estudio-brillo::before { animation: none; display: none; }
+}

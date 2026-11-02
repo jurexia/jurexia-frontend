@@ -7,7 +7,8 @@ import { Scale } from 'lucide-react';
 
 import { claseWeb } from '@/lib/fuentes-web';
 export default function TerminosPage() {
-    const fechaActualizacion = "28 de septiembre de 2026";
+    // 2-nov-2026: cláusula 6 bis, uso razonable del Plan Estudio.
+    const fechaActualizacion = "2 de noviembre de 2026";
 
     return (
         <main className={`${claseWeb} min-h-screen bg-cream-300`}>
@@ -223,6 +224,63 @@ export default function TerminosPage() {
                                 <li>Recibir comprobante de pago</li>
                                 <li>Cancelar o suspender su suscripción en cualquier momento, por sí mismo, desde su cuenta</li>
                             </ul>
+                        </section>
+
+                        {/* ═══ EL USO RAZONABLE DEL PLAN ESTUDIO (2-nov-2026) ═══
+                            La tarjeta de Estudio en /precios dice «consultas
+                            ilimitadas» y, debajo, el uso razonable con un enlace
+                            a esta cláusula (`#uso-razonable-estudio`). PROFECO
+                            calificó de engañoso el «ilimitado» con la condición
+                            escondida; aquí está entera, con las mismas cifras de
+                            la tarjeta (`lib/plan-estudio.ts`): 100 al día, las
+                            primeras 560 con la IA de Élite y después la Avanzada.
+                            Va junto a «Planes y Pagos» porque es una condición
+                            del plan, no una regla general de uso. `scroll-mt`
+                            deja la barra fija fuera al llegar por el enlace. */}
+                        <section id="uso-razonable-estudio" className="mb-8 scroll-mt-28">
+                            <h2 className="font-serif text-2xl font-medium text-charcoal-900 mb-4">
+                                6 bis. Uso razonable del Plan Estudio
+                            </h2>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                <strong>Consultas ilimitadas.</strong> El Plan Estudio no tiene un cupo
+                                mensual de consultas que se agote durante el periodo de facturación. Las
+                                consultas ilimitadas se prestan conforme a la presente política de uso
+                                razonable, que forma parte de las condiciones del plan y se informa junto
+                                a su oferta en la sección de Precios.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                <strong>Hasta 100 consultas al día.</strong> Se considera uso razonable la
+                                realización de hasta cien consultas por día natural.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                <strong>Las primeras 560 consultas de cada periodo, con la IA Jurídica de
+                                Élite.</strong> Las primeras quinientas sesenta consultas de cada periodo
+                                de facturación se atienden con la IA Jurídica de Élite, la misma del Plan
+                                Platinum, incluidos el análisis de documentos escaneados, la Bóveda y la
+                                Cronología del expediente. A partir de la consulta quinientos sesenta y
+                                uno del periodo, el usuario puede seguir consultando, analizando
+                                documentos y redactando sin límite mensual con la IA Jurídica Avanzada;
+                                el análisis de documentos escaneados, la Bóveda y la Cronología se
+                                reanudan al iniciar el siguiente periodo de facturación.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                <strong>Usos no permitidos.</strong> Queda prohibido, en el Plan Estudio:
+                            </p>
+                            <ul className="list-disc pl-6 text-charcoal-700 space-y-2 mb-4">
+                                <li>Automatizar consultas mediante programas, scripts o cualquier medio distinto del uso directo de la Plataforma</li>
+                                <li>Extraer de forma masiva el contenido de la base documental o de las respuestas de la Plataforma</li>
+                                <li>Revender, sublicenciar u ofrecer a terceros, como servicio propio, el acceso a la Plataforma o sus resultados</li>
+                            </ul>
+                            <p className="text-charcoal-700 leading-relaxed">
+                                <strong>Revisión del uso anormal.</strong> Cuando el uso de una cuenta exceda
+                                de forma notoria estos parámetros o presente patrones propios de la
+                                automatización o de la extracción masiva, Iurexia revisará el caso y,
+                                antes de adoptar cualquier medida, se comunicará con el titular de la
+                                cuenta al correo registrado para aclarar el uso y, en su caso, acordar su
+                                ajuste. Sólo si el uso contrario a esta política persiste después de esa
+                                comunicación, Iurexia podrá limitar temporalmente las consultas de la
+                                cuenta a los parámetros aquí descritos.
+                            </p>
                         </section>
 
                         <section className="mb-8">

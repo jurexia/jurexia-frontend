@@ -71,3 +71,40 @@ export function ObraOscura({ arte }: { arte: string }) {
         </div>
     );
 }
+
+/* ─── Estudio: la columnata (2-nov-2026) ──────────────────────────────────
+   La tarjeta de Estudio va sola en su pestaña y es ancha: el nombre y el
+   precio a la izquierda, lo que trae a la derecha. Columnata y no cúpula: la
+   cúpula es lápiz sobre marfil y en negro había que invertirla; la columnata
+   ya nace de noche, con el mismo grabado sepia de Themis, y sus columnas
+   dicen «institución», que es lo que un despacho quiere ver.
+
+   En escritorio la obra ocupa la tarjeta entera y la lista va encima en un
+   cristal oscuro (`TarjetaEstudio`): la arquitectura se sigue viendo, borrosa,
+   detrás de lo que trae el plan. En el teléfono va arriba, detrás del nombre,
+   y se funde hacia abajo (`.estudio-obra`, en globals.css, porque la forma
+   cambia con el ancho).
+
+   En espejo: el cielo negro de la obra queda arriba a la izquierda, detrás
+   del nombre y el precio, y las columnas grandes a la derecha. Sin el espejo
+   las columnas cruzaban el nombre. Encima, un haz de luz dorada desde
+   arriba —el mismo gesto que el de Themis— y un baño de oro en `soft-light`
+   que dora el grabado sin teñir el negro. */
+export function ObraEstudio({ arte }: { arte: string }) {
+    return (
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-[inherit]">
+            <div className="estudio-obra">
+                <img src={arte} alt="" loading="lazy" decoding="async" className="h-full w-full -scale-x-100 object-cover object-[35%_30%] lg:object-[50%_38%]" />
+                <div className="absolute inset-0 mix-blend-soft-light" style={{ background: 'linear-gradient(135deg, rgba(232,203,135,0.7) 0%, rgba(201,169,98,0.35) 50%, rgba(201,169,98,0.1) 100%)' }} />
+                {/* En el teléfono el nombre y el precio cruzan la obra a todo lo
+                    ancho: un velo parejo, más denso a la izquierda. */}
+                <div className="absolute inset-0 lg:hidden" style={{ background: 'linear-gradient(90deg, rgba(15,14,13,0.62) 0%, rgba(15,14,13,0.38) 55%, rgba(15,14,13,0.22) 100%)' }} />
+                <div className="absolute inset-0 mix-blend-screen" style={{ background: 'radial-gradient(40% 75% at 34% -10%, rgba(240,214,150,0.42) 0%, rgba(201,169,98,0.14) 45%, rgba(201,169,98,0) 75%)' }} />
+            </div>
+            {/* Velo de lectura: denso a la izquierda, donde van el nombre y el
+                precio, y al pie, donde está el botón. */}
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(60% 80% at 10% 45%, rgba(15,14,13,0.78) 0%, rgba(15,14,13,0.5) 45%, rgba(15,14,13,0.08) 100%)' }} />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(15,14,13,0.10) 0%, rgba(15,14,13,0) 35%, rgba(15,14,13,0.40) 75%, rgba(15,14,13,0.75) 100%)' }} />
+        </div>
+    );
+}
