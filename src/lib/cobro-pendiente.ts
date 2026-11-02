@@ -164,7 +164,7 @@ export async function salidaDelMuro(email: string, origen: string): Promise<Sali
 }
 
 export type ResultadoCobro =
-    | { estado: 'pagado' | 'sin_adeudo' }
+    | { estado: 'pagado' | 'sin_adeudo' | 'sin_tarjeta_nueva' }
     | { estado: 'rechazado'; mensaje: string }
     | { estado: 'autenticar' | 'factura'; url: string };
 
@@ -228,12 +228,48 @@ function mensajeMetodoNoAdmitido(tipo: string): string {
         + 'tarjeta de crédito o débito' + (tipo === 'link' ? ', sin entrar con Link.' : '.');
 }
 
+/** Los métodos con los que ya se intentó cobrar esta deuda y el banco rechazó:
+ *  los cargos fallidos del cliente desde que se creó su factura abierta más
+ *  vieja. */
+async function metodosRechazados(stripe: Stripe, customerId: string, desde: number): Promise<Set<string>> {
+    const cargos = await stripe.charges.list({ customer: customerId, created: { gte: desde }, limit: 100 });
+    const ids = new Set<string>();
+    for (const cargo of cargos.data) {
+        const pm = typeof cargo.payment_method === 'string' ? cargo.payment_method : null;
+        if (cargo.status === 'failed' && pm) ids.add(pm);
+    }
+    return ids;
+}
+
 /**
  * Cobrar ya, al volver del portal. La tarjeta predeterminada del cliente —la
  * que acaba de dar de alta— pasa a sus suscripciones en mora y con ella se
  * pagan sus facturas abiertas, de la más vieja a la más nueva.
+ *
+ * TAMBIÉN AL ENTRAR, SIN EL `?pago=actualizado` (2-nov-2026). Un Platinum
+ * suspendido dio de alta su tarjeta en el portal tres veces en 40 minutos y
+ * nunca se le cobró: cada vez volvió sin sesión —su navegador no la conservaba
+ * al salir a Stripe; tampoco pudo entrar con Google—, el chat lo mandó a
+ * /login?redirect=/chat y el parámetro que dispara el cobro se quedó en el
+ * camino. Entraba de nuevo y veía el mismo muro, con su tarjeta ya guardada.
+ * Acabó pagando desde la factura de Stripe y escribiendo a soporte «ya pagué y
+ * no puedo ingresar».
+ *
+ * Por eso el muro llama aquí cada vez que se pinta (`automatico`), y esa
+ * llamada cobra sólo si hay una tarjeta que el cliente dio de alta DESPUÉS de
+ * que empezó la deuda y con la que no se ha intentado todavía. Con la que el
+ * banco ya rechazó no se vuelve a probar —ni al entrar ni al volver del
+ * portal—: repetir cargos rechazados es lo que lleva a Stripe y a los bancos a
+ * bloquear (ver los «no reintentar» del 29-oct). Sin tarjeta nueva contesta
+ * `sin_tarjeta_nueva` y no toca nada.
+ *
+ * Al volver del portal no se exige que la tarjeta sea posterior a la deuda:
+ * ahí el cliente acaba de elegirla, aunque sea una que ya tenía guardada.
  */
-export async function reintentarCobro(email: string): Promise<ResultadoCobro> {
+export async function reintentarCobro(
+    email: string,
+    opciones: { automatico?: boolean } = {},
+): Promise<ResultadoCobro> {
     const stripe = getStripe();
     const adeudo = await buscarAdeudo(stripe, email);
 
@@ -255,6 +291,14 @@ export async function reintentarCobro(email: string): Promise<ResultadoCobro> {
     const pred = 'deleted' in cliente ? null : cliente.invoice_settings?.default_payment_method;
     const nueva = (typeof pred === 'string' ? pred : pred?.id) || null;
     const metodo = pred && typeof pred !== 'string' ? pred : null;
+
+    // ¿Hay con qué cobrar que no se haya probado ya? (ver arriba)
+    const desde = adeudo.facturas[0].created ?? 0;
+    const rechazados = await metodosRechazados(stripe, adeudo.customerId, desde);
+    const posteriorALaDeuda = (metodo?.created ?? 0) >= desde;
+    if (!nueva || rechazados.has(nueva) || (opciones.automatico && !posteriorALaDeuda)) {
+        return { estado: 'sin_tarjeta_nueva' };
+    }
 
     // Antes de tocar nada: si la suscripción no admite el método nuevo, ni se
     // copia ni se cobra con él. La factura hereda la misma lista, así que
@@ -290,6 +334,10 @@ export async function reintentarCobro(email: string): Promise<ResultadoCobro> {
             if (err.code === 'invoice_payment_intent_requires_action' && factura.hosted_invoice_url) {
                 return { estado: 'autenticar', url: factura.hosted_invoice_url };
             }
+            // Dos pestañas con el muro abierto cobran a la vez: la segunda
+            // choca con el pago que la primera acaba de hacer. Pagada es pagada.
+            const ahora = await stripe.invoices.retrieve(factura.id).catch(() => null);
+            if (ahora?.status === 'paid') continue;
             console.warn(`💳 Reintento de cobro rechazado para ${email} (${factura.id}):`, err.code, (e as Error).message);
             return { estado: 'rechazado', mensaje: motivoDelRechazo(e) };
         }
@@ -298,6 +346,7 @@ export async function reintentarCobro(email: string): Promise<ResultadoCobro> {
     // Entró todo: se abre ya. El webhook `invoice.payment_succeeded` hará lo
     // mismo en unos segundos; hacerlo aquí es para que no espere mirando el muro.
     await abrirCuenta(email);
-    console.log(`✅ ${email} actualizó su tarjeta y pagó ${adeudo.facturas.length} factura(s): cuenta reabierta`);
+    console.log(`✅ ${email} actualizó su tarjeta y pagó ${adeudo.facturas.length} factura(s) `
+        + `${opciones.automatico ? 'al entrar' : 'al volver del portal'}: cuenta reabierta`);
     return { estado: 'pagado' };
 }

@@ -20,6 +20,13 @@
  *   3. Si entra, la suspensión ya se levantó y se recarga sin el parámetro.
  *      Si el banco la rechaza, se dice por qué y se ofrece otra tarjeta.
  *
+ * SIN EL PARÁMETRO TAMBIÉN (2-nov-2026). Si del portal se vuelve sin sesión,
+ * el chat manda a /login y el `?pago=actualizado` se pierde: el cliente entra
+ * de nuevo, ve el muro y su tarjeta nueva sigue sin cobrarse. Por eso, cada
+ * vez que el muro se pinta, pregunta: si hay una tarjeta dada de alta después
+ * de la deuda que aún no se ha probado, se cobra ahí mismo. Si no la hay, no
+ * pasa nada y el muro sigue igual. Ver `reintentarCobro`.
+ *
  * Y si paga por otro camino —el enlace del correo, o un reintento de Stripe
  * que sí pasa—, el muro lo nota solo: mira el perfil cada 10 s.
  */
@@ -36,11 +43,18 @@ type Estado =
     | { tipo: 'error' };
 
 /** POST con el token de la sesión: las dos rutas sacan el correo de ahí. */
-async function pedir(ruta: string): Promise<Record<string, string>> {
+async function pedir(ruta: string, cuerpo?: Record<string, unknown>): Promise<Record<string, string>> {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
     if (!token) throw new Error('sin sesión');
-    const r = await fetch(ruta, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+    const r = await fetch(ruta, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            ...(cuerpo ? { 'Content-Type': 'application/json' } : {}),
+        },
+        ...(cuerpo ? { body: JSON.stringify(cuerpo) } : {}),
+    });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(d?.error || `HTTP ${r.status}`);
     return d;
@@ -72,21 +86,29 @@ export function CuentaSuspendida({ email, userId }: { email?: string | null; use
         }
     };
 
-    // AL VOLVER DEL PORTAL: cobrar ya con la tarjeta nueva.
+    // AL PINTARSE: cobrar ya con la tarjeta nueva. Al volver del portal se
+    // dice que se está cobrando; al entrar sin el parámetro, el muro sólo
+    // cambia si había algo que cobrar (y nunca pisa lo que el cliente ya pulsó).
     useEffect(() => {
-        if (new URLSearchParams(window.location.search).get('pago') !== 'actualizado') return;
+        const delPortal = new URLSearchParams(window.location.search).get('pago') === 'actualizado';
         let vivo = true;
-        setEstado({ tipo: 'cobrando' });
-        pedir('/api/stripe/reintentar-cobro')
+        const poner = (nuevo: Estado) => setEstado((antes) => (delPortal || antes.tipo === 'listo' ? nuevo : antes));
+        if (delPortal) setEstado({ tipo: 'cobrando' });
+        pedir('/api/stripe/reintentar-cobro', delPortal ? undefined : { automatico: true })
             .then((d) => {
                 if (!vivo) return;
                 if (d.estado === 'pagado' || d.estado === 'sin_adeudo') return abrir();
                 if ((d.estado === 'autenticar' || d.estado === 'factura') && d.url) {
-                    return setEstado({ tipo: 'confirmar', url: d.url, porque: d.estado as 'autenticar' | 'factura' });
+                    return poner({ tipo: 'confirmar', url: d.url, porque: d.estado as 'autenticar' | 'factura' });
                 }
-                setEstado({ tipo: 'rechazado', mensaje: d.mensaje || 'Tu banco rechazó el cargo con la tarjeta nueva.' });
+                if (d.estado === 'sin_tarjeta_nueva') {
+                    return poner(delPortal
+                        ? { tipo: 'rechazado', mensaje: 'Tu banco ya había rechazado esa tarjeta. Para completar el cobro, agrega una tarjeta distinta.' }
+                        : { tipo: 'listo' });
+                }
+                poner({ tipo: 'rechazado', mensaje: d.mensaje || 'Tu banco rechazó el cargo con la tarjeta nueva.' });
             })
-            .catch(() => { if (vivo) setEstado({ tipo: 'error' }); });
+            .catch(() => { if (vivo && delPortal) setEstado({ tipo: 'error' }); });
         return () => { vivo = false; };
     }, [abrir]);
 
