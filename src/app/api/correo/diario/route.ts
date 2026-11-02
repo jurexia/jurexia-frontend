@@ -62,7 +62,14 @@ export const maxDuration = 300;
 // EN PAUSA: `suscripcion` —le vende el plan a la misma gente que el descuento,
 // con peor oferta—, `reactivacion` —misma gente, y anuncia la app móvil «muy
 // pronto»— y `activacion`, con textos de agosto que no se han vuelto a revisar.
-const PRIORIDAD: NombreCampania[] = ['registro_pendiente', 'descuento_pro', 'vitrina', 'referidos', 'entrada'];
+//
+// FUERA `descuento_pro` y `registro_pendiente` (2-nov-2026, pedido de David).
+// Los dos ofrecen «Pro al 50 %: $74.50, después $149», una oferta que venció el
+// 17-oct (VIGENCIA_OFERTA en campanias.ts), y el cron los siguió mandando: 485
+// correos del 18 al 30-oct (463 y 22) con un código que ya no valía. Además, el
+// 3-nov cambian los precios. `registro_pendiente` vuelve cuando su correo deje
+// de llevar la oferta; `descuento_pro`, sólo con oferta y fecha nuevas.
+const PRIORIDAD: NombreCampania[] = ['vitrina', 'referidos', 'entrada'];
 
 /**
  * Vercel firma sus crons con CRON_SECRET. Se acepta también la clave de
