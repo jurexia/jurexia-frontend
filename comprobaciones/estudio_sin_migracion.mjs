@@ -13,7 +13,7 @@
 // Supabase, Resend y next/server de mentira, sin red:
 //   · checkout: con la base sin migrar no se abre el cobro de Estudio (503 y
 //     el mensaje de la tarjeta); con la base al día, sí; los demás planes ni
-//     preguntan;
+//     preguntan. Quien paga Ultra no pasa solo a Estudio (§5): va a soporte;
 //   · webhook: la escritura de Estudio que falla responde 500 y no marca el
 //     evento; el reintento, con la base al día, escribe el plan y cancela la
 //     Platinum vieja con prorrateo. Un plan de siempre que falla sigue en 200;
@@ -108,6 +108,7 @@ globalThis.fetch = async (u) => { throw new Error(`sin red en la prueba: ${u}`);
 const PRECIO_ESTUDIO = 'price_1UXIiI3uD85CqvjMrXLzuClJ';
 const PRECIO_PLATINUM = 'price_1Sy2l03uD85CqvjMMJ4mFqhw';
 const PRECIO_PRO = 'price_1Sy2l63uD85CqvjMku0MM4k3';
+const PRECIO_ULTRA = 'price_1T2MzR3uD85CqvjMW6MK8OyG';
 const CHECK_RECHAZA = { message: 'new row for relation "user_profiles" violates check constraint "user_profiles_subscription_type_check"', code: '23514' };
 
 // ── El estado de la base y de Stripe de mentira ─────────────────────────────
@@ -286,6 +287,41 @@ test('checkout: los planes de siempre no preguntan a la base', async () => {
         assert.equal(E.sesiones[0].line_items[0].price, precio);
         assert.equal(E.ops.filter((o) => o.tabla.startsWith('rpc:')).length, 0, `${precio}: sin rpc`);
     }
+});
+
+test('checkout: quien paga Ultra no pasa solo a Estudio (perdería el taller); va a soporte', async () => {
+    for (const status of ['active', 'past_due']) {
+        reiniciar();
+        E.baseMigrada = true;
+        E.suscripciones.sub_ultra = suscripcion('sub_ultra', PRECIO_ULTRA, status);
+        const { r } = await pedirCobro(PRECIO_ESTUDIO);
+        assert.equal(r.status, 409, status);
+        assert.equal(r.body.code, 'ULTRA_A_ESTUDIO');
+        assert.equal(r.body.error, Estudio.MENSAJE_ULTRA_A_ESTUDIO);
+        assert.ok(Estudio.AVISOS_DEL_COBRO_ESTUDIO.includes(r.body.error), 'la tarjeta lo enseña tal cual');
+        assert.equal(E.sesiones.length, 0);
+        assert.deepEqual(E.canceladas, []);
+    }
+});
+
+test('checkout: Platinum → Estudio sí se cobra (subida normal; la vieja la cancela el webhook)', async () => {
+    E.baseMigrada = true;
+    E.suscripciones.sub_platinum = suscripcion('sub_platinum', PRECIO_PLATINUM);
+    const { r } = await pedirCobro(PRECIO_ESTUDIO);
+    assert.equal(r.status, 200);
+    assert.equal(E.sesiones[0].line_items[0].price, PRECIO_ESTUDIO);
+    assert.deepEqual(E.canceladas, [], 'el checkout no cancela nada antes del pago (29-sep)');
+});
+
+test('checkout: Ultra comprando otro plan sigue como antes', async () => {
+    E.suscripciones.sub_ultra = suscripcion('sub_ultra', PRECIO_ULTRA);
+    const { r } = await pedirCobro(PRECIO_ULTRA);
+    assert.equal(r.status, 409);
+    assert.equal(r.body.code, 'SUBSCRIPTION_EXISTS');
+    reiniciar();
+    E.suscripciones.sub_ultra = suscripcion('sub_ultra', PRECIO_ULTRA);
+    const bajada = await pedirCobro(PRECIO_PRO);
+    assert.equal(bajada.r.body.code, 'DOWNGRADE_REDIRECT');
 });
 
 // ── Webhook ─────────────────────────────────────────────────────────────────

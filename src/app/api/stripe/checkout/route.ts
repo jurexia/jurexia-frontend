@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getStripe, isUpgrade, getPlanIdFromPriceId } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 import { baseAceptaEstudio } from '@/lib/estudio-en-la-base';
-import { MENSAJE_ESTUDIO_NO_DISPONIBLE, PLAN_ESTUDIO } from '@/lib/plan-estudio';
+import { MENSAJE_ESTUDIO_NO_DISPONIBLE, MENSAJE_ULTRA_A_ESTUDIO, PLAN_ESTUDIO } from '@/lib/plan-estudio';
 
 export async function POST(request: NextRequest) {
     try {
@@ -87,6 +87,22 @@ export async function POST(request: NextRequest) {
             const pastDueSub = existingSubs.data.find(
                 (s) => s.status === 'past_due'
             );
+
+            /* ULTRA → ESTUDIO LO VE UNA PERSONA (2-nov-2026, revisión §5).
+               Por rango es subida (7 → 8): el cobro se abriría, el webhook
+               cancelaría Ultra con prorrateo y PLAN_CONFIG de Estudio deja
+               `proyectos_mes_limite = 0`. Estudio no trae el Redactor PJF, así
+               que quien paga el taller lo perdería sin que nada se lo dijera.
+               Hoy hay un solo cliente Ultra; mejor que lo hable con soporte. */
+            const esUltra = (s?: { items: { data: { price: { id: string } }[] } }) =>
+                !!s && getPlanIdFromPriceId(s.items.data[0]?.price.id ?? '') === 'ultra_secretarios';
+            if (getPlanIdFromPriceId(priceId) === PLAN_ESTUDIO && (esUltra(activeSub) || esUltra(pastDueSub))) {
+                console.log(`⚠️ ULTRA → ESTUDIO: ${customerEmail} tiene Ultra Secretarios — se manda a soporte`);
+                return NextResponse.json(
+                    { error: MENSAJE_ULTRA_A_ESTUDIO, code: 'ULTRA_A_ESTUDIO' },
+                    { status: 409 }
+                );
+            }
 
             if (activeSub) {
                 const currentPriceId = activeSub.items.data[0]?.price.id;

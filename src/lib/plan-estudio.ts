@@ -58,13 +58,18 @@ export const USO_RAZONABLE_ESTUDIO =
    pago» de los fallos de verdad: por eso viven aquí, donde los leen las dos.
 
    · La base aún no acepta el plan (falta `sql/supabase_estudio.sql`): cobrar
-     dejaría el pago sin plan. Ver `lib/estudio-en-la-base.ts`. */
+     dejaría el pago sin plan. Ver `lib/estudio-en-la-base.ts`.
+   · Quien paga Ultra Secretarios: Estudio no trae el Redactor PJF, y subir
+     por su cuenta cancelaría Ultra y con él el taller. Lo ve una persona. */
 export const MENSAJE_ESTUDIO_NO_DISPONIBLE =
     'El Plan Estudio se está activando y abre en unos minutos. ' +
     'Vuelve a intentarlo en un momento o escríbenos a soporte@iurexia.com.';
+export const MENSAJE_ULTRA_A_ESTUDIO =
+    'Estudio no incluye el Redactor PJF de Ultra Secretarios, y al contratarlo se cancelaría tu plan actual. ' +
+    'Escríbenos a soporte@iurexia.com y lo vemos contigo.';
 
 /** Los mensajes del checkout que la tarjeta enseña tal cual. */
-export const AVISOS_DEL_COBRO_ESTUDIO: readonly string[] = [MENSAJE_ESTUDIO_NO_DISPONIBLE];
+export const AVISOS_DEL_COBRO_ESTUDIO: readonly string[] = [MENSAJE_ESTUDIO_NO_DISPONIBLE, MENSAJE_ULTRA_A_ESTUDIO];
 
 export function esEstudio(plan?: string | null): boolean {
     return (plan ?? '').trim() === PLAN_ESTUDIO;
