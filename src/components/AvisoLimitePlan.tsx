@@ -81,7 +81,7 @@ const ESTUDIO: Mejora = {
     enlace: '/precios?plan=estudio',
     ventajas: [
         { icono: '∞', titulo: 'Consultas ilimitadas', detalle: `Las primeras ${CONSULTAS_ELITE_ESTUDIO} de cada mes con la IA Jurídica de Élite; después, sin límite con la IA Jurídica Avanzada` },
-        { icono: '✦', titulo: 'IA de última generación', detalle: 'Cada nueva generación de la IA Jurídica de Iurexia llega primero a Estudio' },
+        { icono: '✦', titulo: 'La inteligencia artificial más avanzada de Iurexia', detalle: 'Cada nueva generación llega primero a Estudio' },
         { icono: '⚡', titulo: `${FLUJOS_ESTUDIO} flujos de trabajo al mes`, detalle: 'Y 20 GB para tus expedientes, con todo lo de Platinum' },
     ],
 };

@@ -149,7 +149,7 @@ export const TEMAS: Tema[] = [
         senales: ['qué incluye el plan estudio', 'las consultas son ilimitadas de verdad', 'plan para despachos', 'diferencia entre platinum y estudio'],
         respuesta:
             'El Plan Estudio cuesta $1,499 al mes (sólo mensual) y está pensado para despachos. Incluye todo lo del Plan Platinum y, además: ' +
-            'consultas ilimitadas, la IA de última generación (cada nueva generación de la IA Jurídica de Iurexia llega primero a Estudio) y 100 flujos de trabajo al mes; ' +
+            'consultas ilimitadas, la inteligencia artificial más avanzada de Iurexia (cada nueva generación llega primero a Estudio) y 100 flujos de trabajo al mes; ' +
             'también 20 GB para expedientes, documentos de hasta 600 hojas y soporte prioritario. ' +
             'Las consultas ilimitadas son con uso razonable: las primeras 560 de cada mes van con la IA Jurídica de Élite; después siguen sin límite con la IA Jurídica Avanzada, ' +
             'hasta 100 consultas al día y sin automatización ni extracción masiva. Pasadas esas 560, Bóveda, Cronología y la lectura de documentos escaneados esperan al siguiente periodo. ' +
@@ -372,7 +372,7 @@ PLANES (precios en pesos; anual = cupo mensual igual, pagado por año)
   exclusiva, Sentencia, Precedentes por circuito, Jurimetría, Cronología, Bóveda
   y Toulmin; 60 flujos.
 · Estudio — $1,499 al mes (sólo mensual). Para despachos. Todo lo de Platinum y
-  además: consultas ilimitadas, la IA de última generación primero y 100 flujos
+  además: consultas ilimitadas, la inteligencia artificial más avanzada (cada generación nueva, primero) y 100 flujos
   al mes; 20 GB; 600 hojas; soporte prioritario. Uso razonable: las primeras 560
   consultas del mes con la IA Jurídica de Élite y después sin límite con la IA
   Jurídica Avanzada; hasta 100 al día; sin automatización ni extracción masiva.

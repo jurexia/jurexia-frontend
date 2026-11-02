@@ -255,8 +255,8 @@ export const PLANS = {
         ]
     },
     /* EL PLAN ESTUDIO (2-nov-2026), ver `lib/plan-estudio.ts`. Platinum y
-       además consultas ilimitadas, la IA de última generación primero y 100
-       flujos. `queryLimit` es el tope de uso razonable que se guarda en
+       además consultas ilimitadas, la inteligencia artificial más avanzada
+       (cada generación nueva, primero) y 100 flujos. `queryLimit` es el tope de uso razonable que se guarda en
        `queries_limit` (finito: el −1 bloquea la web y la app instalada); la
        pantalla dice «Ilimitadas». La letra de uso razonable no va en
        `features`: es `USO_RAZONABLE_ESTUDIO`, debajo de la lista. No incluye
@@ -271,7 +271,7 @@ export const PLANS = {
         flujosMes: FLUJOS_ESTUDIO,
         features: [
             'Consultas ilimitadas',
-            'IA de última generación: cada nueva generación de la IA Jurídica de Iurexia llega primero a Estudio',
+            'La inteligencia artificial más avanzada de Iurexia: cada nueva generación llega primero a Estudio',
             `${FLUJOS_ESTUDIO} flujos de trabajo/mes: escritos completos paso a paso`,
             'Todo lo del Plan Platinum incluido',
             '20 GB para tus expedientes',

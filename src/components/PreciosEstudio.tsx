@@ -236,7 +236,7 @@ export function NotaUsoRazonable() {
 export function EstudioFrentePlatinum({ onIndividual }: { onIndividual: () => void }) {
     const filas: [string, React.ReactNode, React.ReactNode][] = [
         ['Consultas al mes', `${CIFRAS_PLATINUM.consultas}`, 'Ilimitadas'],
-        ['IA de última generación, primero', '—', <Check key="ia" className="mx-auto h-4 w-4" strokeWidth={2.5} />],
+        ['Cada nueva generación de la IA, primero', '—', <Check key="ia" className="mx-auto h-4 w-4" strokeWidth={2.5} />],
         ['Flujos de trabajo al mes', `${CIFRAS_PLATINUM.flujos}`, `${FLUJOS_ESTUDIO}`],
         ['Espacio para expedientes', `${CIFRAS_PLATINUM.gb} GB`, `${GB_ESTUDIO} GB`],
         ['Hojas por documento', `${PAGINAS_ESTUDIO}`, `${PAGINAS_ESTUDIO}`],

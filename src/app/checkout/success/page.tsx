@@ -94,7 +94,7 @@ const PRO_THEME: PlanTheme = {
 const ESTUDIO_THEME: PlanTheme = {
     title: '¡Bienvenido a Iurexia Estudio!',
     subtitle: 'Tu suscripción al Plan Estudio ha sido activada.',
-    description: 'Tienes todo lo del Plan Platinum, con consultas ilimitadas y la IA de última generación. Recibirás un correo de confirmación con los detalles de tu suscripción.',
+    description: 'Tienes todo lo del Plan Platinum, con consultas ilimitadas y la inteligencia artificial más avanzada de Iurexia. Recibirás un correo de confirmación con los detalles de tu suscripción.',
     icon: 'check',
     iconBg: 'bg-green-100',
     iconColor: 'text-green-600',

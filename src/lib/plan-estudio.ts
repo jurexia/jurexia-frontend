@@ -1,7 +1,8 @@
 /* ═══ EL PLAN ESTUDIO (2-nov-2026) ══════════════════════════════════════════
    David, 2-nov-2026: lanzar hoy el Plan Estudio SIN tocar nada más del
-   catálogo. Estudio es Platinum y además: consultas ilimitadas, la IA de
-   última generación primero y 100 flujos de trabajo al mes. $1,499 al mes,
+   catálogo. Estudio es Platinum y además: consultas ilimitadas, la
+   inteligencia artificial más avanzada (cada generación nueva, primero) y
+   100 flujos de trabajo al mes. $1,499 al mes,
    sólo mensual. Stripe ya tiene el producto (prod_VYPXZl4MLsf1Tu) y el precio
    (price_1UXIiI3uD85CqvjMrXLzuClJ); el precio vive en `lib/stripe.ts`, como
    los demás.

@@ -18,7 +18,7 @@ const PLAN_FEATURES: Record<string, PlanFeatures> = {
         queries: 'consultas ilimitadas',
         highlights: [
             '∞ Consultas ilimitadas — las primeras 560 de cada mes con la IA Jurídica de Élite; después, sin límite con la IA Jurídica Avanzada. Uso razonable: hasta 100 al día',
-            '✦ IA de última generación — cada nueva generación de la IA Jurídica de Iurexia llega primero a Estudio',
+            '✦ La inteligencia artificial más avanzada de Iurexia — cada nueva generación llega primero a Estudio',
             '⚡ 100 flujos de trabajo al mes — demandas, contestaciones y agravios completos, parte por parte',
         ],
         features: [

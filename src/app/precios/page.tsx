@@ -471,7 +471,7 @@ export default function PreciosPage() {
                                     exclusivesTitle="SOLO EN ESTUDIO"
                                     exclusives={[
                                         ['Consultas ilimitadas', `Sin cupo mensual · Platinum: ${CIFRAS_PLATINUM.consultas}`],
-                                        ['IA de última generación', 'Cada nueva generación de la IA Jurídica llega primero a Estudio'],
+                                        ['La inteligencia artificial más avanzada de Iurexia', 'Cada nueva generación llega primero a Estudio'],
                                         [`${FLUJOS_ESTUDIO} flujos de trabajo al mes`, `Escritos completos · Platinum: ${CIFRAS_PLATINUM.flujos}`],
                                     ]}
                                     note={<NotaUsoRazonable />}
