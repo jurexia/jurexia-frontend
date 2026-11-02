@@ -325,7 +325,7 @@ export function TarjetaEstudio({ activa, animar = true }: { activa: boolean; ani
                                 {[
                                     { icono: HardDrive, texto: `${GB_ESTUDIO} GB para tus expedientes`, nota: `Platinum: ${PLATINUM.gb} GB` },
                                     { icono: FileStack, texto: `Documentos de hasta ${PAGINAS_ESTUDIO} hojas`, nota: null },
-                                    { icono: Headphones, texto: 'Soporte prioritario', nota: null },
+                                    { icono: Headphones, texto: 'Soporte VIP prioritario', nota: null },
                                 ].map(({ icono: Icono, texto, nota }) => (
                                     <li key={texto} className="flex items-start gap-2.5">
                                         <Icono className="mt-0.5 h-4 w-4 shrink-0 text-accent-gold" strokeWidth={1.8} />

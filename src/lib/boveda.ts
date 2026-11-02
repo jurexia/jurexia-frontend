@@ -52,6 +52,10 @@ export interface Cotizacion {
     mensaje_cuota: string | null
     pendientes_de_revision?: number
     sin_costo?: boolean
+    /** Sólo Plan Estudio con sus 560 de élite gastadas o sin cupo para esta
+     *  tarea (2-nov-2026): el aviso del freno, en vez de ofrecer una recarga que
+     *  no le abre la Bóveda. null para cualquier otro plan. */
+    freno?: { codigo: string; mensaje: string } | null
 }
 
 export interface BovedaCarpeta {

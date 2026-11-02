@@ -297,11 +297,16 @@ export default function SeccionBoveda({ carpetaId }: { carpetaId: string }) {
                 <div className="mt-4 rounded-lg border border-accent-gold/50 bg-accent-gold/10 px-4 py-3">
                     <p className="text-sm font-semibold text-charcoal-900">{textoCotizacion(cot)}</p>
                     <p className="mt-1 text-xs text-charcoal-700/70">
-                        {cot.sin_costo || cot.disponibles === null
-                            ? 'Sin costo para tu cuenta.'
-                            : `Te quedan ${cot.disponibles.toLocaleString('es-MX')} consultas.`}
-                        {cot.excede_cuota && cot.mensaje_cuota ? ` ${cot.mensaje_cuota}` : ''}
-                        {!cot.alcanza ? ' No te alcanzan: compra una recarga o espera tu siguiente periodo.' : ''}
+                        {cot.freno
+                            /* Plan Estudio frenado: su aviso, sin «te quedan 0» ni recarga. */
+                            ? cot.freno.mensaje
+                            : <>
+                                {cot.sin_costo || cot.disponibles === null
+                                    ? 'Sin costo para tu cuenta.'
+                                    : `Te quedan ${cot.disponibles.toLocaleString('es-MX')} consultas.`}
+                                {cot.excede_cuota && cot.mensaje_cuota ? ` ${cot.mensaje_cuota}` : ''}
+                                {!cot.alcanza ? ' No te alcanzan: compra una recarga o espera tu siguiente periodo.' : ''}
+                            </>}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
                         <button

@@ -276,7 +276,7 @@ export const PLANS = {
             'Todo lo del Plan Platinum incluido',
             '20 GB para tus expedientes',
             'Documentos de hasta 600 hojas',
-            'Soporte prioritario',
+            'Soporte VIP prioritario',
         ]
     }
 };

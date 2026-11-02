@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { X, Upload, FileText, File, Loader2, AlertCircle, Gavel } from 'lucide-react';
+import { fetchConSesion } from '@/lib/sesion-api';
 
 
 
@@ -81,7 +82,10 @@ export default function SentenciaModal({ isOpen, onClose, onSubmit, estado }: Se
         const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
         const formData = new FormData();
         formData.append('file', file);
-        const response = await fetch(`${API_URL}/extract-text`, { method: 'POST', body: formData });
+        // Con la sesión (2-nov-2026): a un Plan Estudio con sus 560 de élite gastadas
+        // la API ya no le pasa el PDF escaneado por el OCR de pago, y sólo lo sabe
+        // si el token viaja. Sin sesión se comporta como antes.
+        const response = await fetchConSesion(`${API_URL}/extract-text`, { method: 'POST', body: formData });
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ detail: 'Error desconocido' }));
             throw new Error(errorData.detail || `Error del servidor: ${response.status}`);
