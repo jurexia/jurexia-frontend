@@ -142,12 +142,25 @@ export const TEMAS: Tema[] = [
             'Cada cuenta tiene un proyecto de prueba gratis; si ya lo usó, el botón le muestra el plan. Platinum no lo incluye. ' +
             'En pantallas angostas el botón está dentro de «Más», en la barra de arriba.',
     },
+    // Plan Estudio (2-nov-2026). Lo que más se va a preguntar: qué es
+    // «ilimitado» de verdad y en qué se distingue de Platinum.
+    {
+        id: 'plan-estudio',
+        senales: ['qué incluye el plan estudio', 'las consultas son ilimitadas de verdad', 'plan para despachos', 'diferencia entre platinum y estudio'],
+        respuesta:
+            'El Plan Estudio cuesta $1,499 al mes (sólo mensual) y está pensado para despachos. Incluye todo lo del Plan Platinum y, además: ' +
+            'consultas ilimitadas, la IA de última generación (cada nueva generación de la IA Jurídica de Iurexia llega primero a Estudio) y 100 flujos de trabajo al mes; ' +
+            'también 20 GB para expedientes, documentos de hasta 600 hojas y soporte prioritario. ' +
+            'Las consultas ilimitadas son con uso razonable: las primeras 560 de cada mes van con la IA Jurídica de Élite; después siguen sin límite con la IA Jurídica Avanzada, ' +
+            'hasta 100 consultas al día y sin automatización ni extracción masiva. Pasadas esas 560, Bóveda, Cronología y la lectura de documentos escaneados esperan al siguiente periodo. ' +
+            'No incluye el Redactor PJF, que es de Ultra Secretarios. Se contrata en la página de Planes, pestaña «Estudio».',
+    },
     {
         id: 'archivo',
         senales: ['no puedo subir mi archivo', 'no me acepta el documento', 'el pdf es muy grande'],
         respuesta:
             'En el chat se adjunta un documento por consulta: PDF o Word (.doc y .docx), de hasta 25 MB, con el clip de la caja o arrastrándolo a la ventana. ' +
-            'Cada plan lee hasta cierto número de hojas: Gratuito 20, Básico 50, Pro 100 y Platinum 600. En el plan Gratuito, de un documento más largo se leen las primeras 20 hojas y la respuesta lo dice. ' +
+            'Cada plan lee hasta cierto número de hojas: Gratuito 20, Básico 50, Pro 100, y Platinum y Estudio 600. En el plan Gratuito, de un documento más largo se leen las primeras 20 hojas y la respuesta lo dice. ' +
             'Si es un archivo de texto u otro formato, guárdelo como PDF o Word y vuelva a subirlo.',
     },
     {
@@ -275,15 +288,16 @@ LA CAJA DE CONSULTA
   «Encender todas». La elección se queda guardada en ese navegador. Quinta fila:
   Internet (sitios oficiales), desde plan Pro; arranca apagada en cada carga.
 · Esfuerzo — con qué fuerza se redacta un escrito: Básico (todos), Pro (desde
-  Pro) y Platinum (Platinum y Ultra). Sólo cuenta cuando se pide un escrito.
+  Pro) y Platinum (Platinum, Estudio y Ultra). Sólo cuenta cuando se pide un
+  escrito.
 · Micrófono — dictado en español; funciona en Chrome y Safari.
 · Clip — UN documento por consulta: PDF o Word (.doc, .docx), hasta 25 MB.
   También se puede arrastrar a la ventana. Hojas que se leen: Gratuito 20,
-  Básico 50, Pro 100, Platinum y Ultra 600 (en Gratuito, de un documento más
+  Básico 50, Pro 100, Platinum, Estudio y Ultra 600 (en Gratuito, de un documento más
   largo se leen las primeras 20 hojas y se avisa). No acepta TXT.
 · «Desplegar herramientas» (o «Herramientas»), bajo la caja, abre seis. Desde
-  el 12-oct-2026 todas, salvo Escrito legal, son del plan Platinum (y Ultra);
-  en Pro se ven con candado:
+  el 12-oct-2026 todas, salvo Escrito legal, son del plan Platinum (y de
+  Estudio y Ultra, que lo incluyen); en Pro se ven con candado:
   - Escrito legal — formulario para Demanda, Amparo, Impugnación, Contrato,
     Petición u oficio y Denuncia disciplinaria. Todos los planes.
   - Sentencia — audita una resolución AJENA (se arrastra o se pega) frente a los
@@ -317,7 +331,7 @@ LA BARRA IZQUIERDA
 · Flujos de trabajo — construyen un escrito completo por pasos: amparo
   indirecto, amparo directo, contestación de demanda, agravios de apelación,
   revisión de contrato, teoría del caso (penal acusatorio) e investigación y
-  dictamen. Pro 30 al mes; Platinum y Ultra 60. Iniciar un flujo gasta uno del
+  dictamen. Pro 30 al mes; Platinum y Ultra 60; Estudio 100. Iniciar un flujo gasta uno del
   mes y ninguna consulta.
 · Mis carpetas y la lista de carpetas: cada carpeta despliega sus consultas,
   «Nueva consulta aquí» y «Documentos y análisis». Tipos: Cliente, Asunto o
@@ -337,7 +351,7 @@ MIS CARPETAS (página)
   cuenta una consulta), consultas de la carpeta, «Redactar» (incidentes,
   medidas provisionales, contestación de vistas, apelaciones) y documentos
   (subir uno cuenta una consulta). Espacio: Gratuito 20 MB, Básico 100, Pro 500,
-  Platinum y Ultra 2 GB.
+  Platinum 2 GB, Estudio y Ultra 20 GB.
 · Seguimiento — por ahora, órganos del Poder Judicial de la Federación. Se revisa
   cada día a las 9:10 (hora de la Ciudad de México) y llega un correo sólo si hay
   algo nuevo.
@@ -353,9 +367,18 @@ PLANES (precios en pesos; anual = cupo mensual igual, pagado por año)
 · Pro — $149 al mes o $1,490 al año. 140 consultas; 100 hojas; internet y
   esfuerzo Pro; 30 flujos al mes. Desde el 12-oct-2026 NO incluye Sentencia,
   Precedentes, Jurimetría, Cronología, Bóveda ni Toulmin.
-· Platinum — $599 al mes o $5,990 al año. 560 consultas; 600 hojas; todo lo de
-  Pro, esfuerzo Platinum y, en exclusiva, Sentencia, Precedentes por circuito,
-  Jurimetría, Cronología, Bóveda y Toulmin; 60 flujos.
+· Platinum — $599 al mes o $5,990 al año. Para abogados exigentes. 560
+  consultas; 600 hojas; 2 GB; todo lo de Pro, esfuerzo Platinum y, en
+  exclusiva, Sentencia, Precedentes por circuito, Jurimetría, Cronología, Bóveda
+  y Toulmin; 60 flujos.
+· Estudio — $1,499 al mes (sólo mensual). Para despachos. Todo lo de Platinum y
+  además: consultas ilimitadas, la IA de última generación primero y 100 flujos
+  al mes; 20 GB; 600 hojas; soporte prioritario. Uso razonable: las primeras 560
+  consultas del mes con la IA Jurídica de Élite y después sin límite con la IA
+  Jurídica Avanzada; hasta 100 al día; sin automatización ni extracción masiva.
+  Pasadas las 560, Bóveda, Cronología y la lectura de documentos escaneados
+  esperan al siguiente periodo. En /precios, pestaña «Estudio». No incluye el
+  Redactor PJF.
 · Ultra Secretarios — $999 al mes. Lo de Platinum más el Redactor PJF con 40
   proyectos al mes.
 · Subir de plan es inmediato; bajar aplica en el siguiente ciclo. Se paga con

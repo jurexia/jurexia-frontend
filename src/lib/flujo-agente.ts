@@ -1,5 +1,6 @@
 import { getSession } from './supabase'
 import { esObligatorio, type CampoFlujo, type FlujoTrabajo } from './flujos'
+import { FLUJOS_ESTUDIO, PLAN_ESTUDIO } from './plan-estudio'
 
 /**
  * El agente de un flujo de trabajo, del lado de la pantalla (25-sep-2026).
@@ -199,11 +200,15 @@ export function valoresIniciales(
     return salida
 }
 
-// ─── El saldo de flujos del mes (Pro 30, Platinum 60) ────────────────────────
+// ─── El saldo de flujos del mes (Pro 30, Platinum 60, Estudio 100) ───────────
 
-/** Espejo de `public.limite_flujos` (Supabase) y de `limite_flujos` (API). */
+/** Espejo de `public.limite_flujos` (Supabase) y de `limite_flujos` (API).
+ *  Estudio va ANTES del prefijo «platinum», que le daría 60 (2-nov-2026). La
+ *  pantalla dice 100 desde aquí; quien gasta el flujo es `consumir_flujo` en
+ *  la base, así que `limite_flujos` tiene que decir 100 también. */
 export function limiteFlujos(plan: string | null | undefined): number {
     const p = (plan ?? '').trim()
+    if (p === PLAN_ESTUDIO) return FLUJOS_ESTUDIO
     if (p.startsWith('platinum') || p === 'ultra_secretarios') return 60
     if (p.startsWith('pro')) return 30
     return 0

@@ -33,8 +33,10 @@ export const EVENTO_ESFUERZO = 'iurexia:esfuerzo';
    valor por omisión, quien sube de Pro a Platinum se quedaría en Pro. */
 let enPantalla: Esfuerzo | null = null;
 
-const PLANES_PRO = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
-const PLANES_PLATINUM = ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
+// Estudio (2-nov-2026) tiene el techo de Platinum. Pasadas sus 560 consultas
+// de élite la API redacta con el motor de Pro aunque aquí diga Platinum.
+const PLANES_PRO = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios', 'platinum_estudio'];
+const PLANES_PLATINUM = ['platinum_monthly', 'platinum_annual', 'ultra_secretarios', 'platinum_estudio'];
 
 /** El escalón más alto que permite el plan. */
 export function techoDelPlan(plan?: string | null, correo?: string | null): Esfuerzo {

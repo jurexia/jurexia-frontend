@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Crown, ShieldCheck } from 'lucide-react';
+import { CONSULTAS_ELITE_ESTUDIO, FLUJOS_ESTUDIO, esEstudio } from '@/lib/plan-estudio';
 
 /* ═══ EL AVISO DE LÍMITE, CON EL PLAN DE QUIEN LO LEE (7-oct-2026) ═══
    Eran dos copias casi iguales en chat/page.tsx y las dos mentían a quien paga:
@@ -17,7 +18,14 @@ import { Crown, ShieldCheck } from 'lucide-react';
    Ahora se pinta el plan y el cupo reales, y se recomienda el plan de ARRIBA:
    Pro a quien tiene Básico, Platinum a quien tiene Pro. A Platinum y a Ultra
    no hay plan con más consultas que ofrecerles: se les dice y se les da el
-   correo de soporte. Cifras y precios: los de /precios y PLAN_CONFIG. */
+   correo de soporte. Cifras y precios: los de /precios y PLAN_CONFIG.
+
+   PLATINUM → ESTUDIO (2-nov-2026). Desde que existe Estudio, a Platinum sí
+   hay algo arriba: consultas ilimitadas. Se le ofrece con el enlace que abre
+   /precios en la pestaña Estudio. A Ultra no: Estudio no trae el taller de
+   sentencias por el que paga. Y quien ya es Estudio sólo llega aquí en el
+   tope de uso razonable (3,100 al mes) o si el servidor lo frena: se le dice
+   así, sin hablar de «tus N consultas», y se le da el correo de soporte. */
 
 const NOMBRE: Record<string, string> = {
     gratuito: 'Gratuito',
@@ -28,12 +36,16 @@ const NOMBRE: Record<string, string> = {
     platinum_monthly: 'Platinum',
     platinum_annual: 'Platinum anual',
     ultra_secretarios: 'Ultra Secretarios',
+    platinum_estudio: 'Estudio',
 };
 
 type Mejora = {
     nombre: string;
-    consultas: number;
+    /** Número, o el texto que lo sustituye («Ilimitadas»). */
+    consultas: number | string;
     precio: string;
+    /** A dónde lleva el botón; /precios si no se dice. */
+    enlace?: string;
     distintivo?: string;
     ventajas: { icono: string; titulo: string; detalle: string }[];
 };
@@ -61,8 +73,22 @@ const PLATINUM: Mejora = {
     ],
 };
 
+const ESTUDIO: Mejora = {
+    nombre: 'Estudio',
+    consultas: 'Ilimitadas',
+    precio: '$1,499/mes',
+    distintivo: 'Para despachos',
+    enlace: '/precios?plan=estudio',
+    ventajas: [
+        { icono: '∞', titulo: 'Consultas ilimitadas', detalle: `Las primeras ${CONSULTAS_ELITE_ESTUDIO} de cada mes con la IA Jurídica de Élite; después, sin límite con la IA Jurídica Avanzada` },
+        { icono: '✦', titulo: 'IA de última generación', detalle: 'Cada nueva generación de la IA Jurídica de Iurexia llega primero a Estudio' },
+        { icono: '⚡', titulo: `${FLUJOS_ESTUDIO} flujos de trabajo al mes`, detalle: 'Y 20 GB para tus expedientes, con todo lo de Platinum' },
+    ],
+};
+
 function mejoraDe(plan: string): Mejora | null {
-    if (plan.startsWith('platinum') || plan === 'ultra_secretarios') return null;
+    if (esEstudio(plan) || plan === 'ultra_secretarios') return null;
+    if (plan.startsWith('platinum')) return ESTUDIO;
     if (plan.startsWith('pro')) return PLATINUM;
     return PRO;
 }
@@ -82,6 +108,7 @@ export default function AvisoLimitePlan({
     const clave = plan || 'gratuito';
     const nombre = NOMBRE[clave] ?? 'Tu plan';
     const mejora = mejoraDe(clave);
+    const estudio = esEstudio(clave);
 
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md px-4">
@@ -97,7 +124,9 @@ export default function AvisoLimitePlan({
                     <p className="text-white/50 text-xs text-center">
                         {causa === 'servidor'
                             ? 'La consulta no pudo completarse — límite de plan alcanzado'
-                            : `Usaste las ${limite} consultas de tu plan ${nombre} en este periodo`}
+                            : estudio
+                                ? 'Llegaste al tope de uso razonable de tu plan Estudio en este periodo'
+                                : `Usaste las ${limite} consultas de tu plan ${nombre} en este periodo`}
                     </p>
                 </div>
 
@@ -106,8 +135,8 @@ export default function AvisoLimitePlan({
                         <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                             <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wider mb-2">Tu plan actual</p>
                             <p className="text-white font-bold text-sm">{nombre}</p>
-                            <p className="text-white/40 text-xs mt-1">{limite} consultas/mes</p>
-                            <p className="text-red-400/80 text-xs mt-2 font-medium">0 restantes</p>
+                            <p className="text-white/40 text-xs mt-1">{estudio ? 'Consultas ilimitadas, con uso razonable' : `${limite} consultas/mes`}</p>
+                            <p className="text-red-400/80 text-xs mt-2 font-medium">{estudio ? 'Tope de uso razonable' : '0 restantes'}</p>
                         </div>
                         {mejora && (
                             <div className="bg-accent-gold/10 border border-accent-gold/30 rounded-xl p-4 relative">
@@ -116,7 +145,9 @@ export default function AvisoLimitePlan({
                                 )}
                                 <p className="text-[10px] font-semibold text-accent-gold uppercase tracking-wider mb-2">Recomendado</p>
                                 <p className="text-white font-bold text-sm">{mejora.nombre}</p>
-                                <p className="text-accent-gold/80 text-xs mt-1">{mejora.consultas} consultas/mes</p>
+                                <p className="text-accent-gold/80 text-xs mt-1">
+                                    {typeof mejora.consultas === 'number' ? `${mejora.consultas} consultas/mes` : `Consultas ${mejora.consultas.toLowerCase()}`}
+                                </p>
                                 <p className="text-accent-gold text-sm mt-2 font-bold">{mejora.precio}</p>
                             </div>
                         )}
@@ -137,7 +168,7 @@ export default function AvisoLimitePlan({
                             </div>
 
                             <Link
-                                href="/precios"
+                                href={mejora.enlace ?? '/precios'}
                                 className="block w-full py-3.5 rounded-xl text-center font-bold text-base transition-all duration-200 hover:scale-[1.02] active:scale-95 mb-3"
                                 style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c56d)', color: '#1a1a1a' }}
                             >
@@ -147,8 +178,10 @@ export default function AvisoLimitePlan({
                     ) : (
                         <>
                             <p className="text-white/60 text-sm leading-relaxed text-center mb-5">
-                                Ya tienes el plan con más consultas de Iurexia. Si este periodo necesitas
-                                más, escríbenos y lo resolvemos contigo.
+                                {estudio
+                                    ? 'Tus consultas son ilimitadas con uso razonable: hasta 100 al día, sin automatización ni extracción masiva. Si tu despacho necesita más este periodo, escríbenos y lo resolvemos contigo.'
+                                    // Sólo Ultra llega aquí: con Estudio ya no es «el plan con más consultas».
+                                    : 'Llegaste al tope de consultas de tu plan en este periodo. Si necesitas más, escríbenos y lo resolvemos contigo.'}
                             </p>
                             <a
                                 href="mailto:soporte@iurexia.com"

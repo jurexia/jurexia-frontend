@@ -272,6 +272,9 @@ export const CUOTA_MB: Record<string, number> = {
     // venden 20 GB. Tenía los 2 GB de Platinum copiados. La app móvil
     // (iurexia-mobile/src/lib/expedientes.ts) conserva 2048 hasta su próxima versión.
     ultra_secretarios: 20480,
+    // Estudio (2-nov-2026): 20 GB, como Ultra. Sin esta línea caería en los
+    // 20 MB del gratuito (`cuotaDe`), y la tarjeta vende 20 GB.
+    platinum_estudio: 20480,
 }
 
 export function cuotaDe(plan: string | null | undefined): number {
@@ -295,6 +298,8 @@ export const PAGINAS_POR_PLAN: Record<string, number> = {
     platinum_monthly: 600,
     platinum_annual: 600,
     ultra_secretarios: 600,
+    // Estudio, las de Platinum (2-nov-2026). Sin la línea serían las 20 del gratuito.
+    platinum_estudio: 600,
 }
 
 export function paginasDe(plan: string | null | undefined): number {

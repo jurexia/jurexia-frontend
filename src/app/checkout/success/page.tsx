@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, ArrowRight, Loader2, Diamond } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
+import { FLUJOS_ESTUDIO, esEstudio } from '@/lib/plan-estudio';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Plan-specific theme configuration
@@ -88,6 +89,30 @@ const PRO_THEME: PlanTheme = {
     ctaHref: '/chat?bienvenida=1',
 };
 
+// El Plan Estudio (2-nov-2026). Sin esto caía en «¡Bienvenido a Iurexia Pro!»:
+// a quien acaba de pagar $1,499 se le daba la bienvenida al plan de $149.
+const ESTUDIO_THEME: PlanTheme = {
+    title: '¡Bienvenido a Iurexia Estudio!',
+    subtitle: 'Tu suscripción al Plan Estudio ha sido activada.',
+    description: 'Tienes todo lo del Plan Platinum, con consultas ilimitadas y la IA de última generación. Recibirás un correo de confirmación con los detalles de tu suscripción.',
+    icon: 'check',
+    iconBg: 'bg-green-100',
+    iconColor: 'text-green-600',
+    pageBg: 'bg-cream-300',
+    titleColor: 'text-charcoal-900',
+    buttonBg: 'bg-accent-brown',
+    buttonHover: 'hover:bg-accent-brown/90',
+    features: [
+        'Consultar sin límite mensual, con uso razonable',
+        'Recibir primero cada nueva generación de la IA Jurídica de Iurexia',
+        `Iniciar ${FLUJOS_ESTUDIO} flujos de trabajo al mes`,
+        'Usar Sentencia, Precedentes, Jurimetría, Cronología, Bóveda y Toulmin',
+        'Guardar hasta 20 GB de expedientes',
+    ],
+    ctaText: 'Comenzar a usar Iurexia',
+    ctaHref: '/chat?bienvenida=1',
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // Diamond animation component (Ultra only)
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -128,7 +153,9 @@ function CheckoutSuccessContent() {
     // Determine plan type from profile
     const isUltra = profile?.subscription_type === 'ultra_secretarios';
     const isBasico = profile?.subscription_type === 'basico_monthly';
-    const theme = isUltra ? ULTRA_THEME : isBasico ? BASICO_THEME : PRO_THEME;
+    const theme = isUltra ? ULTRA_THEME
+        : esEstudio(profile?.subscription_type) ? ESTUDIO_THEME
+        : isBasico ? BASICO_THEME : PRO_THEME;
 
     useEffect(() => {
         if (sessionId) {

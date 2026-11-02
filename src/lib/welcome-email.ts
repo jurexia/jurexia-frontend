@@ -11,6 +11,24 @@ interface PlanFeatures {
 }
 
 const PLAN_FEATURES: Record<string, PlanFeatures> = {
+    // Plan Estudio (2-nov-2026). Sin esta entrada el correo de bienvenida caía
+    // en `pro_monthly` y le describía Pro a quien acaba de pagar Estudio.
+    platinum_estudio: {
+        label: 'ESTUDIO',
+        queries: 'consultas ilimitadas',
+        highlights: [
+            '∞ Consultas ilimitadas — las primeras 560 de cada mes con la IA Jurídica de Élite; después, sin límite con la IA Jurídica Avanzada. Uso razonable: hasta 100 al día',
+            '✦ IA de última generación — cada nueva generación de la IA Jurídica de Iurexia llega primero a Estudio',
+            '⚡ 100 flujos de trabajo al mes — demandas, contestaciones y agravios completos, parte por parte',
+        ],
+        features: [
+            '🏛️ Todo lo del Plan Platinum: Sentencia, Precedentes, Jurimetría, Cronología, Bóveda y Toulmin',
+            '📁 20 GB para tus expedientes y documentos de hasta 600 hojas',
+            '📋 Registro Connect — Registra tu cédula profesional para aparecer en nuestro directorio y conectar con clientes potenciales',
+            '🛡️ Soporte prioritario por correo electrónico',
+        ],
+        exclusive: '💼 <strong>Consulta Legal Estratégica</strong> — Como suscriptor Estudio, tienes acceso exclusivo a consulta directa con un abogado del equipo legal de Iurexia vía correo electrónico. Escríbenos a <a href="mailto:soporte@iurexia.com" style="color:#c9a84c;text-decoration:none;">soporte@iurexia.com</a> con tu caso y te responderemos a la brevedad.',
+    },
     platinum_monthly: {
         label: 'PLATINUM',
         queries: '560 consultas/mes',
@@ -194,7 +212,7 @@ export function buildWelcomeEmail(params: {
                             <!-- Exclusive feature (Platinum) -->
                             <div style="background-color:#1a1520;border:1px solid #c9a84c40;border-left:4px solid #c9a84c;border-radius:12px;padding:24px;margin-bottom:24px;">
                                 <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#c9a84c;">
-                                    🌟 Exclusivo Platinum
+                                    🌟 Exclusivo ${planType === 'platinum_estudio' ? 'Estudio' : 'Platinum'}
                                 </p>
                                 <p style="margin:0;font-size:14px;color:#ccc;line-height:1.7;">
                                     ${plan.exclusive}

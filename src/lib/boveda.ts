@@ -17,7 +17,9 @@ import { supabase } from '@/lib/supabase'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1390'
 
-export const PLANES_PLATINUM = ['platinum_monthly', 'platinum_annual', 'ultra_secretarios']
+// Estudio incluido (2-nov-2026): tiene todo lo de Platinum. La API la frena
+// desde la consulta 560 del periodo; aquí no se adivina, se pinta su mensaje.
+export const PLANES_PLATINUM = ['platinum_monthly', 'platinum_annual', 'ultra_secretarios', 'platinum_estudio']
 
 export type EstadoDocumento =
     | 'subiendo' | 'subido' | 'revisando' | 'revisado'

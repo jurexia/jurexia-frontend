@@ -666,6 +666,7 @@ const ALMACENAMIENTO: Record<string, { plan: string; espacio: string }> = {
     platinum_monthly: { plan: 'Platinum', espacio: '2 GB' },
     platinum_annual: { plan: 'Platinum', espacio: '2 GB' },
     ultra_secretarios: { plan: 'Ultra Secretarios', espacio: '20 GB' },
+    platinum_estudio: { plan: 'Estudio', espacio: '20 GB' },
 };
 
 export function correoActualizacion(d: Destinatario): Correo {

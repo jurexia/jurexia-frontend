@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { PREFIJO_CIERRE_SOLICITADO } from '@/lib/cierre-cuenta'
+import { TOPE_CONSULTAS_ESTUDIO } from '@/lib/plan-estudio'
 
 // Server-side Supabase client with service_role key
 // This client bypasses Row Level Security (RLS) - use ONLY in server-side code (API routes, webhooks)
@@ -63,6 +64,12 @@ export const PLAN_CONFIG = {
     // 560. Quien lo hubiera comprado habría recibido menos chat que alguien
     // pagando 599.
     ultra_secretarios: { queriesLimit: 560, draftsLimit: 20, sentenciaQueriesLimit: 50, isUnlimited: false, proyectosMes: 40 },
+    // PLAN ESTUDIO (2-nov-2026): consultas ilimitadas con uso razonable. Se
+    // guarda un tope FINITO (3,100 = 100 al día × 31) y no −1: con −1 el chat
+    // de la web abre el aviso de límite y la app instalada bloquea. Desde la
+    // 560 del periodo la API pasa al motor de Pro y frena Bóveda, Cronología
+    // y OCR (ver `lib/plan-estudio.ts`). Sin taller de sentencias: 0 proyectos.
+    platinum_estudio: { queriesLimit: TOPE_CONSULTAS_ESTUDIO, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: true, proyectosMes: 0 },
 } as const;
 
 export type PlanType = keyof typeof PLAN_CONFIG;
@@ -101,10 +108,14 @@ export async function updateUserSubscription(
     // MEJOR de los dos: el premio nunca degrada, y Stripe nunca se degrada
     // por culpa del premio. Si el usuario contrató de verdad algo superior,
     // ese manda y el premio simplemente queda por debajo.
+    //
+    // Estudio va por encima de Platinum (2-nov-2026): un premio de Platinum
+    // (rango 3) no puede pisar a quien paga Estudio y dejarlo en 560.
     const RANGO: Record<string, number> = {
         gratuito: 0, basico_monthly: 1,
         pro_monthly: 2, pro_annual: 2, ultra_secretarios: 2,
         platinum_monthly: 3, platinum_annual: 3,
+        platinum_estudio: 4,
     };
 
     if (subscriptionType !== 'gratuito') {

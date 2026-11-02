@@ -82,6 +82,10 @@ export const PLAN_REGALO = 'pro_monthly';
  */
 export function planDelPremio(planActual: string): string {
     const p = (planActual || 'gratuito').toLowerCase();
+    // Estudio antes que el prefijo (2-nov-2026): a quien ya es Estudio el
+    // premio sería «más Estudio», nunca Platinum. `otorgarPremio` no lo otorga
+    // (mismo rango), igual que el Platinum a quien ya es Platinum.
+    if (p === 'platinum_estudio') return 'platinum_estudio';
     if (p.startsWith('platinum') || p === 'ultra_secretarios') return 'platinum_monthly';
     if (p.startsWith('pro')) return 'platinum_monthly';
     return PLAN_REGALO;
@@ -98,6 +102,7 @@ export const PLANES_QUE_CUENTAN = [
     'pro_monthly', 'pro_annual',
     'platinum_monthly', 'platinum_annual',
     'ultra_secretarios',
+    'platinum_estudio',
 ];
 
 /** El peldaño más alto alcanzado con N invitados activos, o null. */

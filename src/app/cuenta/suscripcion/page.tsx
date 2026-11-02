@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { openCustomerPortal } from '@/lib/stripe-client';
 import { consultarSuscripcion, fechaLarga, type EstadoSuscripcion } from '@/lib/suscripcion-estado';
+import { consultasIlimitadas } from '@/lib/plan-estudio';
 
 type SubscriptionInfo = EstadoSuscripcion;
 
@@ -169,10 +170,15 @@ export default function SubscriptionPage() {
                             <div className="flex justify-between text-sm mb-2">
                                 <span className="text-charcoal-600">Consultas realizadas</span>
                                 <span className="font-medium text-charcoal-900">
-                                    {profile ? `${profile.queries_used ?? 0} / ${profile.queries_limit ?? 5}` : '...'}
+                                    {/* Estudio dice «Ilimitadas» y no lleva barra: su
+                                        `queries_limit` es el tope de uso razonable (2-nov-2026). */}
+                                    {!profile ? '...'
+                                        : consultasIlimitadas(profile.subscription_type)
+                                            ? `${profile.queries_used ?? 0} · Ilimitadas`
+                                            : `${profile.queries_used ?? 0} / ${profile.queries_limit ?? 5}`}
                                 </span>
                             </div>
-                            {profile && (
+                            {profile && !consultasIlimitadas(profile.subscription_type) && (
                                 <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-accent-brown rounded-full transition-all"

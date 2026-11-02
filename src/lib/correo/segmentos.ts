@@ -105,7 +105,7 @@ function filtrar(q: any, campania: NombreCampania) {
     if (campania === 'vitrina') {
         const hace60 = new Date(Date.now() - 60 * 86400_000).toISOString();
         return q.eq('is_active', true)
-                .or(`subscription_type.in.(basico_monthly,pro_monthly,pro_annual,platinum_monthly,platinum_annual,ultra_secretarios),last_query_at.gte."${hace60}"`); // entre comillas: la fecha lleva «:» y «.», reservados en `or`
+                .or(`subscription_type.in.(basico_monthly,pro_monthly,pro_annual,platinum_monthly,platinum_annual,ultra_secretarios,platinum_estudio),last_query_at.gte."${hace60}"`); // entre comillas: la fecha lleva «:» y «.», reservados en `or`
     }
 
 
@@ -122,6 +122,7 @@ function filtrar(q: any, campania: NombreCampania) {
                     'basico_monthly', 'basico_annual',
                     'pro_monthly', 'pro_annual',
                     'platinum_monthly', 'platinum_annual',
+                    'platinum_estudio',   // 2-nov-2026: también paga
                 ]);
     }
 

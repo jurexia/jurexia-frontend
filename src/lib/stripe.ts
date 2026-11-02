@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import { FLUJOS_ESTUDIO, TOPE_CONSULTAS_ESTUDIO, consultasIlimitadas } from './plan-estudio';
 
 // Lazy-initialized Stripe instance (prevents build errors when env vars are missing)
 let stripeInstance: Stripe | null = null;
@@ -87,6 +88,9 @@ const PROMOTION_PRICE_IDS: Record<string, string> = {
     STRIPE_PRICE_PLATINUM_MONTHLY: 'price_1Sy2l03uD85CqvjMMJ4mFqhw', // $599 MXN
     STRIPE_PRICE_PLATINUM_ANNUAL: 'price_1Sy2kw3uD85CqvjM45ZABmfE', // $5,990 MXN
     STRIPE_PRICE_ULTRA_SECRETARIOS: 'price_1T2MzR3uD85CqvjMW6MK8OyG', // $999 MXN
+    // Plan Estudio (2-nov-2026): producto prod_VYPXZl4MLsf1Tu, sólo mensual.
+    // El $2,000 de la tarjeta es el tachado de /precios, no un precio de Stripe.
+    STRIPE_PRICE_ESTUDIO_MONTHLY: 'price_1UXIiI3uD85CqvjMrXLzuClJ', // $1,499 MXN
 };
 
 // Resolve price IDs at runtime (NOT at module load/build time)
@@ -200,7 +204,9 @@ export const PLANS = {
         interval: 'month' as const,
         queryLimit: 560,
         features: [
-            '560 consultas/mes — ideal para despachos',
+            // «para despachos» es ahora Estudio (2-nov-2026): Platinum se
+            // queda con el abogado exigente.
+            '560 consultas/mes — para abogados exigentes',
             '60 flujos de trabajo/mes: escritos completos paso a paso',
             'IA Jurídica de Élite (Máxima precisión argumentativa)',
             'Todo lo del Plan Pro incluido',
@@ -247,6 +253,31 @@ export const PLANS = {
             '20 GB para tus expedientes',
             'Soporte dedicado'
         ]
+    },
+    /* EL PLAN ESTUDIO (2-nov-2026), ver `lib/plan-estudio.ts`. Platinum y
+       además consultas ilimitadas, la IA de última generación primero y 100
+       flujos. `queryLimit` es el tope de uso razonable que se guarda en
+       `queries_limit` (finito: el −1 bloquea la web y la app instalada); la
+       pantalla dice «Ilimitadas». La letra de uso razonable no va en
+       `features`: es `USO_RAZONABLE_ESTUDIO`, debajo de la lista. No incluye
+       el taller de sentencias de Ultra. */
+    platinum_estudio: {
+        name: 'Plan Estudio',
+        get priceId() { return getPriceId('STRIPE_PRICE_ESTUDIO_MONTHLY'); },
+        price: 1499,
+        currency: 'MXN',
+        interval: 'month' as const,
+        queryLimit: TOPE_CONSULTAS_ESTUDIO,
+        flujosMes: FLUJOS_ESTUDIO,
+        features: [
+            'Consultas ilimitadas',
+            'IA de última generación: cada nueva generación de la IA Jurídica de Iurexia llega primero a Estudio',
+            `${FLUJOS_ESTUDIO} flujos de trabajo/mes: escritos completos paso a paso`,
+            'Todo lo del Plan Platinum incluido',
+            '20 GB para tus expedientes',
+            'Documentos de hasta 600 hojas',
+            'Soporte prioritario',
+        ]
     }
 };
 
@@ -262,6 +293,9 @@ export const PLAN_RANK: Record<PlanId, number> = {
     platinum_monthly: 5,
     platinum_annual: 6,
     ultra_secretarios: 7,
+    // Por encima de Ultra por precio (2-nov-2026). Quien pase de Ultra a
+    // Estudio deja el taller de sentencias: Estudio no lo trae.
+    platinum_estudio: 8,
 };
 
 /** Returns true if newPlan is strictly higher tier than currentPlan */
@@ -308,8 +342,10 @@ export function getPlanFromSubscription(subscription: Stripe.Subscription | null
 }
 
 // Check if plan has unlimited queries
+// Estudio guarda un tope finito (3,100) y aun así es «ilimitado»: lo que
+// dice la pantalla lo decide `consultasIlimitadas`, no el número.
 export function hasUnlimitedQueries(planId: PlanId): boolean {
-    return PLANS[planId].queryLimit === -1;
+    return PLANS[planId].queryLimit === -1 || consultasIlimitadas(planId);
 }
 
 // Get query limit for a plan

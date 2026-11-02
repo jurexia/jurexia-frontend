@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { candadoDeSesion, fetchDeSesion } from '@/lib/candado-sesion'
+import { consultasIlimitadas } from '@/lib/plan-estudio'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -142,7 +143,7 @@ export interface UserProfile {
     email: string;
     full_name: string | null;
     estado: string | null;
-    subscription_type: 'gratuito' | 'basico_monthly' | 'pro_monthly' | 'pro_annual' | 'platinum_monthly' | 'platinum_annual' | 'ultra_secretarios';
+    subscription_type: 'gratuito' | 'basico_monthly' | 'pro_monthly' | 'pro_annual' | 'platinum_monthly' | 'platinum_annual' | 'ultra_secretarios' | 'platinum_estudio';
     queries_used: number;
     queries_limit: number;
     drafts_used: number;
@@ -315,16 +316,17 @@ export async function getSubscriptionInfo(userId: string) {
         type: profile.subscription_type,
         queriesUsed: profile.queries_used,
         queriesLimit: profile.queries_limit,
-        isUnlimited: false,
+        isUnlimited: consultasIlimitadas(profile.subscription_type),
         isActive: profile.is_active,
         startDate: profile.subscription_start,
         endDate: profile.subscription_end
     }
 }
 
-// Helper to check if a plan type is unlimited (no plans are unlimited now)
+// Helper to check if a plan type is unlimited. Sólo Estudio (2-nov-2026), y
+// con tope finito de uso razonable en `queries_limit`: ver `lib/plan-estudio.ts`.
 export function isUnlimitedPlan(subscriptionType: string): boolean {
-    return false;
+    return consultasIlimitadas(subscriptionType);
 }
 
 // Helper to check if a plan is the Ultra Secretarios plan

@@ -25,6 +25,7 @@ import { createClient } from '@supabase/supabase-js';
 const PLANES_DE_PAGO = [
     'basico_monthly', 'pro_monthly', 'pro_annual',
     'platinum_monthly', 'platinum_annual', 'ultra_secretarios',
+    'platinum_estudio',
 ];
 
 /** «miguel@tbblaw.net» → «mig•••••@tbblaw.net» */

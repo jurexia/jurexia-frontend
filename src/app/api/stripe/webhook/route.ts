@@ -56,6 +56,10 @@ function mapPlanIdToSubscriptionType(planId: PlanId): PlanType {
         platinum_monthly: 'platinum_monthly',
         platinum_annual: 'platinum_annual',
         ultra_secretarios: 'ultra_secretarios',
+        // Plan Estudio (2-nov-2026). Ojo: la base sólo lo acepta con el CHECK
+        // `user_profiles_subscription_type_check` ampliado; sin esa migración
+        // el `update` de abajo falla y Stripe reintenta el evento.
+        platinum_estudio: 'platinum_estudio',
     };
     return mapping[planId] || 'gratuito';
 }
@@ -377,6 +381,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
             platinum_monthly: PLANS.platinum_monthly.priceId,
             platinum_annual: PLANS.platinum_annual.priceId,
             ultra_secretarios: PLANS.ultra_secretarios.priceId,
+            platinum_estudio: PLANS.platinum_estudio.priceId,
         });
         // Don't return — still try to update with whatever we have, but the warning is logged
     }
@@ -531,6 +536,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
             platinum_monthly: 'Platinum',
             platinum_annual: 'Platinum Anual',
             ultra_secretarios: 'Ultra Secretarios',
+            platinum_estudio: 'Estudio',
         };
 
         const apiKey = process.env.RESEND_API_KEY;

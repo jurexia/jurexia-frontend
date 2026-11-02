@@ -12,6 +12,7 @@ import { updatePassword } from '@/lib/supabase';
 import ConnectLawyerSection from '@/components/ConnectLawyerSection';
 import AdminLawyerPanel from '@/components/AdminLawyerPanel';
 import { fuenteTitulo, fuenteTexto } from '@/lib/fuentes-web';
+import { CONSULTAS_ELITE_ESTUDIO, consultasIlimitadas, pasoDeLaElite, textoDelCupo } from '@/lib/plan-estudio';
 import './perfil-v3.css';
 
 const ADMIN_EMAIL = 'administracion@iurexia.com';
@@ -24,6 +25,7 @@ const planColors: Record<string, { bg: string; text: string; label: string }> = 
     platinum_monthly: { bg: 'bg-charcoal-900', text: 'text-accent-gold', label: 'Platinum Mensual' },
     platinum_annual: { bg: 'bg-charcoal-900', text: 'text-accent-gold', label: 'Platinum Anual' },
     ultra_secretarios: { bg: 'bg-charcoal-950 border border-accent-gold/60', text: 'text-white', label: 'Ultra Secretarios' },
+    platinum_estudio: { bg: 'bg-charcoal-950 border border-accent-gold/60', text: 'text-accent-gold', label: 'Estudio' },
 };
 
 const REGIMENES_FISCALES = [
@@ -364,7 +366,10 @@ export default function PerfilPage() {
     const queryPercentage = profile.queries_limit === -1
         ? 0
         : (profile.queries_used / profile.queries_limit) * 100;
-    const isPro = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual'].includes(profile.subscription_type);
+    // Estudio (2-nov-2026): «Ilimitadas», sin barra. Su `queries_limit` es el
+    // tope de uso razonable (3,100) y una barra contra él diría que se acaba.
+    const ilimitadas = consultasIlimitadas(profile.subscription_type);
+    const isPro = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'platinum_estudio'].includes(profile.subscription_type);
 
     /**
      * Subir la foto de perfil.
@@ -878,11 +883,19 @@ export default function PerfilPage() {
                                     Consultas este mes
                                 </span>
                                 <span className="text-sm text-charcoal-600">
-                                    {profile.queries_used}/{profile.queries_limit === -1 ? '∞' : profile.queries_limit}
+                                    {profile.queries_used}{ilimitadas ? ' · ' : '/'}{textoDelCupo(profile.subscription_type, profile.queries_limit)}
                                 </span>
                             </div>
 
-                            {profile.queries_limit !== -1 && (
+                            {ilimitadas && (
+                                <p className="text-xs text-piedra-600 mt-1.5">
+                                    {pasoDeLaElite(profile.subscription_type, profile.queries_used)
+                                        ? `Ya usó sus ${CONSULTAS_ELITE_ESTUDIO} consultas con la IA Jurídica de Élite de este mes: sigue sin límite con la IA Jurídica Avanzada.`
+                                        : `Las primeras ${CONSULTAS_ELITE_ESTUDIO} consultas de cada mes van con la IA Jurídica de Élite; después, sin límite con la IA Jurídica Avanzada.`}
+                                </p>
+                            )}
+
+                            {profile.queries_limit !== -1 && !ilimitadas && (
                                 <>
                                     <div className="w-full bg-piedra-100 rounded-full h-2.5 overflow-hidden border border-piedra-200">
                                         <div
@@ -1223,7 +1236,8 @@ export default function PerfilPage() {
                             Cada colega que invite entra con{' '}
                             <strong className="text-charcoal-900">{referidos.consultasDeBienvenida} consultas</strong>{' '}
                             que no caducan, sin tarjeta. Y usted gana días de{' '}
-                            {referidos.planDelPremio?.startsWith('platinum') ? 'Platinum' : 'Pro'}{' '}
+                            {referidos.planDelPremio === 'platinum_estudio' ? 'Estudio'
+                                : referidos.planDelPremio?.startsWith('platinum') ? 'Platinum' : 'Pro'}{' '}
                             conforme sus colegas se vayan suscribiendo:
                         </p>
 

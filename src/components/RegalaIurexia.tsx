@@ -38,6 +38,7 @@ const NOMBRE_PLAN: Record<string, string> = {
     pro_annual: 'Pro',
     platinum_monthly: 'Platinum',
     platinum_annual: 'Platinum',
+    platinum_estudio: 'Estudio',
 };
 
 export function IconoRegalo({ className = 'w-4 h-4' }: { className?: string }) {

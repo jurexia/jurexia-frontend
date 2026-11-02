@@ -7,6 +7,7 @@ const PRICE_TO_PLAN: Record<string, { name: string; monthly_equivalent: number }
     'price_1Sy2l63uD85CqvjMku0MM4k3': { name: 'Pro Mensual', monthly_equivalent: 14900 },
     'price_1Sy2l03uD85CqvjMMJ4mFqhw': { name: 'Platinum Mensual', monthly_equivalent: 59900 },
     'price_1T8IMF3uD85CqvjMM49lRfxI': { name: 'Básico', monthly_equivalent: 7900 },
+    'price_1UXIiI3uD85CqvjMrXLzuClJ': { name: 'Estudio', monthly_equivalent: 149900 },
 };
 
 export async function GET(req: NextRequest) {

@@ -63,6 +63,9 @@ const RANGO: Record<string, number> = {
     ultra_secretarios: 2,
     platinum_monthly: 3,
     platinum_annual: 3,
+    // Estudio, por encima de Platinum (2-nov-2026): el premio de Platinum de
+    // la escalera o de la vitrina nunca lo baja a 560 consultas.
+    platinum_estudio: 4,
 };
 
 const rango = (plan: string) => RANGO[plan] ?? 0;

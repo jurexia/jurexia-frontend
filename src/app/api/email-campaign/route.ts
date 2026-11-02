@@ -142,7 +142,7 @@ function buildConversionEmail(firstName: string): string {
                                         <tr>
                                             <td>
                                                 <strong style="font-size:16px;color:#c9a84c;">PLAN PLATINUM</strong><br>
-                                                <span style="font-size:12px;color:#888;">Para despachos y firmas jurídicas</span>
+                                                <span style="font-size:12px;color:#888;">Para abogados exigentes</span>
                                             </td>
                                             <td align="right" style="vertical-align:top;">
                                                 <strong style="font-size:16px;color:#fff;">$599 MXN <span style="font-size:11px;color:#888;">/mes</span></strong>

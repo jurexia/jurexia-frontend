@@ -34,7 +34,7 @@ import AvisoPlan from './AvisoPlan';
 
 // Internet, desde el plan Pro: cuesta dinero en cada consulta. El servidor
 // vuelve a comprobarlo (`fuentes_web` sin plan Pro se ignora).
-const PLANES_INTERNET = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
+const PLANES_INTERNET = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios', 'platinum_estudio'];
 
 interface Props {
     /** La entidad de la barra superior (la del perfil, salvo que la cambie). */

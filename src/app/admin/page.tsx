@@ -48,12 +48,13 @@ const SECCIONES: { id: Seccion; nombre: string; icono: typeof Users }[] = [
 ];
 
 const PLANES = ['gratuito', 'basico_monthly', 'pro_monthly', 'pro_annual',
-    'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
+    'platinum_monthly', 'platinum_annual', 'ultra_secretarios', 'platinum_estudio'];
 
 const NOMBRE_PLAN: Record<string, string> = {
     gratuito: 'Gratuito', basico_monthly: 'Básico', pro_monthly: 'Pro',
     pro_annual: 'Pro anual', platinum_monthly: 'Platinum',
     platinum_annual: 'Platinum anual', ultra_secretarios: 'Secretarios',
+    platinum_estudio: 'Estudio',
 };
 
 const dinero = (c: number) => `$${(c / 100).toLocaleString('es-MX', { maximumFractionDigits: 0 })}`;

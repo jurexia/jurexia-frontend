@@ -78,6 +78,7 @@ import ContextoConsulta from '@/components/ContextoConsulta';
 import NuevaCarpetaModal from '@/components/NuevaCarpetaModal';
 import { getExpedientes, type Expediente } from '@/lib/expedientes';
 import { PLANES_PLATINUM, fijarCarpetaConBoveda, leerBoveda } from '@/lib/boveda';
+import { USO_RAZONABLE_ESTUDIO, consultasIlimitadas } from '@/lib/plan-estudio';
 import { getVinculos, vincularConsulta, type Vinculos } from '@/lib/consultas-carpeta';
 import { flujoPorId, instruccionDeParte, mensajeDeFlujo, mensajeDeParte } from '@/lib/flujos';
 import AgenteFlujo from '@/components/AgenteFlujo';
@@ -214,7 +215,7 @@ export default function ChatPage() {
     // pago: ahí el webhook de Stripe aún no ha escrito el plan nuevo y se
     // entregaría la insignia vieja a quien acaba de pagar.
 
-    const _PRO_PLUS = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
+    const _PRO_PLUS = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios', 'platinum_estudio'];
     const isPro = _PRO_PLUS.includes(profile?.subscription_type || '');
     const isProPlus = isPro && !isAdmin(user?.email);
     // Apagado para todos desde el 3-sep-2026; se enciende con la variable de
@@ -2128,7 +2129,20 @@ export default function ChatPage() {
                                     Versión básica · Crear cuenta
                                 </Link>
                             ) : (
-                            /* El contador no se pulsa: va hundido, no en relieve. */
+                            /* El contador no se pulsa: va hundido, no en relieve.
+                               Estudio (2-nov-2026) dice «Ilimitadas» y no lleva barra:
+                               su límite guardado es el tope de uso razonable (3,100) y
+                               «12/3100» contradiría la tarjeta. */
+                            consultasIlimitadas(profile?.subscription_type) ? (
+                            <div
+                                className={`hundido bt-cuenta gap-2 px-3 text-[0.8125rem] transition-all duration-300 ${counterPulse ? 'ring-2 ring-accent-gold/40' : ''}`}
+                                title={`Consultas este mes: ${queriesUsed}. ${USO_RAZONABLE_ESTUDIO}`}
+                            >
+                                <span className={`font-semibold tabular-nums ${queriesRemaining <= 1 ? 'text-red-700' : 'text-charcoal-900'}`}>
+                                    {queriesUsed}<span className="font-normal text-charcoal-900/50"> · Ilimitadas</span>
+                                </span>
+                            </div>
+                            ) : (
                             <div
                                 className={`hundido bt-cuenta gap-2 px-3 text-[0.8125rem] transition-all duration-300 ${counterPulse ? 'ring-2 ring-accent-gold/40' : ''}`}
                                 title={`Consultas usadas este mes: ${queriesUsed} de ${queriesLimit}`}
@@ -2143,7 +2157,7 @@ export default function ChatPage() {
                                     />
                                 </span>
                             </div>
-                            )}
+                            ))}
                             <UserAvatar />
                         </div>
                     </div>

@@ -26,6 +26,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { esAdmin } from '@/lib/admins';
+import { PLAN_CONFIG } from '@/lib/supabase-admin';
 import { usuarios as auditarUsuarios, avisosPorFamilia, resumenOpiniones } from '@/lib/auditoriaTaller';
 import type { Evento, Perfil, Opinion } from '@/lib/auditoriaTaller';
 
@@ -51,7 +52,7 @@ async function guardia(req: NextRequest): Promise<{ email: string } | null> {
 }
 
 const PLANES_PAGO = ['pro_monthly', 'pro_annual', 'platinum_monthly',
-    'platinum_annual', 'basico_monthly', 'ultra_secretarios'];
+    'platinum_annual', 'basico_monthly', 'ultra_secretarios', 'platinum_estudio'];
 
 // ── Secciones ───────────────────────────────────────────────────────────
 
@@ -299,16 +300,27 @@ async function accion(cuerpo: any, quien: string) {
 
     switch (tipo) {
         case 'cambiar_plan': {
-            const LIMITES: Record<string, number> = {
-                gratuito: 5, basico_monthly: 70, pro_monthly: 140, pro_annual: 140,
-                platinum_monthly: 560, platinum_annual: 560, ultra_secretarios: 140,
-            };
+            /* LAS CUOTAS SALEN DE PLAN_CONFIG (2-nov-2026), la misma tabla que
+               usa el webhook de Stripe. La copia que había aquí le daba 140 a
+               Ultra —las de Pro; son 560— y no conocía Estudio (3,100, el
+               tope de uso razonable).
+
+               Y SE ESCRIBEN DOS VECES, como en `updateUserSubscription`: el
+               disparador `auto_update_queries_limit` (BEFORE UPDATE) reescribe
+               `queries_limit` con su propia tabla cuando cambia el plan, y esa
+               tabla no conoce Estudio (le daría 5) ni el 560 de Ultra. El
+               segundo update no cambia el plan, así que el disparador ya no
+               toca nada y tampoco vuelve a poner en cero las usadas. */
             const plan = cuerpo.plan;
-            if (!(plan in LIMITES)) return { error: 'plan desconocido' };
+            const config = Object.prototype.hasOwnProperty.call(PLAN_CONFIG, plan)
+                ? PLAN_CONFIG[plan as keyof typeof PLAN_CONFIG]
+                : null;
+            if (!config) return { error: 'plan desconocido' };
             await db.from('user_profiles').update({
-                subscription_type: plan, queries_limit: LIMITES[plan],
+                subscription_type: plan, queries_limit: config.queriesLimit,
                 updated_at: new Date().toISOString(),
             }).eq('id', id);
+            await db.from('user_profiles').update({ queries_limit: config.queriesLimit }).eq('id', id);
             await asentar({ plan });
             return { ok: true };
         }

@@ -17,7 +17,8 @@ import { crearTermino } from '@/lib/agenda';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
 
-export const PLANES_CRONOLOGIA = ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
+// Estudio incluido (2-nov-2026); el freno de sus 560 lo aplica la API.
+export const PLANES_CRONOLOGIA = ['platinum_monthly', 'platinum_annual', 'ultra_secretarios', 'platinum_estudio'];
 
 /** Lo mismo que comprueba la API (`exigir_platinum`): aquí sólo decide qué se
     pinta; la puerta de verdad está en el servidor. */

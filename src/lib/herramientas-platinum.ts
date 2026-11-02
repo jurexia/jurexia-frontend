@@ -8,11 +8,15 @@
    · la administración y los testers: `esAdmin` (`@/lib/admins`), que admite
      el dominio @iurexia.com y los correos nominales; entre ellos está
      jenycampos@hotmail.com, la cuenta Pro de Jenica Campos Juárez.
-   La API comprueba lo mismo con `exigir_platinum` (cobro_consultas.py). */
+   La API comprueba lo mismo con `exigir_platinum` (cobro_consultas.py).
+
+   Estudio (2-nov-2026) es Platinum y más: trae las seis. Después de sus 560
+   consultas de élite la API frena Bóveda y Cronología hasta el siguiente
+   periodo, pero el candado de la pantalla no cambia: lo dice el servidor. */
 
 import { esAdmin } from '@/lib/admins'
 
-export const PLANES_PLATINUM = ['platinum_monthly', 'platinum_annual', 'ultra_secretarios']
+export const PLANES_PLATINUM = ['platinum_monthly', 'platinum_annual', 'ultra_secretarios', 'platinum_estudio']
 
 export function tieneHerramientasPlatinum(plan?: string | null, correo?: string | null): boolean {
     return esAdmin(correo) || PLANES_PLATINUM.includes(plan ?? '')

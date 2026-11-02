@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/useAuth';
 import { Insignia, nivelDePlan } from '@/components/Insignia';
 import { signOut, supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { consultasIlimitadas, textoDelCupo } from '@/lib/plan-estudio';
 
 const planColors: Record<string, { bg: string; text: string; label: string }> = {
     gratuito: { bg: 'bg-gray-100', text: 'text-gray-600', label: 'Gratuito' },
@@ -17,6 +18,7 @@ const planColors: Record<string, { bg: string; text: string; label: string }> = 
     platinum_monthly: { bg: 'bg-gradient-to-r from-amber-100 to-orange-100', text: 'text-amber-700', label: 'Platinum' },
     platinum_annual: { bg: 'bg-gradient-to-r from-amber-100 to-orange-100', text: 'text-amber-700', label: 'Platinum Anual' },
     ultra_secretarios: { bg: 'bg-gradient-to-r from-purple-100 to-indigo-100', text: 'text-purple-700', label: 'Ultra' },
+    platinum_estudio: { bg: 'bg-gradient-to-r from-amber-100 to-orange-100', text: 'text-amber-700', label: 'Estudio' },
 };
 
 export function UserAvatar() {
@@ -143,7 +145,10 @@ export function UserAvatar() {
                         {profile && (
                             <div className="mt-1">
                                 <p className="text-xs text-charcoal-400">
-                                    {profile.queries_used}/{profile.queries_limit === -1 ? '∞' : profile.queries_limit} consultas
+                                    {/* Estudio: «12 consultas · Ilimitadas» (2-nov-2026). */}
+                                    {consultasIlimitadas(profile.subscription_type)
+                                        ? `${profile.queries_used} consultas · Ilimitadas`
+                                        : `${profile.queries_used}/${textoDelCupo(profile.subscription_type, profile.queries_limit)} consultas`}
                                 </p>
                                 {profile.subscription_type === 'ultra_secretarios' && (
                                     <p className="text-xs text-charcoal-400">
