@@ -1,20 +1,23 @@
 // ESTUDIO ANTES DE LA MIGRACIÓN: QUE NADIE PAGUE SIN PLAN (2-nov-2026).
 //
-// La revisión del front (precios-nov2/estudio-hoy/revision-front.md, §1)
+// La revisión del front (precios-nov2/estudio-hoy/revision-front.md, §1 y §2)
 // encontró que, si el front sale antes que `sql/supabase_estudio.sql`, la
 // base rechaza `platinum_estudio` y:
 //   · el webhook responde 200 aunque no escribió el plan, Stripe no reintenta
 //     y el cliente pagó 1,499 sin plan; si venía de Platinum, la suscripción
-//     vieja no se cancela (va después) y le quedan las dos.
+//     vieja no se cancela (va después) y le quedan las dos;
+//   · el panel de administración, con el cambio de plan rechazado, escribía
+//     igual 3,100 consultas en el plan anterior y respondía {ok:true}.
 //
-// Esto corre las RUTAS DE VERDAD (checkout y webhook) con Stripe,
+// Esto corre las RUTAS DE VERDAD (checkout, webhook y panel) con Stripe,
 // Supabase, Resend y next/server de mentira, sin red:
 //   · checkout: con la base sin migrar no se abre el cobro de Estudio (503 y
 //     el mensaje de la tarjeta); con la base al día, sí; los demás planes ni
 //     preguntan;
 //   · webhook: la escritura de Estudio que falla responde 500 y no marca el
 //     evento; el reintento, con la base al día, escribe el plan y cancela la
-//     Platinum vieja con prorrateo. Un plan de siempre que falla sigue en 200.
+//     Platinum vieja con prorrateo. Un plan de siempre que falla sigue en 200;
+//   · panel: un cambio de plan rechazado no escribe el cupo ni dice «ok».
 //
 //   node --test comprobaciones/estudio_sin_migracion.mjs
 //
@@ -212,6 +215,7 @@ const Estudio = await import(path.join(SRC, 'lib/plan-estudio.ts'));
 const Base = await import(path.join(SRC, 'lib/estudio-en-la-base.ts'));
 const Checkout = await import(path.join(SRC, 'app/api/stripe/checkout/route.ts'));
 const Webhook = await import(path.join(SRC, 'app/api/stripe/webhook/route.ts'));
+const Panel = await import(path.join(SRC, 'app/api/admin/panel/route.ts'));
 
 beforeEach(() => { reiniciar(); Base.olvidarConfirmacionEstudio(); });
 
@@ -336,4 +340,53 @@ test('webhook: Pro con la base sana, igual que siempre', async () => {
     assert.deepEqual(r.body, { received: true });
     assert.deepEqual(planesEscritos(), ['pro_monthly']);
     assert.deepEqual(marcados(), ['evt_pro_2']);
+});
+
+// ── Panel de administración ─────────────────────────────────────────────────
+
+const cambiarPlan = (plan) => callado(() => Panel.POST({
+    headers: { get: (k) => (k === 'authorization' ? 'Bearer token_prueba' : null) },
+    json: async () => ({ tipo: 'cambiar_plan', id: 'perfil_1', plan }),
+}));
+const updatesDelPerfil = () => E.ops.filter((o) => o.tabla === 'user_profiles' && o.accion === 'update');
+const bitacora = () => E.ops.filter((o) => o.tabla === 'admin_audit_log' && o.accion === 'insert');
+
+test('panel: Estudio rechazado por la base no deja 3,100 en el plan viejo ni dice ok', async () => {
+    E.usuario = { email: 'pruebas@iurexia.com' };
+    const { r } = await cambiarPlan('platinum_estudio');
+    assert.equal(r.status, 400);
+    assert.match(r.body.error, /no se pudo cambiar el plan/);
+    assert.equal(updatesDelPerfil().length, 1, 'sólo el intento del plan: el cupo no se escribe');
+    assert.equal(bitacora().length, 0, 'la bitácora no registra un cambio que no ocurrió');
+});
+
+test('panel: cualquier otro fallo del primer update, igual', async () => {
+    E.usuario = { email: 'pruebas@iurexia.com' };
+    E.fallaUpdate = { message: 'se cayó la conexión', code: '08006' };
+    const { r } = await cambiarPlan('pro_monthly');
+    assert.equal(r.status, 400);
+    assert.equal(updatesDelPerfil().length, 1);
+    assert.equal(bitacora().length, 0);
+});
+
+test('panel: un cambio que sí entra escribe el cupo sólo sobre ese plan y lo asienta', async () => {
+    E.usuario = { email: 'pruebas@iurexia.com' };
+    E.baseMigrada = true;
+    const { r } = await cambiarPlan('platinum_estudio');
+    assert.equal(r.status, 200);
+    assert.deepEqual(r.body, { ok: true });
+    const [plan, cupo] = updatesDelPerfil();
+    assert.equal(plan.datos.subscription_type, 'platinum_estudio');
+    assert.equal(plan.datos.queries_limit, 3100);
+    assert.deepEqual(cupo.datos, { queries_limit: 3100 });
+    assert.deepEqual(cupo.filtros, [['eq', 'id', 'perfil_1'], ['eq', 'subscription_type', 'platinum_estudio']]);
+    assert.equal(bitacora().length, 1);
+    assert.deepEqual(bitacora()[0].datos.details, { plan: 'platinum_estudio' });
+});
+
+test('panel: sin sesión de administrador no se toca nada', async () => {
+    E.usuario = { email: 'alguien@ejemplo.mx' };
+    const { r } = await cambiarPlan('platinum_estudio');
+    assert.equal(r.status, 401);
+    assert.equal(updatesDelPerfil().length, 0);
 });

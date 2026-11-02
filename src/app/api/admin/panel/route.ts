@@ -310,17 +310,30 @@ async function accion(cuerpo: any, quien: string) {
                `queries_limit` con su propia tabla cuando cambia el plan, y esa
                tabla no conoce Estudio (le daría 5) ni el 560 de Ultra. El
                segundo update no cambia el plan, así que el disparador ya no
-               toca nada y tampoco vuelve a poner en cero las usadas. */
+               toca nada y tampoco vuelve a poner en cero las usadas.
+
+               EL SEGUNDO SÓLO SI EL PRIMERO ENTRÓ (2-nov-2026, revisión §2).
+               supabase-js no lanza: devuelve `error`. Sin mirarlo, un cambio
+               rechazado —Estudio antes de la migración choca con el CHECK—
+               dejaba al usuario en su plan de antes CON 3,100 consultas, la
+               acción decía «ok» y la bitácora asentaba un plan que no tenía.
+               Ahora el fallo se devuelve tal cual y el cupo se escribe sólo
+               sobre la fila que ya tiene ese plan. */
             const plan = cuerpo.plan;
             const config = Object.prototype.hasOwnProperty.call(PLAN_CONFIG, plan)
                 ? PLAN_CONFIG[plan as keyof typeof PLAN_CONFIG]
                 : null;
             if (!config) return { error: 'plan desconocido' };
-            await db.from('user_profiles').update({
+            const { error: errPlan } = await db.from('user_profiles').update({
                 subscription_type: plan, queries_limit: config.queriesLimit,
                 updated_at: new Date().toISOString(),
             }).eq('id', id);
-            await db.from('user_profiles').update({ queries_limit: config.queriesLimit }).eq('id', id);
+            if (errPlan) return { error: `no se pudo cambiar el plan: ${errPlan.message}` };
+            const { error: errCupo } = await db.from('user_profiles')
+                .update({ queries_limit: config.queriesLimit })
+                .eq('id', id)
+                .eq('subscription_type', plan);
+            if (errCupo) return { error: `el plan cambió, pero no se pudo fijar su cupo: ${errCupo.message}` };
             await asentar({ plan });
             return { ok: true };
         }
