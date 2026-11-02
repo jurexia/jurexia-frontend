@@ -15,14 +15,19 @@ import PieDePagina from '@/components/PieDePagina';
 import { clasesBoton } from '@/components/web/sistema';
 import { claseWeb } from '@/lib/fuentes-web';
 import { HERRAMIENTAS_PLATINUM } from '@/lib/herramientas-platinum';
-import { FLUJOS_ESTUDIO, CONSULTAS_ELITE_ESTUDIO } from '@/lib/plan-estudio';
+import { FLUJOS_ESTUDIO, CONSULTAS_ELITE_ESTUDIO, PAGINAS_ESTUDIO } from '@/lib/plan-estudio';
 import {
+    CIFRAS_PLATINUM,
     EstudioFrentePlatinum,
+    GB_ESTUDIO,
+    NotaUsoRazonable,
+    PRECIO_ESTUDIO,
+    PRECIO_TACHADO_ESTUDIO,
     SelectorDeVista,
-    TarjetaEstudio,
+    cobrarEstudio,
     vistaDeLaDireccion,
     type VistaDePrecios,
-} from '@/components/TarjetaEstudio';
+} from '@/components/PreciosEstudio';
 
 /* En el servidor `useLayoutEffect` no corre y React lo avisa; en el navegador
    es el que deja colocar la pestaña de la dirección ANTES del primer cuadro
@@ -206,7 +211,7 @@ export default function PreciosPage() {
                         decisión (¿para mí o para el despacho?); mensual o anual
                         es la segunda. `scroll-mt` deja la barra fija fuera. */}
                     <AnimateOnScroll delay={0.25}>
-                        <div ref={selector} className="mb-7 flex scroll-mt-28 justify-center">
+                        <div ref={selector} className="-mt-2 mb-6 flex scroll-mt-28 justify-center">
                             <SelectorDeVista vista={vista} onCambio={elegirVista} />
                         </div>
                     </AnimateOnScroll>
@@ -418,8 +423,54 @@ export default function PreciosPage() {
                     className="w-full shrink-0 px-4"
                     style={estiloPanel(vista === 'estudio')}
                 >
-                    <div className="max-w-6xl mx-auto pt-8 pb-4">
-                        <TarjetaEstudio activa={vista === 'estudio'} animar={!menosMovimiento} />
+                    {/* La tarjeta, sola y centrada, al ancho EXACTO de una de
+                        las cuatro de Individual (la misma rejilla de 7xl con
+                        huecos de 1.5 rem): es una tarjeta más de la familia,
+                        no una pieza aparte. Sube al aparecer, como las otras
+                        con `AnimateOnScroll`, pero atada a la pestaña: hasta
+                        que se elige Estudio está fuera, a la derecha. */}
+                    <div className="max-w-7xl mx-auto pt-8 pb-4">
+                        <div className="flex justify-center">
+                            <div
+                                className="w-full md:w-[calc((100%-1.5rem)/2)] lg:w-[calc((100%-4.5rem)/4)]"
+                                style={{
+                                    opacity: vista === 'estudio' ? 1 : 0,
+                                    transform: vista === 'estudio' ? 'none' : 'translateY(24px)',
+                                    transition: menosMovimiento
+                                        ? 'none'
+                                        : `opacity 0.7s ${curva} 0.25s, transform 0.7s ${curva} 0.25s`,
+                                }}
+                            >
+                                <PricingCard
+                                    name="Plan Estudio"
+                                    price={PRECIO_ESTUDIO}
+                                    originalPrice={PRECIO_TACHADO_ESTUDIO}
+                                    period="MXN/mes"
+                                    /* Sin precio por consulta: no hay cupo que
+                                       dividir. En su sitio, lo que lo separa de
+                                       Platinum. */
+                                    unitPrice="Consultas ilimitadas"
+                                    description="Para despachos"
+                                    features={[
+                                        <span className="font-semibold text-white">Todo lo del Plan Platinum, y además:</span>,
+                                        <><span className="font-semibold text-white">{GB_ESTUDIO} GB para tus expedientes</span> <span className="text-white/45">· Platinum:&nbsp;{CIFRAS_PLATINUM.gb}&nbsp;GB</span></>,
+                                        <>Documentos de hasta <span className="font-semibold text-white">{PAGINAS_ESTUDIO} hojas</span></>,
+                                        "Soporte VIP prioritario",
+                                    ]}
+                                    exclusivesTitle="SOLO EN ESTUDIO"
+                                    exclusives={[
+                                        ['Consultas ilimitadas', `Sin cupo mensual · Platinum: ${CIFRAS_PLATINUM.consultas}`],
+                                        ['IA de última generación', 'Cada nueva generación de la IA Jurídica llega primero a Estudio'],
+                                        [`${FLUJOS_ESTUDIO} flujos de trabajo al mes`, `Escritos completos · Platinum: ${CIFRAS_PLATINUM.flujos}`],
+                                    ]}
+                                    note={<NotaUsoRazonable />}
+                                    buttonText="Elegir Estudio"
+                                    cobro={cobrarEstudio}
+                                    fondo="estudio"
+                                    badge="PARA DESPACHOS"
+                                />
+                            </div>
+                        </div>
                         <EstudioFrentePlatinum onIndividual={() => irAVista('individual')} />
                     </div>
                 </div>
@@ -952,8 +1003,10 @@ function PricingCard({
     savingsBadge,
     unitPrice,
     exclusives,
+    exclusivesTitle = 'SOLO EN PLATINUM',
     note,
-    upgradePriceId
+    upgradePriceId,
+    cobro
 }: {
     name: string;
     price: string;
@@ -967,27 +1020,47 @@ function PricingCard({
     highlighted?: boolean;
     isBasic?: boolean;
     badge?: string;
-    /** La obra de fondo (ver FondosDePlan). Sólo la llevan los dos planes que
-        la página vende: el palacio de justicia, claro, en Pro; Themis, en
-        negro, en Platinum. La de Themis oscurece la tarjeta y decide la tinta. */
-    fondo?: 'corte' | 'themis';
+    /** La obra de fondo (ver FondosDePlan). Sólo la llevan los planes que la
+        página vende: el palacio de justicia, claro, en Pro; Themis, en negro,
+        en Platinum; la biblioteca dorada, en negro, en Estudio. Las de negro
+        oscurecen la tarjeta y deciden la tinta. */
+    fondo?: 'corte' | 'themis' | 'estudio';
     savingsBadge?: string;
     /** Precio por consulta. Se calcula del precio y el cupo; va bajo el precio
         porque es el dato con el que de verdad se comparan dos planes. */
     unitPrice?: string;
     /** Lo que este plan tiene y ninguno inferior ofrece, a ningún precio. */
     exclusives?: [string, string][];
+    /** El rótulo del recuadro de exclusivas: «SOLO EN PLATINUM», «SOLO EN ESTUDIO». */
+    exclusivesTitle?: string;
     note?: React.ReactNode;
     /** Plan al que empuja el aviso del Básico. Sin esto el botón sólo cerraba
         el aviso: la llamada a la acción principal no llevaba a ninguna parte. */
     upgradePriceId?: string;
+    /** Un cobro propio en lugar del de `priceId` (Estudio: `cobrarEstudio`,
+        que vuelve a su pestaña tras entrar y dice tal cual los «todavía no»
+        del checkout). Recibe el correo de la sesión, si la hay. */
+    cobro?: (email?: string | null) => Promise<void>;
 }) {
-    const oscura = highlighted || fondo === 'themis';
+    /* Estudio es la tarjeta de la casa en su pestaña: tinta, obra y oro,
+       como la destacada, aunque no compite con Platinum por el anillo. */
+    const estudio = fondo === 'estudio';
+    const oscura = highlighted || fondo === 'themis' || estudio;
+    const destacada = highlighted || estudio;
     const [loading, setLoading] = useState(false);
     const [showWarning, setShowWarning] = useState(false);
     const { user } = useAuth();
 
     const handleSubscribe = async () => {
+        if (cobro) {
+            setLoading(true);
+            try {
+                await cobro(user?.email);
+            } finally {
+                setLoading(false);
+            }
+            return;
+        }
         if (!priceId) {
             console.error('❌ No priceId provided');
             alert('Error de configuración. Por favor contacta a soporte.');
@@ -1042,7 +1115,14 @@ function PricingCard({
        `isolate` no es adorno: crea el contexto de apilamiento sin el que el
        fondo —que va en z negativo— se metería detrás de la propia tarjeta y
        no se vería. */
-    const cardStyles = highlighted
+    /* Estudio (2-nov-2026): la misma tarjeta negra de Platinum con el filo de
+       oro más vivo (60 % en vez de 35 %), un segundo filo por dentro —el
+       marco doble de un diploma— y un halo de oro muy diluido debajo. Sin
+       animación ni brillo: David pidió que fuera de la familia, no un
+       anuncio. Va sola en su pestaña, así que no sube sobre las demás. */
+    const cardStyles = estudio
+        ? 'isolate bg-charcoal-900 text-white ring-1 ring-accent-gold/60 shadow-[0_30px_80px_-32px_rgba(0,0,0,0.6),0_0_70px_-30px_rgba(201,169,98,0.55)]'
+        : highlighted
         ? 'isolate bg-charcoal-900 text-white ring-1 ring-accent-gold/35 shadow-[0_30px_80px_-32px_rgba(0,0,0,0.6)] relative z-10 lg:-mt-5 lg:-mb-5'
         : fondo === 'corte'
             ? 'isolate bg-[#f8f3eb] border border-black/[0.07] shadow-[0_24px_60px_-38px_rgba(0,0,0,0.35)] hover:shadow-lg'
@@ -1050,7 +1130,9 @@ function PricingCard({
 
     /* El distintivo de Pro, en tinta sobre su tarjeta clara; el oro sigue
        siendo sólo de Platinum. */
-    const badgeStyles = highlighted
+    const badgeStyles = estudio
+        ? 'bg-gradient-to-b from-[#ecd9a6] to-accent-gold text-charcoal-900 tracking-[0.12em]'
+        : highlighted
         ? 'bg-accent-gold text-charcoal-900'
         : 'bg-charcoal-900 text-white';
 
@@ -1066,6 +1148,10 @@ function PricingCard({
         <div className={`relative rounded-3xl p-8 pt-10 transition-all duration-300 flex flex-col h-full ${cardStyles}`}>
             {fondo === 'corte' && <ObraClara arte="/web/arte/fachada.webp" />}
             {fondo === 'themis' && <ObraOscura arte="/web/arte/themis.webp" />}
+            {estudio && <ObraOscura arte="/web/arte/estudio.webp" />}
+            {estudio && (
+                <div aria-hidden className="pointer-events-none absolute inset-[7px] rounded-[17px] border border-accent-gold/20" />
+            )}
 
             {badge && (
                 <div className={`absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide shadow-sm ${badgeStyles}`}>
@@ -1089,13 +1175,13 @@ function PricingCard({
                     </span>
                 </div>
                 {originalPrice && (
-                    <p className={`text-sm line-through ${highlighted ? 'text-white/45' : oscura ? 'text-white/55' : 'text-piedra-500'
+                    <p className={`text-sm line-through ${destacada ? 'text-white/45' : oscura ? 'text-white/55' : 'text-piedra-500'
                         }`}>
                         <PrecioAnimado valor={originalPrice} /> {period}
                     </p>
                 )}
                 {unitPrice && (
-                    <p className={`mt-1 text-xs font-medium ${highlighted ? 'text-accent-gold' : oscura ? 'text-white/70' : 'text-piedra-600'}`}>
+                    <p className={`mt-1 text-xs font-medium ${destacada ? 'text-accent-gold' : oscura ? 'text-white/70' : 'text-piedra-600'}`}>
                         <PrecioAnimado valor={unitPrice} />
                     </p>
                 )}
@@ -1117,7 +1203,7 @@ function PricingCard({
             {exclusives && exclusives.length > 0 && (
                 <div className="mb-6 rounded-xl border border-accent-gold/30 bg-[#0f0e0d]/60 p-4 backdrop-blur-[2px]">
                     <p className="text-[10px] font-bold tracking-widest text-accent-gold mb-3">
-                        SOLO EN PLATINUM
+                        {exclusivesTitle}
                     </p>
                     <ul className="space-y-3">
                         {exclusives.map(([titulo, detalle]) => (
@@ -1152,7 +1238,7 @@ function PricingCard({
             )}
 
             <div className="mt-auto pt-2">
-                {priceId ? (
+                {priceId || cobro ? (
                     <button
                         onClick={handleSubscribe}
                         disabled={loading}
