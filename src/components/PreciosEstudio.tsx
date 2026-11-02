@@ -91,6 +91,11 @@ export function vistaDeLaDireccion(search: string): VistaDePrecios | null {
    pixel; la otra, en piedra. Mensual | Anual se queda como estaba: es la
    segunda decisión y la que sí tiene que verse.
 
+   La piedra es la 600, no la 500, en la etiqueta y en la pestaña no elegida:
+   sobre el crema de la página la 500 da 3.28:1 y la 600, 5.03:1 (AA pide
+   4.5:1). La no elegida es justo la que hay que descubrir para llegar a
+   Estudio, y aun así se sigue viendo apagada frente a la elegida, en tinta.
+
    Sigue siendo un `tablist` de verdad: las flechas, Inicio y Fin cambian de
    pestaña (y la activan, que con dos pestañas es lo esperable), y sólo la
    activa entra en el orden del tabulador. */
@@ -122,7 +127,7 @@ export function SelectorDeVista({
 
     return (
         <div className="flex flex-col items-center">
-            <p id="tipo-de-plan" className="text-[10px] font-semibold uppercase tracking-[0.24em] text-piedra-500">
+            <p id="tipo-de-plan" className="text-[10px] font-semibold uppercase tracking-[0.24em] text-piedra-600">
                 Tipo de plan
             </p>
             <div role="tablist" aria-labelledby="tipo-de-plan" className="mt-1.5 flex items-center">
@@ -145,7 +150,7 @@ export function SelectorDeVista({
                                 tabIndex={activa ? 0 : -1}
                                 onClick={() => onCambio(v.id)}
                                 onKeyDown={e => alTeclear(e, i)}
-                                className={`relative flex h-10 items-center px-1 font-serif text-[1.0625rem] tracking-[0.01em] transition-colors duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold/70 focus-visible:ring-offset-4 focus-visible:ring-offset-cream-300 motion-reduce:transition-none ${activa ? 'text-tinta' : 'text-piedra-500 hover:text-charcoal-700'}`}
+                                className={`relative flex h-10 items-center px-1 font-serif text-[1.0625rem] tracking-[0.01em] transition-colors duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent-gold/70 focus-visible:ring-offset-4 focus-visible:ring-offset-cream-300 motion-reduce:transition-none ${activa ? 'text-tinta' : 'text-piedra-600 hover:text-charcoal-700'}`}
                             >
                                 {v.nombre}
                                 {/* El subrayado de oro: crece desde el centro al

@@ -446,15 +446,26 @@ export default function PreciosPage() {
                                     price={PRECIO_ESTUDIO}
                                     originalPrice={PRECIO_TACHADO_ESTUDIO}
                                     period="MXN/mes"
-                                    /* Sin precio por consulta: no hay cupo que
-                                       dividir. En su sitio, lo que lo separa de
-                                       Platinum. */
-                                    unitPrice="Consultas ilimitadas"
-                                    description="Para despachos"
+                                    /* Sin renglón de oro bajo el precio, como
+                                       Gratuito: no hay cupo que dividir, y
+                                       «Consultas ilimitadas» ya lo dicen el
+                                       recuadro y la nota (2-nov-2026: en ese
+                                       renglón salía tres veces en 302 px).
+                                       La descripción no repite el sello:
+                                       «PARA DESPACHOS» dice para quién; ella,
+                                       para cuánto. Corta a propósito: a 302 px
+                                       el capitel de la obra empieza a 191 px
+                                       del borde, y «Para quien lleva muchos
+                                       asuntos» (228) se le montaba encima;
+                                       ésta acaba en 162, como «Para abogados
+                                       exigentes» (184) antes de Themis. */
+                                    description="Para muchos asuntos"
+                                    /* Las 600 hojas van en «todo lo de Platinum»,
+                                       no bajo «y además»: Platinum ya las lee, y
+                                       el cuadro de abajo dice 600 | 600. */
                                     features={[
-                                        <span className="font-semibold text-white">Todo lo del Plan Platinum, y además:</span>,
+                                        <span className="font-semibold text-white">Todo lo del Plan Platinum, con sus documentos de hasta {PAGINAS_ESTUDIO} hojas, y además:</span>,
                                         <><span className="font-semibold text-white">{GB_ESTUDIO} GB para tus expedientes</span> <span className="text-white/45">· Platinum:&nbsp;{CIFRAS_PLATINUM.gb}&nbsp;GB</span></>,
-                                        <>Documentos de hasta <span className="font-semibold text-white">{PAGINAS_ESTUDIO} hojas</span></>,
                                         "Soporte VIP prioritario",
                                     ]}
                                     exclusivesTitle="SOLO EN ESTUDIO"
