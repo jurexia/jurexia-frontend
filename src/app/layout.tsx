@@ -19,6 +19,7 @@ const playfair = Playfair_Display({
 })
 import { AuthProvider } from '@/components/AuthProvider'
 import { AvisoCookies } from '@/components/AvisoCookies'
+import { AvisoRelojDesfasado } from '@/components/AvisoRelojDesfasado'
 import { WakeUpProvider } from '@/components/WakeUpProvider'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import MetaPixel from '@/components/MetaPixel'
@@ -124,6 +125,10 @@ export default function RootLayout({
                         sobre el acceso, que es justo donde llega el visitante
                         que aún no ha decidido nada. */}
                     <AvisoCookies />
+                    {/* El reloj del equipo (2-nov-2026): con la hora mal, la
+                        sesión se renovaba sin parar. Se pinta sobre todo,
+                        incluido el muro de la suspensión. */}
+                    <AvisoRelojDesfasado />
                 </AuthProvider>
             </body>
         </html>
