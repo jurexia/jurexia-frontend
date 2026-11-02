@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripe, isUpgrade, getPlanIdFromPriceId } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
+import { baseAceptaEstudio } from '@/lib/estudio-en-la-base';
+import { MENSAJE_ESTUDIO_NO_DISPONIBLE, PLAN_ESTUDIO } from '@/lib/plan-estudio';
 
 export async function POST(request: NextRequest) {
     try {
@@ -11,6 +13,26 @@ export async function POST(request: NextRequest) {
                 { error: 'Price ID is required' },
                 { status: 400 }
             );
+        }
+
+        /* ESTUDIO SÓLO SE COBRA SI LA BASE YA LO ACEPTA (2-nov-2026). Sin la
+           migración, el webhook no puede escribir `platinum_estudio`: el cobro
+           se haría y el plan no llegaría (y quien venía de Platinum pagaría las
+           dos). Aquí no se abre el cobro hasta que la base diga que sí; en
+           cuanto se aplique la migración, el botón funciona solo. Ver
+           `lib/estudio-en-la-base.ts`. Los demás planes no pasan por aquí. */
+        if (getPlanIdFromPriceId(priceId) === PLAN_ESTUDIO) {
+            const servicio = createClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.SUPABASE_SERVICE_ROLE_KEY!,
+                { auth: { autoRefreshToken: false, persistSession: false } },
+            );
+            if (!(await baseAceptaEstudio(servicio))) {
+                return NextResponse.json(
+                    { error: MENSAJE_ESTUDIO_NO_DISPONIBLE, code: 'ESTUDIO_NO_DISPONIBLE' },
+                    { status: 503 }
+                );
+            }
         }
 
         // Try to get email from Supabase Auth token

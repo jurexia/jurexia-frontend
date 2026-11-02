@@ -18,6 +18,7 @@ import { guardarTarjetaQuePague, suscripcionDeLaFactura } from '@/lib/cobro-pend
 import { reactivarSiPagoFacturaVieja, type Reactivacion } from '@/lib/reactivar-factura-vieja';
 import { avisarSuspension } from '@/lib/correo/suspension';
 import { conTope, medirCompraMeta } from '@/lib/meta-capi';
+import { esEstudio } from '@/lib/plan-estudio';
 import { Resend } from 'resend';
 
 // Disable body parsing, we need the raw body for webhook verification
@@ -57,11 +58,55 @@ function mapPlanIdToSubscriptionType(planId: PlanId): PlanType {
         platinum_annual: 'platinum_annual',
         ultra_secretarios: 'ultra_secretarios',
         // Plan Estudio (2-nov-2026). Ojo: la base sólo lo acepta con el CHECK
-        // `user_profiles_subscription_type_check` ampliado; sin esa migración
-        // el `update` de abajo falla y Stripe reintenta el evento.
+        // `user_profiles_subscription_type_check` ampliado (sql/supabase_estudio.sql).
+        // Sin esa migración el `update` falla. Por regla general este webhook
+        // responde 200 aunque falle (FIX #1, abajo) y Stripe NO reintenta: el
+        // cobro se quedaría sin plan. Por eso el checkout no abre el cobro de
+        // Estudio hasta que la base lo acepta, y si aun así falla la escritura
+        // de Estudio, `escribirPlan` responde 500 para que Stripe sí reintente.
         platinum_estudio: 'platinum_estudio',
     };
     return mapping[planId] || 'gratuito';
+}
+
+/** La escritura del plan falló y el evento tiene que volver a llegar: el
+ *  webhook responde 500 en vez del 200 de siempre (ver `escribirPlan`). */
+class ReintentarEvento extends Error {
+    constructor(mensaje: string, readonly causa: unknown) {
+        super(mensaje);
+        this.name = 'ReintentarEvento';
+    }
+}
+
+/**
+ * `updateUserSubscription`, y si lo que falla es escribir ESTUDIO, que Stripe
+ * reintente (2-nov-2026).
+ *
+ * El webhook responde 200 aunque falle (FIX #1) y el evento no queda marcado
+ * como procesado: nada lo recupera. Con Estudio el daño es doble, porque el
+ * auto-cancelado de la suscripción anterior va DESPUÉS de escribir el plan:
+ * quien sube de Platinum pagaría 599 + 1,499 y seguiría en Platinum. Su fallo
+ * esperable es uno solo y pasajero —la migración aún no aplicada—, así que el
+ * 500 hace que Stripe lo reintente (hasta tres días) y el reintento, ya con la
+ * base al día, escribe el plan y cancela la vieja.
+ *
+ * Los demás planes siguen exactamente como estaban: su error se propaga y el
+ * `catch` de POST responde 200.
+ */
+async function escribirPlan(
+    email: string,
+    subscriptionType: PlanType,
+    stripeCustomerId?: string,
+    stripeSubscriptionId?: string,
+    resetUsage: boolean = false,
+) {
+    try {
+        await updateUserSubscription(email, subscriptionType, stripeCustomerId, stripeSubscriptionId, resetUsage);
+    } catch (e) {
+        if (!esEstudio(subscriptionType)) throw e;
+        console.error(`🚨 ESTUDIO COBRADO Y SIN ESCRIBIR — ${email} (suscripción ${stripeSubscriptionId}); se pide a Stripe que reintente. ¿Falta sql/supabase_estudio.sql?`, e);
+        throw new ReintentarEvento(`no se pudo escribir platinum_estudio para ${email}`, e);
+    }
 }
 
 /**
@@ -200,6 +245,15 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ received: true });
     } catch (error) {
         console.error(`❌ Webhook handler error for event ${event.type}:`, error);
+        // La única excepción al 200 (2-nov-2026): Estudio cobrado sin plan
+        // escrito. Sin marcar el evento, para que el reintento sí se procese.
+        // Ver `escribirPlan`.
+        if (error instanceof ReintentarEvento) {
+            return NextResponse.json(
+                { error: 'Webhook handler failed, retry', eventType: event.type },
+                { status: 500 }
+            );
+        }
         // FIX #1: SIEMPRE retornar 200 para que Stripe NO reenvíe el evento.
         // Un 500 causa que Stripe reintente durante 3 días, creando un loop
         // infinito de errores. Los errores se investigan con logs.
@@ -388,7 +442,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
     console.log(`📧 Updating user ${email}: plan=${planId} → subscriptionType=${subscriptionType}, limit=${config.queriesLimit}`);
 
-    await updateUserSubscription(
+    await escribirPlan(
         email,
         subscriptionType,
         session.customer as string,
@@ -611,7 +665,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     console.log(`📧 User ${email} subscription updated to: ${subscriptionType}, status: ${subscription.status}`);
 
     if (subscription.status === 'active') {
-        await updateUserSubscription(
+        await escribirPlan(
             email,
             subscriptionType,
             subscription.customer as string,

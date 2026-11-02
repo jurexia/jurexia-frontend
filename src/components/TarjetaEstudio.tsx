@@ -30,6 +30,7 @@ import {
     CUOTA_MB_ESTUDIO,
     FLUJOS_ESTUDIO,
     PAGINAS_ESTUDIO,
+    AVISOS_DEL_COBRO_ESTUDIO,
     PLAN_ESTUDIO,
     USO_RAZONABLE_ESTUDIO,
 } from '@/lib/plan-estudio';
@@ -179,6 +180,10 @@ export function TarjetaEstudio({ activa, animar = true }: { activa: boolean; ani
                 window.location.href = `/login?redirect=${encodeURIComponent('/precios?plan=estudio')}`;
             } else if (mensaje.includes('Price ID')) {
                 alert('Error de configuración del plan. Por favor contacta a soporte.');
+            } else if (AVISOS_DEL_COBRO_ESTUDIO.includes(mensaje)) {
+                // «Todavía no» del checkout (la base aún no acepta Estudio):
+                // no es un error del pago, se dice tal cual.
+                alert(mensaje);
             } else {
                 alert(`Error al procesar el pago: ${mensaje}. Por favor intenta de nuevo o contacta a soporte.`);
             }

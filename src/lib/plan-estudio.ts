@@ -53,6 +53,19 @@ export const USO_RAZONABLE_ESTUDIO =
     'Consultas ilimitadas con uso razonable: las primeras 560 de cada mes con la IA Jurídica de Élite; ' +
     'después, sin límite con la IA Jurídica Avanzada. Hasta 100 consultas al día, sin automatización ni extracción masiva.';
 
+/* LOS «TODAVÍA NO» DEL COBRO DE ESTUDIO (2-nov-2026). Los dice la ruta del
+   checkout y la tarjeta los enseña tal cual, sin el «Error al procesar el
+   pago» de los fallos de verdad: por eso viven aquí, donde los leen las dos.
+
+   · La base aún no acepta el plan (falta `sql/supabase_estudio.sql`): cobrar
+     dejaría el pago sin plan. Ver `lib/estudio-en-la-base.ts`. */
+export const MENSAJE_ESTUDIO_NO_DISPONIBLE =
+    'El Plan Estudio se está activando y abre en unos minutos. ' +
+    'Vuelve a intentarlo en un momento o escríbenos a soporte@iurexia.com.';
+
+/** Los mensajes del checkout que la tarjeta enseña tal cual. */
+export const AVISOS_DEL_COBRO_ESTUDIO: readonly string[] = [MENSAJE_ESTUDIO_NO_DISPONIBLE];
+
 export function esEstudio(plan?: string | null): boolean {
     return (plan ?? '').trim() === PLAN_ESTUDIO;
 }
