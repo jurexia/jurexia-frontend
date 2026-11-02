@@ -459,7 +459,7 @@ export default function PreciosPage() {
                                        asuntos» (228) se le montaba encima;
                                        ésta acaba en 162, como «Para abogados
                                        exigentes» (184) antes de Themis. */
-                                    description="Para equipos con muchos asuntos"
+                                    description="Para muchos asuntos"
                                     /* Las 600 hojas van en «todo lo de Platinum»,
                                        no bajo «y además»: Platinum ya las lee, y
                                        el cuadro de abajo dice 600 | 600. */
