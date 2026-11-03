@@ -1,0 +1,580 @@
+{
+ "_LEEME": "CONTROL A CIEGAS FINAL (2-nov-2026): mensajes REALES de user_feedback de hace más de 75 días (abril a mediados de agosto). Se etiquetaron a mano ANTES de correr el clasificador y su tasa se reporta tal cual salió la primera vez, sin retocar reglas ni etiquetas. Sin nombres ni correos. Fuera, los que sólo se entienden con la conversación.",
+ "mensajes": [
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "en que apartado registro mi cedula profesional",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "en el plan Pro cuantos documetos puedo subir",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Puedo agregar varios Docuentos o es solo uno solo",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Que tal buen día no me deja usar el chat dice que no tengo tokens pero tenia más de la mitad de los 560 y volvi a pagar",
+   "tipo": "pago"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Acabo de pagar otra vez la membreasi platinum",
+   "tipo": "pago"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "❌ Error al analizar documento: Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 32768 tokens, but can only afford 29307. To increase, visit https://openrouter.ai/settings/credits and add more credits', 'code': 402, 'metadata': {'li",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Ya me sali y volvi a entrar y sigue diciendo lo mismo",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Ya volvi a entrar y me sigue diciendo lo mismo que me faltan tokens pero aparecen 0/560 consultas",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "PERO ACABO DE PAGAR OTRA VEZ EL PLATINUM Y TENIA MAS DE LA MITAD DE CONSULTAS DISPONIBLES",
+   "tipo": "pago"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "QUE TAL BUEN DIA ME APARECE ESTO",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Que tal buen dia pague el paquete platinum pero me aparece el gratuito",
+   "tipo": "pago"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "hola ustedes manejan prompts",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "esta bloqueado el modulo laboral porque estoy en prueba, es correcto?",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "puede realizar proyectos de demanda laboral esta IA",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "no necesito soporte porque eso es parte del consulta que estaba realizando",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Núm. de Expediente: 1000/2026 Fecha del Acuerdo: 07/08/2026 Síntesis: Demanda de amparo. Visto lo de cuenta, téngase recibida la demanda de amparo promovida por ********************, mediante la cual solicita el amparo y protección de la justicia federal contra actos que atribuye a la autoridad: Juz",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "buscar",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "amparo",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "hola sigue con el mismo problema me marca erro 400 invalid_argument",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Error code 400",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "hola tengo un chat de consulta que me marca error y le vuelvo a escribir pero sigue marcando error",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "hola para cancelar suscripcion?",
+   "tipo": "cancelar"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "TODAS las veces que he consultado tesis",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Al solicitarle tesis, siempre se equivoca",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "hola para que sirve el boton de sentencia",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Sigue sin funcionar",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Ya recargué y sigue igual",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "La plataforma se atora y no me contesta nada",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Nadie me responde desde hace tres días",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "La plataforma me citó una tesis que no existe",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Quiero cancelar mi suscripción",
+   "tipo": "cancelar"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Los genios de iurexia",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Para que son los genios ?",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Puedes generar una demanda de amparo?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Que modelo de ia usas para responder?",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Ok y como veo el historial de consultas?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "hola como cancelo mi cuenta?",
+   "tipo": "cancelar"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Tengo varios mensajes que les envie en donde les comentó que ya les envie a ustedes un proyecto de demanda de nulidad de testamento y no me responden sobre la revisión del mismo, les mandó consultas para saber si no tienen la respuesta y en este caso me olvido de ustedes o la busco en otra plataform",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "creo que no esta funcionando la plataforma y lo malo es que ya los recomende con varios abogados, desde ayer estoy mandando un proyecto de demanda y se las acabo nuevamente de mandar y se queda en guia rapido de uso y no recibo respuesta que esta pasando con la plataforma",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "dos veces le he consuntado en este momento y se atora y no señala nada y me deja sin contestación",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "porque aparece este mensaje ❌ Error al analizar documento: Error code: 402 - {'error': {'message': 'Insufficient credits. Add more using https://openrouter.ai/settings/credits', 'code': 402, 'metadata': {'limit_source': 'openrouter_credits', 'remedy_hint': 'Add credits at https://openrouter.ai/setti",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Estoy batallando para poder ver el hostorial de las consultas, en la pantalla unicamente se ve una y no puedo las anteriores, bajo el cursor las veo pero al momenot de seleccionarlas se mueven y se seleccional la mas reciente",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Buenas tardes, estoy averiguando que paso con mi suscripcion, yo estaba en Premium",
+   "tipo": "pago"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "como sé donde se me va a realizar el cobro del servicio mensual",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "iurexia me cito tesis que no existian al verificarlas en la pagina SCJN o bien hablan y son de otra materia y no me da como el enlace oficial cuando me ayuda con la fundamentacion alguna veces para verificar su vigencia y que son verificables y reales y no alucinaciones",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "como puedo bajar la barra para poder leer bien",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "no me permite cancelar mi suscripción",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Amapao indirecto",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Error",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "estoy intentando cancelar mi suscripcion y no me deja. me marca error. porque no me deja?",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Demanada de amparo indirecto, contra auto.de vinculacion por delito de secuestto agravado, en juzgado de juicio oral.de [LUGAR], ya que los datos de prieba, que son la declaracion de la victima es impresisa en la descripcion de uno de los imputados, [NOMBRE] no coincide la descripci",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "si cambio de plan pro a premium me toman encuenta lo pagado en el pro?",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "FATAL. SE LE ESTÁ PRESENTANDO A LA HERRAMIENTA LA TRANSCRIPCIÓN DEL CONTENIDO DE TODAS LAS ACTUACIONES EN UN DOCUMENTO DE 25 PÁGINAS, PERFECTAMENTE ORDENADAS, CON CADA ACTUACIÓN PERFECTAMENTE IDENTIFICADA, CON CLARIDAD ABSOLUTA EN SU CONTENIDO Y CUABNSO SE LE PIDEN LOS ARGUMENTOS DE LA VALORACIÓN CO",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Buen dia, subi una demanda soliciando la sintesis de los 10 conceptos de violacion que contiene y solo ubica a 3 a pesar de que estan claramente identificados",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Existe una app para Iurexia. Así no usarla desde Chrome",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "VOR QUE LA CONTESTACIÓN QUE ME PROPONES ESMJY CORTA CON ESO CREES QUE ES SUFICIENTE Y NO OFRECES CXOPULSAS CNTABLESPARA DEMOSTRAR QUE NO SE HICIERON LOS DEPÓSITOS",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "que pasa nadie me da respuesta",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "2 veces he realizado el pago pero aun asi no se actulizan mis consultas",
+   "tipo": "pago"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "buen dia ,realizde el pago pero no se ve refleh¿jado el plan aun me aparece gratuiti",
+   "tipo": "pago"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "La pantalla no muestra el contenido lateral derecho, por lo que no se puede revisar la información adecuadamente cuando muestra un cuadro con información estructurada",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Buenas tardes. Acabo de comprar el plan platinum. Desde mi laptop si puedo entrar a Iurexia pero desde mi celular no, ya que indica que no son correctos el correo electrónico o la contraseña",
+   "tipo": "acceso"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Amplían el tamaño del texto o la ocupación del texto que genera cada consulta tanto en el movil como en la versión de escritorio hay mucho espacio desperdiciado y no se puede leer bien, todo esta pequeño y la letra igual, y agreguen por favor las leyes del estado de Oaxaca",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Quiero que esté amparo me lo afines y me lo redactes más técnicamente y que se pueda fundamentar en tracto sucesivo",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "recientemente realicé un proyecto de queja en el cual se combate el acuerdo por el cual la sala superior negó la suspensión provisional por la sala superior, dicho proyecto salió en el sentido de fundada, sin embargo, estoy muy desconfiada de la plataforma por dos cosas: una cuando trato de utilizar",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Quiero saber por qué dice mi página Consultas 74/140?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "como puedo cancelar mi suscripcion",
+   "tipo": "cancelar"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "quiero cerrar mi suscripción",
+   "tipo": "cancelar"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "No hay error",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "La demanda carece de fundamentos legales",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "DESEO CANCELAR Y NO SE ME PERMITE",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Solo que me faltaron datos el error es mio",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "He sometido un texto para consulta 4 ocasiones consecutivas y me aparece X Error: Retry",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "no permite cancelar suscripción",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "quiero cancelar suscripción",
+   "tipo": "cancelar"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "llevo 12 intentos y marca error, creo que cancelaré",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "llevo 8 intentos y en todos marca error",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "cualquier solicitud dice: xError: RetryError",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Hola, he querido hacer una consulta, pero me marca error, sin embargo se consumieron los créditos",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Hola me gustaría cancelar mi suscripción pero me aparece como error al confirmar el cancelar",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "COmo puedo consultar on ustdes la forma de agregar dos documentos o mas para su revision al mismo tiempo, si es que esto es posible? y En donde seribo la contestacion a las preguntas que envio por esta via?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "sigue sin contestar marcando error y cobrando la consulta",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Como accedo a mis consultas previas?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Hola buen dia, me ha marcado 4 consultas pero no me ha dado respuesta solo paarece el mensaje de Error",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Quiero pasar a PRO",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Hola, buen dia. me interesa contratar el Plan Pro, por favor apoyeme en el procedimiento para contratarlo. gracias",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Buen dia, intenté contratar el Plan Pro anual, pero no encuentro como hacerlo en la pagina de Lurexia",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Buena tarde. He notado que el inicio de mis consultas ya no se encuentran disponibles. Yo no he borrado nada, pero al querer consultar el inicio de la conversación no es posible. Para mí es importante tener todo el historial de cada chat y/o consulta. ¿Existe la posibilidad de tener las conversacion",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "bajo la barra de desplazamiento del historial para revisar un análisis previo y se regresa sin permitirme ubicar el chat de esa consulta en el historial ¿¿¿podrían resolverlo por favor??? La verdad me urge. Gracias.",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "No se como hicieron un cobro indebido si no contaban con mi tarjeta",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "quiero cancelar la suscripción y no me deja,",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Favor de cancelar mi subscripcion. [CORREO] Me marca un error cuando intento hacerlo en la plataforma. Gracias.",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Hola, me ayudan a cancelar mi suscripción? Me marca un error cuando lo intento.",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Buenas noches observo que tienen la opcion de secretario del PJF en version beta deseo probarlo pero no me da la opcion a pesar de que adquiri el plan platinum",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "buen diía disculpe porque cuando paso un archivo eque esta legible y completo, me arroja este error, y encima de la respuesta erronea me quita un consulta como realizada Asimismo, las autoridades responsables sostuvieron la constitucionalidad y legalidad de los actos reclamados, al considerar que fu",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "ES LA SEGUNDA VEZ QUE ME PROPORCIONA INFORMACION INCOMPLETA, POR QUÉ?",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "buenas tardes cuando contrate indicaba que tenian en version beta la funcion de secretario del poder judicial",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Ayer consulté la plataforma sobre una Demanda de Amparo Directo, y a partir del os datos me arrojó una causal de extemporaneidad. Ante la duda hube que consultar otras fuentes. Tal causal no se configura.",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "CONTINÚA CON LA REDACCIÓN",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "No es intituiva la aplicacion y no es claro el menu",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Con todo respeto les hago las siguientes observaciones. 1. Ustedes promueven y destacan cualquier cantidad de cualidades de su herramienta, sin embargo, el error cometido hoy si no se puede dejar pasar por alto. 2. Le pedí a su herramienta que me proporcionara razonamientos, argumentos, tesis o juri",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Envié una consulta y Se repitió el texto como 50 veces",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Le pedí a la aplicación que buscara los documentos, pruebas o anexos ofrecidos en el escrito de demanda digitalizado que le proporcioné y “transcribió” los hechos tergiversadamente y no tal cual viene en el escrito.",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Esto para qué es para buscar abogados o para redactar",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Policías municipales quitaron automotor a su dueño bajo argumento que tenía reporte de robo en el 911, mismo que semanas antes el dueño del carro levanto con los hechos de captura del [NOMBRE], al haber sido privado de libertad por unas horas, al quitar vehículo entregaron inventario en hoja rosa sin ",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "No me han contestado? en historial dice que tengo 10 conversaciones como las veo?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Buenos días Se me borro mi ultima consulta de ayer en la noche o no la encuentro",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "no se puede descargar el documento",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "ponme los primeros agravios que me mostraste en mi primera busqueda",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Admitir el envío de mas de un archivo a la vez",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Hola buen día, recién realice el pago de mi mensualidad, pero no encuentro donde puedo bajar el comprobante del pago realizado, ¿me podría por favor ayudar?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "El tribunal le impuso multa por no dar cumplimiento a la sentencia a los responsables de la Alcaldía incluyendo a su Titular se fueron al amparo les conceden suspensión definitiva La Sala Ordinaria ordena Arresto por incumplimiento de sentencia según la autoridad se va Amparo ?? Ante la simulación d",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Policía municipal quitaron a su propietaria carro bajo argumento que tenía reporte de robo, sin orden judicial y ministerio público aún no devuelve automotor, que puedo hacer?",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Acabo de hacer el pago de la suscripción PRo y me sigue apareciendo como plan gratuito.",
+   "tipo": "pago"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Trato de cargar un documento y me aparece esto, Failed to fetch, son reiteradas ocasiones",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "user_feedback.message (75+ días)",
+   "texto": "Trato de cargar un documento para que lo analice Iurexia y me detecta error, reitero los intentos y me está consumiendo las consultas, no tiene capacidad de análisis",
+   "tipo": "humano"
+  }
+ ]
+}
