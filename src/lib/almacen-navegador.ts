@@ -43,7 +43,8 @@ const PRUEBA_CARACTERES = 256;
 
 function hayLocalStorage(): boolean {
     try {
-        return typeof window !== 'undefined' && typeof window.localStorage === 'object' && window.localStorage !== null;
+        // Como supabase-js: `globalThis`, que en el navegador es `window`.
+        return typeof globalThis.localStorage === 'object' && globalThis.localStorage !== null;
     } catch {
         return false;
     }
