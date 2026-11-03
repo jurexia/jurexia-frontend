@@ -11,6 +11,8 @@ import { createClient } from '@supabase/supabase-js';
 import { SITIO, boton, caja, envolver, esc, parrafo, rotulo } from '@/lib/correo/plantilla';
 
 export const dynamic = 'force-dynamic';
+// Sin caché de datos de Next en esta ruta GET: ver api/cron/incidencias (2-nov-2026).
+export const fetchCache = 'force-no-store';
 export const maxDuration = 120;
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto',

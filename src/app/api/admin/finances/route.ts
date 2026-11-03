@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { exigirAdmin } from '@/lib/guardia-admin';
 import { getStripe } from '@/lib/stripe';
 
+// Sin caché de datos de Next en esta ruta GET: ver api/cron/incidencias (2-nov-2026).
+export const fetchCache = 'force-no-store';
+
 // Price IDs mapped to plan names
 const PRICE_TO_PLAN: Record<string, { name: string; monthly_equivalent: number }> = {
     'price_1Sy2l63uD85CqvjMku0MM4k3': { name: 'Pro Mensual', monthly_equivalent: 14900 },

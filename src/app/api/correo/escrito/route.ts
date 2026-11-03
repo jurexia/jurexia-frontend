@@ -31,6 +31,8 @@ import { datosDeEnvio, enviarEscrito, proponerMensaje, type Abogado } from '@/li
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+// Sin caché de datos de Next en esta ruta GET: ver api/cron/incidencias (2-nov-2026).
+export const fetchCache = 'force-no-store';
 export const maxDuration = 60;
 
 const SIN_SESION = { error: 'Inicia sesión para continuar.' };

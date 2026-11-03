@@ -39,6 +39,8 @@ import { comparar, hayQueAvisar, Conocida } from '@/lib/seguimiento/detector';
 import { correoActuacion, correoNoSePudo, enviar } from '@/lib/seguimiento/correo';
 
 export const dynamic = 'force-dynamic';
+// Sin caché de datos de Next en esta ruta GET: ver api/cron/incidencias (2-nov-2026).
+export const fetchCache = 'force-no-store';
 export const maxDuration = 300;
 
 const PAUSA_PJF = 2000;   // un hilo, una petición cada 2 s: hay un F5 delante

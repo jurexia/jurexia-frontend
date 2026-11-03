@@ -26,6 +26,9 @@ import { correoCasosUso } from '@/lib/correo/campanias';
 import { INCLUIDOS_CASOS_USO, segmento } from '@/lib/correo/segmentos';
 import { enviarCampania } from '@/lib/correo/enviar';
 
+// Sin caché de datos de Next en esta ruta GET: ver api/cron/incidencias (2-nov-2026).
+export const fetchCache = 'force-no-store';
+
 export const maxDuration = 300;
 
 const CAMPANIA = 'casos_uso';

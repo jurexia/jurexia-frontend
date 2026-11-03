@@ -15,6 +15,9 @@ import { createClient } from '@supabase/supabase-js';
 import { verificarTestigo } from '@/lib/correo/baja';
 import { PALETA } from '@/lib/correo/plantilla';
 
+// Sin caché de datos de Next en esta ruta GET: ver api/cron/incidencias (2-nov-2026).
+export const fetchCache = 'force-no-store';
+
 function admin() {
     return createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,

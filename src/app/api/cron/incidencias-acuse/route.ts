@@ -13,8 +13,11 @@ import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { recoger } from '@/lib/incidencias/recogida';
 import { acusar } from '@/lib/incidencias/acuse';
+import { REMITENTE_SOPORTE } from '@/lib/incidencias/correos';
 
 export const dynamic = 'force-dynamic';
+// Sin caché de datos de Next en esta ruta GET: ver api/cron/incidencias (2-nov-2026).
+export const fetchCache = 'force-no-store';
 export const maxDuration = 300;
 
 function autorizado(req: NextRequest): boolean {
@@ -35,7 +38,7 @@ export async function GET(req: NextRequest) {
     try {
         const recogida = await recoger();
         const resend = simulacro ? null : new Resend(process.env.RESEND_API_KEY!);
-        const remitente = process.env.FROM_EMAIL || 'Iurexia <noreply@iurexia.com>';
+        const remitente = REMITENTE_SOPORTE;
         const acuses = await acusar(cliente, resend, remitente, simulacro);
         return NextResponse.json({ simulacro, recogida, acuses });
     } catch (e) {

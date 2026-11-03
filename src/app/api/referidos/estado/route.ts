@@ -10,6 +10,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { estadoDeReferidos } from '@/lib/referidos-backend';
 
+// Sin caché de datos de Next en esta ruta GET: ver api/cron/incidencias (2-nov-2026).
+export const fetchCache = 'force-no-store';
+
 export async function GET(req: NextRequest) {
     const cabecera = req.headers.get('authorization') ?? '';
     const token = cabecera.startsWith('Bearer ') ? cabecera.slice(7) : '';

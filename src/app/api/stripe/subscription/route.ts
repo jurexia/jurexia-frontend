@@ -3,6 +3,8 @@ import { finDelAcceso, finDelPeriodo, getStripe, getPlanFromSubscription } from 
 import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
+// Sin caché de datos de Next en esta ruta GET: ver api/cron/incidencias (2-nov-2026).
+export const fetchCache = 'force-no-store';
 
 export async function GET(request: NextRequest) {
     try {
