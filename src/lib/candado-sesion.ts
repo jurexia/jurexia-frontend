@@ -42,7 +42,32 @@
  * si la congelada ya gastó el token y no alcanzó a guardar, éste vuelve a
  * llegar al servidor dentro de la ventana de 10 s, y Supabase contesta con la
  * sesión vigente en vez de revocarla.
+ *
+ * EL RELOJ DEL EQUIPO (2-nov-2026). Con el reloj nueve horas adelantado, toda
+ * sesión que daba el servidor le parecía vencida a supabase-js —compara el
+ * `expires_at` del servidor con `Date.now()` del equipo— y la renovaba sin
+ * parar: 154 renovaciones en 12 minutos, 21 contestadas con 429, y un 429 al
+ * renovar borra la sesión (ver `reloj.ts`). Ahora:
+ *
+ * - Cada sesión que entrega el servidor (entrar, volver de Google, renovar)
+ *   pasa por `pedirSesion`, que mide con ella el desfase del reloj y, si pasa
+ *   de un minuto, guarda su vencimiento en la hora del equipo: lo que dura el
+ *   token contado desde que se pidió. supabase-js ya no ve vencida una sesión
+ *   recién dada, y con el reloj atrasado ya no da por vigente una que el
+ *   servidor rechaza. Con el reloj bien no se toca nada.
+ *
+ * - Si el reloj se corrige después, la sesión guardada quedó en la hora vieja:
+ *   `ponerSesionEnHora` la compara con la medición nueva y la renueva.
+ *
+ * - Y un freno, por si el ciclo vuelve por otro camino: con `TOPE_RENOVACIONES`
+ *   renovaciones contestadas por el servidor en el último minuto (entre todas
+ *   las pestañas), la siguiente no sale. Se devuelve la sesión guardada si
+ *   sigue vigente en la hora del servidor; si no, un 503, que supabase-js
+ *   reintenta sin borrar la sesión —el 429 de Supabase la borra—.
  */
+
+import { almacenEscribible } from './almacen-navegador'
+import { UMBRAL_CORREGIR_MS, anotarDesfase, desfaseConocido, desfaseDeEmision } from './reloj'
 
 /** Lo que auth-js reconoce como «candado ocupado» en su tic de renovación. */
 class CandadoOcupado extends Error {
@@ -100,6 +125,10 @@ const TOPE_RENOVACION_MS = 5_000
 const MARGEN_MS = 90_000
 /** Cuánto vale el aviso de la última renovación para las pestañas que esperaban. */
 const VIGENCIA_AVISO_MS = 60_000
+/** Renovaciones contestadas por el servidor que caben en `VENTANA_FRENO_MS`
+ *  entre todas las pestañas. Lo normal es una por hora. */
+const TOPE_RENOVACIONES = 4
+const VENTANA_FRENO_MS = 60_000
 
 interface SesionGuardada {
     access_token?: string
@@ -138,9 +167,159 @@ function respuestaCon(s: SesionGuardada): Response {
     return new Response(JSON.stringify(s), { status: 200, headers: { 'Content-Type': 'application/json' } })
 }
 
+function urlDe(entrada: RequestInfo | URL): string {
+    return typeof entrada === 'string' ? entrada : entrada instanceof URL ? entrada.href : entrada.url
+}
+
 function esRenovacion(entrada: RequestInfo | URL): boolean {
-    const url = typeof entrada === 'string' ? entrada : entrada instanceof URL ? entrada.href : entrada.url
+    const url = urlDe(entrada)
     return url.includes('/auth/v1/token') && url.includes('grant_type=refresh_token')
+}
+
+/** Las peticiones con las que el servidor de sesión entrega una sesión nueva:
+ *  contraseña, código, regreso de Google/Apple (pkce), alta y renovación. */
+function emiteSesion(entrada: RequestInfo | URL, init?: RequestInit): boolean {
+    const metodo = init?.method
+        ?? (typeof Request !== 'undefined' && entrada instanceof Request ? entrada.method : 'GET')
+    return metodo.toUpperCase() === 'POST' && /\/auth\/v1\/(token|verify|signup)(\?|$)/.test(urlDe(entrada))
+}
+
+/** El `exp` del token de acceso: su vencimiento en la hora del SERVIDOR. */
+function vencimientoDelToken(token: string | undefined): number | null {
+    try {
+        const carga = token?.split('.')[1]
+        if (!carga) return null
+        const { exp } = JSON.parse(atob(carga.replace(/-/g, '+').replace(/_/g, '/')))
+        return typeof exp === 'number' ? exp : null
+    } catch {
+        return null
+    }
+}
+
+/**
+ * Mide el reloj con una sesión recién emitida y, si va desfasado, pone su
+ * vencimiento en la hora del equipo: lo que dura el token, contado desde que
+ * se pidió (antes de la respuesta: así nunca vence después que en el servidor).
+ */
+function enHoraDelEquipo(s: SesionGuardada, inicio: number, fin: number): SesionGuardada {
+    if (typeof s.expires_at !== 'number' || typeof s.expires_in !== 'number') return s
+    const desfase = desfaseDeEmision(inicio, fin, s.expires_at, s.expires_in)
+    anotarDesfase(desfase, 'sesión')
+    if (Math.abs(desfase) < UMBRAL_CORREGIR_MS) return s
+    return { ...s, expires_at: Math.floor(inicio / 1000) + s.expires_in }
+}
+
+/** Pide la sesión al servidor y se la devuelve a supabase-js en la hora del equipo. */
+async function pedirSesion(
+    entrada: RequestInfo | URL,
+    init: RequestInit | undefined,
+): Promise<{ respuesta: Response; sesion: SesionGuardada | null }> {
+    const inicio = Date.now()
+    const respuesta = await fetch(entrada, init)
+    const fin = Date.now()
+    // Sin cuerpo no hay sesión, y `new Response` no admite cuerpo con éstos.
+    if ([101, 204, 205, 304].includes(respuesta.status)) return { respuesta, sesion: null }
+    const texto = await respuesta.text()
+    let cuerpo = texto
+    let sesion: SesionGuardada | null = null
+    if (respuesta.ok) {
+        try {
+            const datos = JSON.parse(texto) as SesionGuardada
+            if (datos.access_token && datos.refresh_token) {
+                sesion = enHoraDelEquipo(datos, inicio, fin)
+                if (sesion !== datos) cuerpo = JSON.stringify(sesion)
+            }
+        } catch {
+            // No era una sesión: se devuelve tal cual.
+        }
+    }
+    const headers = new Headers(respuesta.headers)
+    if (cuerpo !== texto) headers.delete('content-length')
+    return {
+        respuesta: new Response(cuerpo, { status: respuesta.status, statusText: respuesta.statusText, headers }),
+        sesion,
+    }
+}
+
+let renovacionesEnMemoria: number[] = []
+let frenoDicho = 0
+
+/** Las renovaciones que el servidor contestó en el último minuto, de todas las
+ *  pestañas. Si el reloj se movió hacia atrás, las «futuras» no cuentan. */
+function renovacionesRecientes(clave: string): number[] {
+    const ahora = Date.now()
+    // Con la sesión en memoria (almacén lleno), lo de localStorage es viejo.
+    const guardadas = almacenEscribible() ? leer<unknown>(clave) : null
+    const lista = Array.isArray(guardadas) ? guardadas : renovacionesEnMemoria
+    return lista.filter((t): t is number => typeof t === 'number' && ahora - t >= 0 && ahora - t < VENTANA_FRENO_MS)
+}
+
+function anotarRenovacion(clave: string): void {
+    const lista = [...renovacionesRecientes(clave), Date.now()]
+    renovacionesEnMemoria = lista
+    try { localStorage.setItem(clave, JSON.stringify(lista)) } catch { /* sin almacén: queda en memoria */ }
+}
+
+/**
+ * La renovación que no sale. Si la sesión guardada aún vale en la hora del
+ * servidor, se devuelve ésa, puesta en la hora del equipo para que supabase-js
+ * deje de pedir. Si no, un 503: supabase-js lo reintenta y NO borra la sesión.
+ */
+function frenar(guardada: SesionGuardada | null, cuantas: number): Response {
+    const ahora = Date.now()
+    const desfase = desfaseConocido()
+    if (ahora - frenoDicho > VENTANA_FRENO_MS) {
+        frenoDicho = ahora
+        console.warn(`[sesión] ${cuantas} renovaciones del token en el último minuto: se frenan las `
+            + 'siguientes para no llegar al límite de Supabase (su 429 cierra la sesión).'
+            + (desfase !== null && Math.abs(desfase) >= UMBRAL_CORREGIR_MS
+                ? ` [reloj] El reloj del equipo va ${Math.round(desfase / 60_000)} min desfasado.` : ''))
+    }
+    const exp = vencimientoDelToken(guardada?.access_token)
+    const quedan = exp === null ? 0 : exp * 1000 - (ahora - (desfase ?? 0))
+    if (guardada?.refresh_token && quedan > MARGEN_MS) {
+        return respuestaCon({ ...guardada, expires_at: Math.floor((ahora + quedan) / 1000) })
+    }
+    return new Response(
+        JSON.stringify({ code: 503, error_code: 'renovacion_frenada', msg: 'Demasiadas renovaciones seguidas' }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } },
+    )
+}
+
+/**
+ * ¿La sesión guardada se calculó con otra hora del equipo? Su `expires_at`
+ * menos el `exp` de su token es el desfase con que se guardó (cero si se guardó
+ * en la hora del servidor). Si difiere del medido ahora en más que el margen
+ * con que supabase-js renueva (90 s), la renovaría cuando el servidor ya la
+ * rechaza. Por debajo no vale la pena: con un desfase justo en el umbral de un
+ * minuto, el ruido de cada medición la haría renovar en cada carga de página.
+ */
+export function sesionEnOtraHora(claveSesion: string, desfase: number): boolean {
+    // Con la sesión en memoria, la de localStorage es una vieja: no cuenta.
+    const s = almacenEscribible() ? leerSesion(claveSesion) : null
+    const exp = vencimientoDelToken(s?.access_token)
+    if (!s || typeof s.expires_at !== 'number' || exp === null) return false
+    return Math.abs(desfase - (s.expires_at - exp) * 1000) > MARGEN_MS
+}
+
+/** Lo que se usa del cliente de sesión de supabase-js. */
+interface ClienteDeSesion {
+    getSession(): Promise<unknown>
+    refreshSession(): Promise<unknown>
+}
+
+/**
+ * Tras medir el reloj (al abrir la página, o porque el usuario lo corrigió):
+ * si la sesión guardada quedó en otra hora, se renueva y la nueva se guarda en
+ * la hora de ahora. Primero se pide la sesión: si ya parecía vencida,
+ * supabase-js la renueva ahí mismo y no hace falta una segunda renovación.
+ */
+export async function ponerSesionEnHora(auth: ClienteDeSesion, claveSesion: string, desfase: number): Promise<boolean> {
+    await auth.getSession()
+    if (!sesionEnOtraHora(claveSesion, desfase)) return false
+    console.warn('[reloj] La sesión guardada se calculó con otra hora del equipo: se renueva.')
+    await auth.refreshSession()
+    return true
 }
 
 /**
@@ -149,6 +328,7 @@ function esRenovacion(entrada: RequestInfo | URL): boolean {
  */
 export function fetchDeSesion(claveSesion: string): typeof fetch {
     const claveAviso = `${claveSesion}:renovacion`
+    const claveRenovaciones = `${claveSesion}:renovaciones`
     const avisoVigente = (): AvisoRenovacion | null => {
         const aviso = leer<AvisoRenovacion>(claveAviso)
         if (aviso && Date.now() - aviso.en < VIGENCIA_AVISO_MS) return aviso
@@ -158,21 +338,30 @@ export function fetchDeSesion(claveSesion: string): typeof fetch {
     if (typeof localStorage !== 'undefined') avisoVigente()
 
     return async (entrada, init) => {
+        if (!emiteSesion(entrada, init)) return fetch(entrada, init)
+        // Entrar, volver de Google, el alta, y la renovación en navegadores
+        // sin `navigator.locks`: sin coordinar pestañas, pero en la hora del equipo.
+        const sinCoordinar = async () => (await pedirSesion(entrada, init)).respuesta
         if (typeof navigator === 'undefined' || !navigator.locks || !esRenovacion(entrada)
             || typeof init?.body !== 'string') {
-            return fetch(entrada, init)
+            return sinCoordinar()
         }
         let cuerpo: Record<string, unknown>
         try {
             cuerpo = JSON.parse(init.body)
         } catch {
-            return fetch(entrada, init)
+            return sinCoordinar()
         }
         const pedido = cuerpo.refresh_token
-        if (typeof pedido !== 'string' || !pedido) return fetch(entrada, init)
+        if (typeof pedido !== 'string' || !pedido) return sinCoordinar()
 
         const renovar = async (): Promise<Response> => {
-            const guardada = leerSesion(claveSesion)
+            // Con el almacén lleno, supabase-js guarda la sesión en memoria y
+            // lo que queda en localStorage es una sesión VIEJA: gastar su token
+            // en vez del pedido daba «Refresh Token Not Found» y cerraba la
+            // sesión cada hora (2-nov-2026, ver almacen-navegador.ts). Sin
+            // almacén escribible no hay pestañas que coordinar por él.
+            const guardada = almacenEscribible() ? leerSesion(claveSesion) : null
             let gastar = pedido
             if (guardada?.refresh_token && guardada.refresh_token !== pedido) {
                 // Otra pestaña ya renovó y guardó: se usa lo suyo.
@@ -184,29 +373,25 @@ export function fetchDeSesion(claveSesion: string): typeof fetch {
                 const aviso = avisoVigente()
                 if (aviso?.de === pedido && vigente(aviso.sesion)) return respuestaCon(aviso.sesion)
             }
+            // El freno (2-nov-2026): cuentan las que el servidor contestó.
+            const recientes = renovacionesRecientes(claveRenovaciones)
+            if (recientes.length >= TOPE_RENOVACIONES) return frenar(guardada, recientes.length)
             const body = gastar === pedido ? init.body : JSON.stringify({ ...cuerpo, refresh_token: gastar })
-            const respuesta = await fetch(entrada, { ...init, body })
-            const texto = await respuesta.text()
-            if (respuesta.ok) {
+            const { respuesta, sesion } = await pedirSesion(entrada, { ...init, body })
+            anotarRenovacion(claveRenovaciones)
+            if (sesion) {
                 try {
-                    const sesion = JSON.parse(texto) as SesionGuardada
-                    if (sesion.access_token && sesion.refresh_token) {
-                        if (typeof sesion.expires_at !== 'number' && typeof sesion.expires_in === 'number') {
-                            sesion.expires_at = Math.round(Date.now() / 1000) + sesion.expires_in
-                        }
-                        const aviso: AvisoRenovacion = { de: gastar, en: Date.now(), sesion }
-                        localStorage.setItem(claveAviso, JSON.stringify(aviso))
+                    if (typeof sesion.expires_at !== 'number' && typeof sesion.expires_in === 'number') {
+                        sesion.expires_at = Math.round(Date.now() / 1000) + sesion.expires_in
                     }
+                    const aviso: AvisoRenovacion = { de: gastar, en: Date.now(), sesion }
+                    localStorage.setItem(claveAviso, JSON.stringify(aviso))
                 } catch {
                     // Sin aviso, la que espera a lo sumo reutiliza el token
                     // dentro de su ventana de 10 s, que Supabase admite.
                 }
             }
-            return new Response(texto, {
-                status: respuesta.status,
-                statusText: respuesta.statusText,
-                headers: respuesta.headers,
-            })
+            return respuesta
         }
 
         const control = new AbortController()

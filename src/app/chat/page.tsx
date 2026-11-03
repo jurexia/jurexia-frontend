@@ -54,6 +54,7 @@ import {
     generateTitle,
     updateConversationTitle
 } from '@/lib/conversations';
+import { guardarVersiones } from '@/lib/almacen-navegador';
 import {
     avisarTraba,
     copiaYaGuardada,
@@ -1872,9 +1873,15 @@ export default function ChatPage() {
        Al cambiar de conversación se recogen el panel y su vínculo; la que se
        acaba de crear para este envío no cuenta como cambio. */
     const convCargadaRef = useRef<string | null>(null);
+    /* En el render del cambio de conversación `versiones` todavía trae las de
+       la ANTERIOR (o el `[]` inicial): guardarlas ahí las copiaba en la clave
+       de la nueva y, al abrir la página, borraba las guardadas. Ese primer
+       guardado se salta (2-nov-2026). */
+    const saltarGuardadoRef = useRef(false);
     useEffect(() => {
         if (activeConversationId === convCargadaRef.current) return;
         convCargadaRef.current = activeConversationId;
+        saltarGuardadoRef.current = true;
         if (activeConversationId && convRecienCreadaRef.current === activeConversationId) {
             convRecienCreadaRef.current = null;
             setVersiones([]);
@@ -1888,8 +1895,10 @@ export default function ChatPage() {
         } catch { setVersiones([]); }
     }, [activeConversationId]);
     useEffect(() => {
+        if (saltarGuardadoRef.current) { saltarGuardadoRef.current = false; return; }
         if (!activeConversationId || convCargadaRef.current !== activeConversationId) return;
-        try { localStorage.setItem(`iurexia-documento-${activeConversationId}`, JSON.stringify(versiones)); } catch { /* sin almacenamiento */ }
+        // Sin volver a llenar el almacén: ver `almacen-navegador.ts` (2-nov-2026).
+        guardarVersiones(`iurexia-documento-${activeConversationId}`, versiones);
     }, [versiones, activeConversationId]);
 
     /* SEGUIR LA RESPUESTA MIENTRAS SE ESCRIBE. El desplazamiento sólo ocurría
