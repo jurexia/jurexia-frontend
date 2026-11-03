@@ -248,7 +248,8 @@ let frenoDicho = 0
  *  pestañas. Si el reloj se movió hacia atrás, las «futuras» no cuentan. */
 function renovacionesRecientes(clave: string): number[] {
     const ahora = Date.now()
-    const guardadas = leer<unknown>(clave)
+    // Con la sesión en memoria (almacén lleno), lo de localStorage es viejo.
+    const guardadas = almacenEscribible() ? leer<unknown>(clave) : null
     const lista = Array.isArray(guardadas) ? guardadas : renovacionesEnMemoria
     return lista.filter((t): t is number => typeof t === 'number' && ahora - t >= 0 && ahora - t < VENTANA_FRENO_MS)
 }
@@ -294,7 +295,8 @@ function frenar(guardada: SesionGuardada | null, cuantas: number): Response {
  * minuto, el ruido de cada medición la haría renovar en cada carga de página.
  */
 export function sesionEnOtraHora(claveSesion: string, desfase: number): boolean {
-    const s = leerSesion(claveSesion)
+    // Con la sesión en memoria, la de localStorage es una vieja: no cuenta.
+    const s = almacenEscribible() ? leerSesion(claveSesion) : null
     const exp = vencimientoDelToken(s?.access_token)
     if (!s || typeof s.expires_at !== 'number' || exp === null) return false
     return Math.abs(desfase - (s.expires_at - exp) * 1000) > MARGEN_MS
