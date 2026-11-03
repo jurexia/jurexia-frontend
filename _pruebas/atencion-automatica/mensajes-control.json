@@ -1,0 +1,470 @@
+{
+ "_LEEME": "CONTROL A CIEGAS (2-nov-2026): mensajes REALES de user_feedback de hace 31 a 75 días, que NO se miraron al escribir las reglas. Se etiquetaron a mano ANTES de correr el clasificador y no se tocaron después: su tasa es la honesta. Sin nombres, correos ni folios. Fuera quedan los que sólo se entienden con la conversación («pro», «uno por uno», «tengo un plan pro»).",
+ "mensajes": [
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "gracias",
+   "tipo": "acuse"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "son en las ultimas consultas de la carpeta [NOMBRE], tambien trate de realizar la misma consulta pero ahora nueva y me amrca los mismos errores",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "porque le he dado la información en la carpeta correspondiente señalando varios detalles como lo son que hay documentos escaneados dicen copias sin valor pero sigue dando instrucciones de eso, o me hace señalamientos que yo misma le he corrigido pero sigue señalandolos",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "hola buenas noches no se si realizaron un cambio de programacion pero realmente las respuestas de ahora estan por muy debajo de las respuestas iniciales",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "En materia mercantil",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Podrías hacer un medio preparatorio utilizando la fracción VII del artículo 367 del código nacional de procedimientos civiles y familiares",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Y podrá realzarme un borrador correcto para yo llevarlo ante el tribunal",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "si pero solo me admite 100 hojas",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "y que instruccion digo para sbirlo en dos partes",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "No pudo asistir pese a su lugar confirmado por suspención de matricula",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "ya cerré sesión e ingresé nuevamente, borré historial de navegación la caché, etc, y sigue el mismo problema técnico, mi correo electrónico es [CORREO]",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "por que si me dice que tengo acceso al taller y que conservo mis 40 proyectos mensuales, ya no me genera proyecto porque dice que ya usé la prueba gratuita? tengo pagado el platinum, debo actualizar al plan secretarios y si es así, me cobrarán sólo la diferencia?",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Tengo el plan platinum, pero no puedo usar el taller de sentencias, quitarón esa función y subió de precio sin que me avisaran",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "pero actualmente ya no me deja usar el taller de sentencias, hay algun error? me dice que debo pagar 999 o hacer una recarga de 250 pesos",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Tengo una duda, en el plan platinum tenía el taller de sentencias, lo quitaron y subió de precio a 999? me interesa ese plan, pero tengo el platinum, si contrato el de 999, solo me cobrarían la diferencia? o todo?",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "sta demanda me parece que es de junio de 2026 . Yo tuve acceso a ella porque ya habian puesto una anotacion preventiva en el registro publico pero a mi no me han emplazado. hemos estado trabajando la respuesta pero yo vivo en otro estado. Rento un cuarto y hasta donde yo se no han ido a emplazarme a",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Genera el amparo indicto limpio sin comentarios y argumentado con leyes reales y actuales",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Elabora un proyecto de contestación de demanda",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "El acto es que el mp no inició la carpeta de investigacion",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "ya cerré sesión y volví a entrar, sigue apareciendo como plan gratuito, el correo es [CORREO]",
+   "tipo": "pago"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "solicito aclaración realicé el pago de $599 el 22 de septiembre de 2026, ayer funcionaba bien y tenía mi sucripción activa, pero ahora está como plan gratuito, pese a que ya pagué",
+   "tipo": "pago"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Solicito aclaración, me aparece plan gratuito, pero pagué 599 el 22 de septiembre de 2026",
+   "tipo": "pago"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "cual es la opción para revisar una sentencia",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "eso es para consultas jurídicas y el servicio que ofreces respecto a temas jurídicos. el utilizarlo va a hacer que yo utilice tu servicio y que goces de mi dinero. eso es desleal de parte de ustedes",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "que no me devolvieron un pago de dinero que yo no autoricé y me cobraron",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "manda el reporte de esta situación",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "que me devuelvas mi dinero y de paso que me paguen el daño que me ocasionaron. a mi me cuesta dinero la repocisión de mi tarjeta bancaria y la tuve que cancelar debido a que ustedes no quieren devolver mi dinero que no autoricé que cobraran.",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "nunca me escribieron. les valió madre",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "me causaron un daño económico al cancelar mi tarjeta. Ustedes hicieron un cobro que yo no autoricé, me afectaron. Es la última vez que trabajo con iurexia.",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "me hicieron cancelar mi tarjeta, es parte del daño que me causaron.",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "¿cual resolver? si son unos abusivos",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "es la última vez que uso su aplicación",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "ya se lo había proporcionado y se hacen tontos para solucionar mi problema.",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "no cancelaron el último cobro. yo no hice el pago, ustedes lo realizaron. solicité que cancelaran. no me gusta la gente abusiva y ustedes abusan.",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "noté que el día de hoy me están cobrando el servicio nuevamente, situación que yo no autoricé. solicito que cancelen ese cobro. el cobro (operación) ocurrió el 26 de septiembre del 2026 a las 01:00:56 horas folio [FOLIO]",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "En un asunto intestamentario lo solicita la concubina en el año 2007 trata de notificar a todos los interesados pero hasta el 2028 se presenta la mamá del de cujus con un juicio terminado ante notario en el 2018 donde la declaran única heredera a la mamá del de cujus y dejan a salvo los derechos de ",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Podrías perfeccionar dicha apelación",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Dónde veo el historial de las consultas que te hice",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "ya refresque la pagina pero no ha leido 4 documentos de 45 qu ele di para leer , y no se por qué",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "solamente no dice leido, y me indica que 31 de 45 documentos ya han sido leios por la ia, pero falta que lea 4 mas, aunque ya los subio no los ha leido",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "porque no puede leer un documento que subi a una de las carpetas",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "donde esta el chat de luxeria",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "me puedes revisar un contrato de arrendamiento",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "pero mi doa es si tengo dos documentos separados puedo subir los dos?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "tengo una duda hasta cuantos docuemntos se puede anexar en el mensaje",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "no aparecen las materias, ni el boton de genios",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "por que no aprecen las metarias no genios en el chat",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Quiero saber más, de lo que ya me brindaste, dame más cosas que deba saber, como conceptos, cómo se organiza, qué es un político. Senador, ósea como está organizado eso en la ley que hace cada uno, que es un amparo como se maneja, leyes",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Explícame más",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Cómo editar",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Desde la primera ocasión seleccioné Ciudad de México y no recuerdo que alguna ocasión haya aparecido Federal",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "No me aparece jurisdiccion federal",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "NO aparece Federal solo las entidades federativas",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Como deselecciono la entidad",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Necesito que las consultas no se dirijan a la legislación local, aunque establezca que deseo que sea de fuero Federal, me realiza consultas en la legislación del eatdo de Hidalgo",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "NO ME DA EL RESULTADO",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "en el documento de word dice que se generara la respuesta, pero solo aparecen dos símbolos de gato",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "no se vbe la respuesta a la consulta que se formula",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Me refiero , al querer domiciliar bajo el engaño de una devolución y no resultar exitosa, podrían marcar como usuario de riesgo y no renovar? Por eso preguntaba que pasaría si quieren embargar o domiciliar la cuenta?",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Trataron de hacerme una devolución para justificar la domiciliación pero el banco la rechazó",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "el programa no redacta demanda conforme al codigo nacional de procedimientos civiles y familiares",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Donde quedan guardadas las consultas",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "No los usuarios fueron los que pidieron el apoyo a los policías por la controversia de la propiedad del vehículo",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Uno de ellos argumentaba que ya había iniciado en una carpeta de investigación por fraude y que no reconocía un documento que traía la contraparte supuestamente que él había expedido",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Buenas tardes, estoy en prueba gratis, ya subi el analisis de una demanda de amparo directo y no sale nada en el resultado simplemete una hoja en blanco con dos signos de gato",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "me desespera le pongo clausula de mediación, me manda directamente",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "y no esta seleccionado redactar si no buscar pero le pregunto algo inmediatamente me manda a un formato tipo word",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "esta en negro, el toulmin, al desplegar las herramientas, quiero seguir en el chat y que no me envie a un tipo word",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "me manda a un tipo de word, y ya no continue ahi, tengo que regresar para extender la pregunta o responder",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "porque me abre un documento en vez de continuar en el anterior formato",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "porque cambio la forma de interactuar con la IA DE lurexia",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "medice que ya realizo el documento incluso me dice que son 814 palabras pero solo despliega 3 renglones",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Hola, no se si se trate de alguna falla, actualizacion o problema con mi cuenta, ya que le he solicitado en 3 ocasiones un resumen del documento y solo me arroja algunos renglonres y no realiza el resumen detallado.",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "despues de la consulta no arroja el documento, unicamente dos ##",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "No arroja la respuesta solicitada",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "ahora estoy adjuntando documentos y sale esto ❌ Error al analizar documento: No se pudo extraer texto del documento. El archivo puede estar vacío, corrupto o ser una imagen sin texto reconocible.",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "es decir le doy adjuntar a varios y ya que este lista le doy enviar y los vera todos aunque yo solo pueda ver el ultimo?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "y como veo donde se van adjuntando porque solo se ve uno cuando subo mas",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "como puedo subirle varios documentos a la vez",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "ya hice todo y sigue sin dejare subir archivos",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "sigue sin dejarme adjuntar archiivos para eso tengo la version premium y no me deja dice ⏱️ El análisis tardó demasiado. El documento es muy extenso o complejo para procesarse en este momento. Intenta con un archivo más pequeño o con menos páginas. pero es un pdf de 50 paginas",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "NO ME ESTA DEJANDO ADJUNTAR ARCHIVOS YA HASTA DIVIDI EL ARCCHIVO Y NADA, COMPRE LA VERSION PREMIUM JUSTO POR ESO Y NADA",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "NO PUEDO VER LA ULTIMA CONSULTA",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Cómo puedo depositar por Oxxo",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "ninguno, sólo que cuando los selecciono sólo sube el último",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "no esta funcionado no me deja subir los archivos",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "solo sube uno, y no me indica nada más",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "No me deja subir varios documentos",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Nuevamente, El plan que tengo contratado refiere que se pueden hacer consultas de un documento hasta 100 páginas, cargue un documento con 86 paginas y de indica que es muy extenso, ademas que me lo contabiliza como consulta cuando no me a dado respuesta",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Los artículos que despliega la consulta, no corresponden a aquellos de la legislación del Estado de Puebla. La respuesta es inexacta",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "como adquiero un paquete con pago de lurexia",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "Un tracto camión se Volvo y se proyecto contra el tercero fallece el conductor responsable",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message (31–75 días)",
+   "texto": "despues de la consulta anterior y de su respuesta eso en que me ayuda",
+   "tipo": "humano"
+  }
+ ]
+}

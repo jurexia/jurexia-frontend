@@ -1,0 +1,840 @@
+{
+ "_LEEME": "Mensajes REALES de soporte de los últimos 30 días (2-nov-2026), pedidos con SELECT a reportes_soporte.primer_mensaje y user_feedback.message, y etiquetados a mano con el tipo que les corresponde. Sin nombres, correos ni folios: los nombres propios y lugares van como [NOMBRE] y [LUGAR]. Los largos vienen recortados a 300 caracteres, como los devolvió la consulta. Se dejaron fuera los que sólo se entienden con la conversación («ya hice ese procedimiento», «Pdf» suelto sí entra como humano) y las marcas automáticas «[cancelación · …]».",
+ "mensajes": [
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Quiero pagar los 79 pesos del plan básico y obtener toda información y demás servicios que ofrece Iurexia",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Plan",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Acapulco de Juárez, Guerrero, a 2 de noviembre de 2026. RECLAMACIÓN por daño moral contra el issste asunto: reclamación de indemnización por daño moral derivada de actividad administrativa irregular. C. [NOMBRE] DIRECTOR GENERAL DEL INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIALES DE L",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "me dieron un numero de codigo pero no dice donde debo anexarlo",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "procedea redactar los escritos",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Si lo solicito en audiencia y quedo por escrito en un auto hace un mes",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Listo ya envié el documento que necesito que me ayuden a revisar",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Tienen app para android",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Me puedes realizar un escrito de deslindamiento de todo tipo de acción penal y laboral, en la cual el contratante fue [NOMBRE], quien contrata a [NOMBRE] para tema de la construcción, en la cual se provoca un accidente por derrumbe de un padrón esquinando al contratado. Asimismo",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Cómo puedo entender mejor la materia de amparo",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Prácticas y teóricas en materia de amparo",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Cuando puedo interponer una demanda de amparo directo",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Puedo subir un resolución que me notificaron para que la análisis esta en archivo pdf",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "CUANDO TENDRAN PLATAFORMA PARA AMPARO INDIRECTO DEL PODER JUDICIAL DE LA FEDERACION ?",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "quiero una ficha textual del abuso de autoridad policial con un autor que ah echo muchos libros",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "En en documento enviado falta fundamento y tesis verificadas",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Marca error",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Lo que pasa es que el IMSS ya no me quiso expedir más incapacidad aunque la hoja de urgencias dice que mi estado es malo para la función y en mi unidad médico familiar me indican que ya no me van a dar licencia médica que ya me presenta trabajar que ya me dieron de alta ambulatoria y me quitaron la ",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "no aparecio lo que le solicite",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "me negaron apelacion contra incidnete de nulidad materia familair liquidacion de sociedad",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Solo escribí dime si es correcto y se envio el msj y me respondió pero no me dejó terminar y me puso pon aquí lo que querías decir lo puse y no .e dejo enviar el msj después puse una nueva consulta y me dice que ya no tendí mam",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Mañana te doy los datos para un destitución de albacea y me elabores una demanda incidental con los datos que te daré mañana",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Para hacer una denuncia ante la fiscalía en línea",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "En este caso si el papá tiene dos hijos uno de 17 años 8 meses y uno de 14 años y la mamá tiene una de 3 años quién tiene que dar pensión alimenticia a quién o cómo se tendría que dar legalmente",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Realiza una ficha textual y fu ha de contenido sobre el tráfico de menores en la cdmx de 2025 a la actualidas",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "quiero que sea mas amplia y se acompañaron mas de 100 comprobantes medicos que le menor tiene asma y los propios testigos refirieron no tenr empleo fijo ya que actualmente es comerciante",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "en relación a lo señalado, ya soy el abogado que represento a los demandados, y ya nos fue notificado la vista que señálales, si quieres te anexo los documentos",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "BUENOS DIAS, ULTIMAMENTE SIEMPRE ME PAARECE ESTE MENSAJE CUANDO REALIZO UNA CONSULTA. NECESITO APOYO: ⏱️ Se perdió el contacto con el servidor. Dejó de llegar información durante más de un minuto mientras se analizaba tu documento. Puede que el análisis sí se haya completado: vuelve a intentarlo y, ",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Se corta la conexión a subir dumento",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Me comentaron un caso dime que Claro. En tu mensaje todavía no aparecen los hechos del caso, así que no sería responsable darte una opinión jurídica concreta. Cuéntame, aunque sea de forma resumida: qué ocurrió y cuándo;quiénes participaron y si intervino alguna autoridad;qué daño o consecuencia hub",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "si",
+   "tipo": "acuse"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "TENGO UN JUICIO POR PENSION AUN NO RADICADO EL DIA 30 DE SEPTIEMBRE CONTESTE UNA EMANDA DE DIVORCIO Y CONVIVENCIA EN LA CUAL EL ACTOR QUIERE CONVIVENVIAS CON EL MENOR DE 2 AÑOS, LA JUEZ ADMITIO LA RECONVENCION POR PENSION. NO QUIEREMOS CONVIVENVIA LIBRE 1 POR QUE EL MENOR TIENE 2 AÑOS Y 2 PORQUE CUA",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Que puedo hacer ante gastos para cobrarle al ISSSTE por estudios de un paciente oncólogico que el instituto no realiza",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Por medidas cautelares dictaminadas por un juez se suspende temporalmente la relación laboral entre mi cliente y el imss ahora las medidas ya fenecieron por existir una sentencia además de un oficio donde se reitera que ya están terminadas dichas medidas cautelares ahora hay que solicitar a un juez ",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "no me aparece nada ni me carga nada",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Quiero una demanda de Responsabilidad civil Objetiva donde participan dos vehículos y el vehículo 2 o B no respetará la señalización semáforo a pasándose en rojo e impactando al vehículo 1 o A en el [LUGAR]",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Como puedo cancelar mi suscripocion mensual?",
+   "tipo": "cancelar"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Al poner mi pdf y dar instrucciones me dice que se cortó la conexión pero si tengo internet",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "ya hice el pago y sigo en el plan gratuito",
+   "tipo": "pago"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Hola",
+   "tipo": "acuse"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Pensión alimentaria para menores de edad",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Que tipo de demandas vez civil penal mercantil familiar o nada más amparo",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Un cliente tiene una plaza de petróleo mexicano, estuvo trabajando un tiempo, después de unos años, su hermano inició a trabajar con una INE falsa en las instalaciones de pemex. Se jubiló y fallecio, entonces el verdadero dueño de la plaza intentó firmar la hoja de vida pero no se lo permitieron, po",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Donde encuentro tuturiales de como usar la plataforma?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Eealizame una cambio de pago de pension alimenticia al hijo que cumplio los 18 años y su mamá es maestra de la sep para armar un escrito",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Que costo tiene el servicio de iurexia?",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Tuve un accidente en un establecimiento de [NEGOCIO] había un ventanal el cual no tenía ninguna señalética y yo pensé que era entrada entonces al querer pasar caminando no no me percaté que era ventanal y me cayó el vidrio encima porque el vidrio que tenía no era el que exige la norma",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Me ayudas a redactar un incidente de pensión alimenticia",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Pedir la guarda y custodia compartids",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "como borra la información dada?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Como disolver una propiedad con gravamen de infonavit, si ya me divorcie",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Que precio tiene",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Contestación de una demanda laboral",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Custodia compartida de hijos uno mayor de 18 años y otra de 14 años",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "hola que tal, me interesa su plataforma, veo que segun lo que ofrece tiene mucha versatilidad y potencia, me gustaria probarla pero la verdad la otra herramienta que usaa tenia un soporte fatal no te atendian y no daban los cursos para aprender a utilizarla bien y otra cosa tenia muchos problemas de",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "La comisión ejecutiva de atención a víctimas del Estado de México me realizó una extracción de domicilio, sin tener la facultad y violando todos mis derechos fundamentales",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "no encuento la pestaña para redactar una demnada",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "hola que tal buena noche",
+   "tipo": "acuse"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Quiero subir un archivo para que se analice",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Que hace Asuntos internos sinte envían una denuncia anónima",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Cómo puedo pegar un texto que me dice que necesita",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "soporte aqui existen barios problemas en iurexia 1 me cerro la pagina uando yo ya tenia una respuesta 2. no me deja abrir las consultas realizadas . 3. aun no medeja hacer preguntas anexando documentos 4.sigue persistiendo estos errores",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Fallo el plan",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Ya te dije",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Hola Buenos Días estoy intentando pagar el plan pro me sale otro número celular que no reconozco",
+   "tipo": "pago"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Que pruebas se requieren para lograr la vinculación a proceso",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "SI YA PAGE Y NO ME DEJA TRABAJAR",
+   "tipo": "pago"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Y en materia penal?",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Que se debe hacer para que [NOMBRE] obtenga su libertad lo antes posible",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Juicio suserio",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Un flujo me cubre toda la redacción de una demanda, de principio a fin?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Sigo con la duda en cuanto el flujo, qué tanto abarca.",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "¿Cuál es el costo?",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "¿Me sirve para redactar una demanda, una denuncia cía o una querella?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "necesito el proyecto completo de amparo de fecha 15 de octubre",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Lo que te pedí",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Sigue el error persistiendo",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "es que asi no se puede :C ;C",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "sigue el problema",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "es que no es la primera vez ;C",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "el fallo esta persistiendo en que le el dia de hoy a las 7:25 anexe un escrito para que me generara dentro de los alegatos otro punto dentro de los alegantos en el escrito y al parecer esta persistiendo el problema",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Enterado, muchas gracias por su atención",
+   "tipo": "acuse"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "De acuerdo, ya entendí, solo otra pregunta mas, puede hacer imagenes a partir de escritos jurídicos?",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Quiero ver costos de planes",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Quiero aclara que la junta nunca entró al estudio de fondo, por lo que los dictámenes no fueron valorados en su conjunto, además con la finalidad de ingresar una ampliación de manifestaciones y alegatos pienso que se valoren ya que la jurisprudencia 55/2024 ya se encontrabais vigente desde julio de ",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "me anda fallando Iurexia en realizar mi escrito",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "como puedo lograr y obtener mi ultima pregunta?",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Se cortó la conexión al enviar el documento. No es tu archivo: la petición no llegó a completarse. Vuelve a adjuntarlo — normalmente entra al segundo intento.",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "la última respuesta la quiero en un PDF",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "sube el documento adjunto",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Como guardo infirmacion consultada",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Litigo",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Se perdió el contacto con el servidor. Dejó de llegar información durante más de un minuto mientras se analizaba tu documento. Puede que el análisis sí se haya completado: vuelve a intentarlo y, si se repite, escríbenos a soporte@iurexia.com.",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Pero no quiere hacerse la consulta",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Me cobrarán más por eso?",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Tarda en emitir respuesta ya van varias veces que intento hacer la consulta",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "No me carga",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Has un proyecto de denuncia",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Pero dame un ejemplo de un proemio mas sencillo autorizandome como abogada patrona en [LUGAR]",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "s reales”. La denominación empleada en la demanda no es determinante para establecer la naturaleza de la acción. Lo jurídicamente relevante es que los actores pretenden que se declare el incumplimiento del contrato, que se deje sin efecto la relación jurídica que invocan, que se les restituya la pos",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "me urge que chequen mi conversaicon porque fuera de lo frustante es confuso que no analice bien los datos y luego me confunda mas",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "sigue fallando, lo mismo me da respuestas que se contradicen y es en el mismo chat, me dice que esta mal alguna redaccion cuando la misma IA me hizo la redaccion",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "No se, es muy extenso y no quisiera dos abogados por parte",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "A donde les puedo llamar o mandar mail para una duda fuera del funcionamiento d ela IA",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Porque no se suben todos los archivos",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "tengo una duda, iurexia tiene en sus bases de datos las leyes estatales y nacionales o tengo que enviarle el pdf?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Que le puedo preguntar?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Eres Ia?",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "puedo analizar un caso en concreto,??",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Como se usa una vez pagando un plan",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Hola quisiera saber como usarlo. U",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Quiero el plan de 999, tengo activo el de 599, que debo hacer?",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Quiero apoyo para promover apelación a esta sentencia.",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Quiero promover apelación a esta sentencia",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "reportes_soporte.primer_mensaje",
+   "texto": "Cómo vuelvo al chat anterior",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "donde puedo escribir en la plataforma",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Como puedo tener acceso desde mi movil",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Cómo entender mejor la materia de amparo",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "PERO ME SIRVE PARA AMPARO INDIRECTO? O SOLO PARA AMPARO DIRECTO?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "PERO PARA LA ELABORACION DE SENTENCIAS DE AMPARO INDIECTO",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Pdf",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Adjunte un archivo y dice error",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "hola hasme un tipo ensayo de CONTROVERSIAS Y SOLUCIONES DEL MATRIMONIO Y ADOPCIÓN esta en la pagina 102 matrimonio, y el otro escapitulo 9 pagina 265 controversias y divorcio hahla de la pagina 194 a la 347 y se acaba hasta la 431 eso",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "solo se me fue el internet pero ya mandamelo3",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "No yo no la envié por eso se envió incompleta y la respuesta igual fue inesperada incluso no tenía nada que ver",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Escribiendo una consulta pero se envió y me respondió algo sin siquiera saber que le diría y después me dijo pon aquí lo que me quieres decir lo escribí y no me daba opción de enviar por lo tanto abrí una nueva consulta puse lo que quería y me salió la leyenda",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Gracias",
+   "tipo": "acuse"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "cerré y volví a entrar y sigo en gratuito",
+   "tipo": "pago"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "y no se acutaliza el plan a pro",
+   "tipo": "pago"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "ya hice el pago",
+   "tipo": "pago"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Es que es muy confuso no explican bien qué incluye o cómo está la situación con lo que ofrecen así pues ni cómo adquirir el producto",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Vuelvo a repetir la pregunta el plan básico me da asesorías incluye asesorías?",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "El básico exactamente que cubre?",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Ok",
+   "tipo": "acuse"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "No",
+   "tipo": "acuse"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "si muchas gracias",
+   "tipo": "acuse"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "en la plataforma, mi pregunta es, puedes esta plataforma redactar una demnada",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "YA LO IZE",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Normativa que aplica",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Quiero contratar",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "¿En cuanto a una denuncia, un flujo cubre la redacción de la misma?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Si te go 30 flujos, y a los 20 días los consumo, ¿qué necesito hacer para obtener más flujos?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "¿Qué es un flujo?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "¿Para litigar un asunto penal, me apoya en el desarrollo de ideas y alternativas dentro del proceso penal?",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "sigue persistiendo el error",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "persiste el problema esto nunca me sucedio :C",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "De acuerdo, puedo hacerlo con capturas de pantalla de esas seis hojas, es pregunta",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "estoy subiendo una Ley que contiene 376 páginas y requiero solo el contenido de 6 hojas, mi pregunta sería como hacerlo",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "documentos de hasta 100 hojas, se refiere a la elaboración o a los escritos para obtener resultados",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Me podeía proporcionar como quedsría ya redactado la ampliación del escrito de manifestaciones, considerando de quedaría la ampliación de manifestaciones?",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "se queda en Leyendo consulta",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "la última respuesta para poder copiarla",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Quiero entrar directo",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "El de $149",
+   "tipo": "contratar"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Una tía quiere adquirir la totalidad de los derechos sobre su menor sobrino ya que la hermana de ella falleció y se ha hecho cargo del bebé desde pequeño... contexto el bebé fue registrado por la pareja de ella sin embargo el bebé no es de él señor el señor lo",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Dice que se perdio el contacto en el servidor",
+   "tipo": "respuesta-cortada"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Tmabien me vuelve a trabajr con legislacion incorrecta",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "me da el codigo nacional de procedimientos civiles y familiares y desde un inicio le marque que tiene que ser codigo civil y codigo de procedimientos",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Hoy se me actualizaron los creditos, todo ok, pero no encuentro en donde se me esta haciendo el cobro ya le di la vuelta a toda la plataforma y no encuentro donde esta esa información, me podrías apoyar diciendome que cuenta es donde me cobran el servicio",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Son pdf subo 4 archivos y solo me dice que recibió dos",
+   "tipo": "documento"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Iurexia puede ser entrenada?",
+   "tipo": "humano"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Excelente",
+   "tipo": "acuse"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "A ti te puedo hacer las preguntas que no tengan que ver con derecho?",
+   "tipo": "consulta-juridica"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "queria primero ver que tan confiable es",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Es una app o debe ser por chrome",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Si contrato un plan sigo abriéndolo en chrome o es una app",
+   "tipo": "como-se-usa"
+  },
+  {
+   "fuente": "user_feedback.message",
+   "texto": "Necesito dividir el texto, por que rebasa el número de hijas a analizar",
+   "tipo": "como-se-usa"
+  }
+ ]
+}
