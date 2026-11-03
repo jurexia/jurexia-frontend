@@ -2,6 +2,7 @@
 // contra un GoTrue simulado que rota el refresh token y revoca la familia si se reutiliza
 // fuera de su ventana. Compara: «antes» (navigator.locks común + toma), «processLock» (candado
 // por pestaña sin coordinar la renovación) y «ahora» (candado por pestaña + fetchDeSesion).
+import './resolver-ts.mjs';   // candado-sesion.ts importa ./reloj (2-nov-2026)
 import { createRequire } from 'node:module';
 // Uso (desde la raíz del front):  node --experimental-strip-types scripts/prueba-candado-pestanas.mjs
 // Repetirla al actualizar @supabase/supabase-js: depende de cómo auth-js usa `lock` y `fetch`.

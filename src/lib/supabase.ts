@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { candadoDeSesion, fetchDeSesion } from '@/lib/candado-sesion'
+import { candadoDeSesion, fetchDeSesion, ponerSesionEnHora } from '@/lib/candado-sesion'
 import { liberarAlmacen } from '@/lib/almacen-navegador'
 import { consultasIlimitadas } from '@/lib/plan-estudio'
 
@@ -25,6 +25,21 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     // Sólo la renovación del token se hace de una pestaña a la vez.
     global: { fetch: fetchDeSesion(CLAVE_SESION) },
 })
+
+/** ¿Hay una sesión guardada en este navegador? Sin leerla con el candado. */
+export function haySesionGuardada(): boolean {
+    try {
+        return typeof localStorage !== 'undefined' && !!localStorage.getItem(CLAVE_SESION)
+    } catch {
+        return false
+    }
+}
+
+/** Con el reloj recién medido: si la sesión guardada quedó en otra hora del
+ *  equipo (porque lo corrigieron), se renueva (2-nov-2026, ver candado-sesion.ts). */
+export function ponerSesionEnHoraDelEquipo(desfase: number): Promise<boolean> {
+    return ponerSesionEnHora(supabase.auth, CLAVE_SESION, desfase)
+}
 
 // Auth helper functions
 export async function signUpWithEmail(email: string, password: string, name: string) {
