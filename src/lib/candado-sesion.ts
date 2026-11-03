@@ -44,6 +44,8 @@
  * sesión vigente en vez de revocarla.
  */
 
+import { almacenEscribible } from './almacen-navegador'
+
 /** Lo que auth-js reconoce como «candado ocupado» en su tic de renovación. */
 class CandadoOcupado extends Error {
     readonly isAcquireTimeout = true
@@ -172,7 +174,12 @@ export function fetchDeSesion(claveSesion: string): typeof fetch {
         if (typeof pedido !== 'string' || !pedido) return fetch(entrada, init)
 
         const renovar = async (): Promise<Response> => {
-            const guardada = leerSesion(claveSesion)
+            // Con el almacén lleno, supabase-js guarda la sesión en memoria y
+            // lo que queda en localStorage es una sesión VIEJA: gastar su token
+            // en vez del pedido daba «Refresh Token Not Found» y cerraba la
+            // sesión cada hora (2-nov-2026, ver almacen-navegador.ts). Sin
+            // almacén escribible no hay pestañas que coordinar por él.
+            const guardada = almacenEscribible() ? leerSesion(claveSesion) : null
             let gastar = pedido
             if (guardada?.refresh_token && guardada.refresh_token !== pedido) {
                 // Otra pestaña ya renovó y guardó: se usa lo suyo.

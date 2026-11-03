@@ -1,10 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 import { candadoDeSesion, fetchDeSesion } from '@/lib/candado-sesion'
+import { liberarAlmacen } from '@/lib/almacen-navegador'
 import { consultasIlimitadas } from '@/lib/plan-estudio'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const CLAVE_SESION = 'iurexia-auth'
+
+// ANTES DE CREAR EL CLIENTE (2-nov-2026): supabase-js prueba aquí si puede
+// escribir en localStorage y, si está lleno, guarda la sesión sólo en memoria
+// (cada recarga la pierde). Se hace sitio primero. Ver `almacen-navegador.ts`.
+if (typeof window !== 'undefined') liberarAlmacen()
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
