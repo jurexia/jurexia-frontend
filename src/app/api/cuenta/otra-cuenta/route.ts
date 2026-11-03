@@ -22,6 +22,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Sin caché de datos de Next en esta ruta GET: ver api/cron/incidencias (2-nov-2026).
+export const fetchCache = 'force-no-store';
+
 const PLANES_DE_PAGO = [
     'basico_monthly', 'pro_monthly', 'pro_annual',
     'platinum_monthly', 'platinum_annual', 'ultra_secretarios',

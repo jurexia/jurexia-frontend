@@ -20,6 +20,9 @@ import { CAMPANIAS, type NombreCampania } from '@/lib/correo/campanias';
 import { segmento } from '@/lib/correo/segmentos';
 import { ADMINS, enviarCampania, type Destinatario } from '@/lib/correo/enviar';
 
+// Sin caché de datos de Next en esta ruta GET: ver api/cron/incidencias (2-nov-2026).
+export const fetchCache = 'force-no-store';
+
 export const maxDuration = 300;
 
 const REVISOR = 'jdm.juridico@gmail.com';

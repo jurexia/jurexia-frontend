@@ -37,10 +37,17 @@ import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { recoger } from '@/lib/incidencias/recogida';
 import { verificar } from '@/lib/incidencias/verificacion';
-import { avisoInterno, correoCierre, Incidencia } from '@/lib/incidencias/correos';
+import { avisoInterno, correoCierre, Incidencia, REMITENTE_SOPORTE } from '@/lib/incidencias/correos';
 import { acusar } from '@/lib/incidencias/acuse';
 
 export const dynamic = 'force-dynamic';
+/* SIN CACHÉ DE DATOS (2-nov-2026). En una ruta GET, Next 14.2 guarda para
+   siempre cada fetch que no diga otra cosa —también las consultas de
+   supabase-js—, aunque la ruta sea `force-dynamic`: ésa no fija `revalidate` y
+   el fetch cae en «auto cache». La recogida de este circuito leyó la misma
+   lista de reportes desde el 30-oct; sólo llegaban a Supabase las consultas de
+   más de 2 MB, que Next no guarda. `force-no-store` lo apaga en toda la ruta. */
+export const fetchCache = 'force-no-store';
 export const maxDuration = 300;
 
 const DESTINO_INTERNO = 'jdm.juridico@gmail.com';
@@ -78,7 +85,7 @@ export async function GET(req: NextRequest) {
     parte.recogida = recogida;
 
     const resend = simulacro ? null : new Resend(process.env.RESEND_API_KEY!);
-    const remitente = process.env.FROM_EMAIL || 'Iurexia <noreply@iurexia.com>';
+    const remitente = REMITENTE_SOPORTE;
 
     // ── 1b. EL ACUSE AL USUARIO ─────────────────────────────────────────
     // David, 16-oct-2026: «si falla hay que darles la razón, y si hay tema de
@@ -91,11 +98,17 @@ export async function GET(req: NextRequest) {
     // ── 2. VERIFICACIÓN ─────────────────────────────────────────────────
     // Sólo las triadas de familia «defecto» o «calidad». Ni soporte, ni
     // mejora, ni buzón equivocado: ésas no son fallos que reproducir.
+    //
+    // Y SÓLO LAS QUE NUNCA SE VERIFICARON (2-nov-2026). Un `sin_medios` se
+    // queda en `triada` (ver abajo), así que con las quince más viejas a secas
+    // la vuelta repetía cada día las mismas quince de mayo y junio, todas sin
+    // forma de comprobarse, y nada nuevo llegaba a verificarse.
     const { data: porVerificar } = await cliente
         .from('incidencias')
         .select('id, clase, texto, contexto, requiere_vb, estado_usuario')
         .eq('estado', 'triada')
         .in('familia', ['defecto', 'calidad'])
+        .is('verificacion', null)
         .order('creado_at', { ascending: true })
         .limit(15);
 

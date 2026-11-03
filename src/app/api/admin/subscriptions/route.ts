@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { exigirAdmin } from '@/lib/guardia-admin';
 import { finDelPeriodo, getStripe, inicioDelPeriodo } from '@/lib/stripe';
 
+// Sin caché de datos de Next en esta ruta GET: ver api/cron/incidencias (2-nov-2026).
+export const fetchCache = 'force-no-store';
+
 function safeDate(ts: any): string {
     if (!ts) return '';
     try {

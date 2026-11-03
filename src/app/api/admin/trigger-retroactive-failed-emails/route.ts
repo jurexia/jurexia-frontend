@@ -13,6 +13,8 @@ function getSupabaseAdmin() {
 }
 
 export const dynamic = 'force-dynamic';
+// Sin caché de datos de Next en esta ruta GET: ver api/cron/incidencias (2-nov-2026).
+export const fetchCache = 'force-no-store';
 
 function buildPaymentFailedEmail(name: string, attemptCount: number) {
     const firstName = name.split(' ')[0] || 'Estimado/a';

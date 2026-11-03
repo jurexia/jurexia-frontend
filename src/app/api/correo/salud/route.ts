@@ -16,6 +16,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generarReporteSalud } from '@/lib/correo/salud-financiera';
 
 export const dynamic = 'force-dynamic';
+// Sin caché de datos de Next en esta ruta GET: ver api/cron/incidencias (2-nov-2026).
+export const fetchCache = 'force-no-store';
 /** Stripe se pagina entero: con 69 suscripciones sobra, pero no hay prisa. */
 export const maxDuration = 300;
 

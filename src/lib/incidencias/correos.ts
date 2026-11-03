@@ -215,7 +215,7 @@ export function correoCierre(datos: {
             'Gracias por tomarse el tiempo de reportarlo. Un fallo que nadie señala se queda ' +
             'años en el producto.'),
         `<div style="border-top:1px solid ${PALETA.borde};margin-top:28px;padding-top:18px;font-family:${SANS};font-size:13px;color:${PALETA.apagado};">
-            <div style="font-weight:bold;color:${PALETA.tinta};">Equipo de desarrollo · Iurexia</div>
+            <div style="font-weight:bold;color:${PALETA.tinta};">Equipo de Desarrollo de Iurexia</div>
             <div>soporte@iurexia.com</div>
          </div>`,
     ].join('');
@@ -226,7 +226,7 @@ export function correoCierre(datos: {
         'Qué ocurría: ' + r.queParoJusto,
         'Qué se corrigió: ' + correccion,
         '', 'Ya está en producción. Gracias por reportarlo.',
-        '', 'Equipo de desarrollo · Iurexia',
+        '', 'Equipo de Desarrollo de Iurexia',
     ].join('\n');
 
     return {
@@ -235,6 +235,12 @@ export function correoCierre(datos: {
         texto,
     };
 }
+
+/** De quién salen el acuse y el cierre (2-nov-2026). Salían con `FROM_EMAIL`,
+ *  el remitente de las campañas (connect@), y firmados «Equipo de soporte»; la
+ *  regla de la casa es soporte@ y «Soporte de Iurexia» o «Equipo de Desarrollo
+ *  de Iurexia». Y quien contesta, contesta a soporte@. */
+export const REMITENTE_SOPORTE = 'Soporte de Iurexia <soporte@iurexia.com>';
 
 /* ────────────────── 3. EL ACUSE AL USUARIO, EL MISMO DÍA ────────────────── */
 
@@ -390,7 +396,7 @@ export function correoAcuse(datos: {
             `<div style="${i < queSigue.length - 1 ? 'padding-bottom:12px;' : ''}">${esc(p)}</div>`).join('')),
         parrafo('Puede responder directamente a este correo: lo lee una persona del equipo.'),
         `<div style="border-top:1px solid ${PALETA.borde};margin-top:28px;padding-top:18px;font-family:${SANS};font-size:13px;color:${PALETA.apagado};">
-            <div style="font-weight:bold;color:${PALETA.tinta};">Equipo de soporte · Iurexia</div>
+            <div style="font-weight:bold;color:${PALETA.tinta};">Soporte de Iurexia</div>
             <div>soporte@iurexia.com · <a href="${SITIO}" style="color:${PALETA.apagado};">www.iurexia.com</a></div>
          </div>`,
     ].join('');
@@ -400,7 +406,7 @@ export function correoAcuse(datos: {
         apertura, ...(demora ? ['', demora] : []), '',
         ...queSigue.flatMap(p => [p, '']),
         'Puede responder directamente a este correo: lo lee una persona del equipo.', '',
-        'Equipo de soporte · Iurexia', 'soporte@iurexia.com',
+        'Soporte de Iurexia', 'soporte@iurexia.com',
     ].join('\n');
 
     return {

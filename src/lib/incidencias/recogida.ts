@@ -45,6 +45,8 @@ interface Entrada {
     creado_at: string;
     /** Sin esto la verificacion de articulos no abre el silo del estado. */
     estado_usuario: string | null;
+    /** Lo que lee el triaje. Ver `deReportes`: no es lo mismo que `contexto`. */
+    paraTriaje: string;
 }
 
 /** Reportes de la plataforma que aún no están en el libro. */
@@ -125,6 +127,19 @@ async function deReportes(cliente: ReturnType<typeof admin>): Promise<Entrada[]>
         // soporte va detrás, como contexto para quien lo mire a mano.
         const contexto = [respuesta, soporte && `--- hilo de soporte ---\n${soporte}`]
             .filter(Boolean).join('\n\n') || null;
+        // EL TRIAJE LEE SÓLO AL USUARIO (2-nov-2026). Leía el texto y los
+        // primeros 600 caracteres del contexto, que en un reporte de soporte
+        // abren con el saludo del asistente —«le ayudo con la plataforma, su
+        // plan o un fallo»—, y la regla de cobro veía «plan»: 35 de 40
+        // «planes y cobro» lo eran sólo por el saludo, y a una consulta jurídica
+        // o a un «se cortó la conexión al subir mi PDF» les llegó un acuse de
+        // «Su consulta sobre planes y cobro». Ahora entran sus propias líneas del
+        // hilo (no las del asistente) y, para quien lo lea a mano, el contexto
+        // completo sigue guardado igual.
+        const delUsuario = soporte.split('\n')
+            .filter(l => l.startsWith('Usuario:'))
+            .map(l => l.slice('Usuario:'.length).trim())
+            .filter(l => l && l !== String(r.message ?? '').trim());
         return {
             origen: 'reporte' as const,
             origen_id: String(r.id),
@@ -135,6 +150,7 @@ async function deReportes(cliente: ReturnType<typeof admin>): Promise<Entrada[]>
             contexto,
             estado_usuario: estados.get((r.user_email as string || '').toLowerCase()) ?? null,
             creado_at: String(r.created_at),
+            paraTriaje: [String(r.message ?? ''), ...delUsuario].join('\n'),
         };
     });
 }
@@ -163,6 +179,10 @@ async function deCorrecciones(cliente: ReturnType<typeof admin>): Promise<Entrad
         contexto: (r.respuesta_previa as string) ?? null,
         estado_usuario: (r.estado as string) ?? null,
         creado_at: String(r.creado_at),
+        // En una corrección, la respuesta discutida sí ayuda a clasificarla.
+        paraTriaje: r.respuesta_previa
+            ? `${[r.senal ? `[${r.senal}] ` : '', String(r.texto ?? '')].join('')}\n\n---\n${String(r.respuesta_previa).slice(0, 600)}`
+            : [r.senal ? `[${r.senal}] ` : '', String(r.texto ?? '')].join(''),
     }));
 }
 
@@ -197,7 +217,7 @@ export async function recoger(): Promise<Recogida> {
 
     for (const c of frescas) {
         try {
-            const cl = await clasificar(c.contexto ? `${c.texto}\n\n---\n${c.contexto.slice(0, 600)}` : c.texto);
+            const cl = await clasificar(c.paraTriaje);
 
             const { error } = await cliente.from('incidencias').insert({
                 origen: c.origen, origen_id: c.origen_id, folio: c.folio,

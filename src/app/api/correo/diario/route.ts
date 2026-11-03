@@ -42,6 +42,9 @@ import { revisarRecuperacion } from '@/lib/correo/alerta-recuperacion';
 import { revisarCorrecciones } from '@/lib/correo/alerta-correcciones';
 import { revisarCreditosVoz } from '@/lib/correo/alerta-voz';
 
+// Sin caché de datos de Next en esta ruta GET: ver api/cron/incidencias (2-nov-2026).
+export const fetchCache = 'force-no-store';
+
 export const maxDuration = 300;
 
 /** El orden importa: se gasta el cupo de arriba hacia abajo. */
