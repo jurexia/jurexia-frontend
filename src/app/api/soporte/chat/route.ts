@@ -4,8 +4,8 @@
  * POR QUÉ VIVE AQUÍ Y NO EN main.py
  * ---------------------------------
  * Tres razones, en orden de peso:
- *   1. La clave de OpenRouter se queda en el servidor de Next y no viaja al
- *      navegador.
+ *   1. Las claves de los modelos (la directa y la de OpenRouter) se quedan en
+ *      el servidor de Next y no viajan al navegador.
  *   2. El soporte NO comparte destino con el chat legal. Ese es el camino
  *      crítico del producto y ya se ha caído por despliegues ajenos a él.
  *   3. Publicar un cambio de soporte no reinicia el API ni corta una consulta
@@ -57,6 +57,16 @@ const MODELO = process.env.SOPORTE_MODELO || 'google/gemini-2.5-flash-lite';
    tampoco, la ficha del tema (`fichaSinMotor`). */
 const MODELOS_RESPALDO = (process.env.SOPORTE_MODELOS_RESPALDO || 'openai/gpt-6-luna,google/gemini-3.1-flash-lite')
     .split(',').map(m => m.trim()).filter(m => m && m !== MODELO);
+/* EL PROVEEDOR DIRECTO PRIMERO (3-nov-2026). Con `OPENAI_API_KEY` en Vercel
+   contesta gpt-6-luna directo, el motor del chat legal, y el intermediario
+   queda de respaldo mientras tenga saldo; sin esa clave, todo sigue como
+   antes. Razona con esfuerzo `low`, el que la API ya usa con este modelo, y
+   `max_completion_tokens` cuenta también lo que piensa: por eso el tope es
+   más alto que los 320 del intermediario. Lo corto de la respuesta lo pide el
+   prompt. */
+const MODELO_DIRECTO = process.env.SOPORTE_MODELO_DIRECTO || 'gpt-6-luna';
+const ESFUERZO_DIRECTO = process.env.SOPORTE_ESFUERZO_DIRECTO || 'low';
+const TOPE_TOKENS_DIRECTO = 1_500;
 /** Dos intentos de hasta 12 s y una pausa caben en los 30 s de la función. */
 const INTENTOS = 2;
 const TOPE_INTENTO_MS = 12_000;
@@ -218,52 +228,85 @@ function admin() {
  * `reportes_soporte` si salió o no, para que el cron recoja lo que falló.
  * Ver `@/lib/soporte/aviso`.
  */
-/** El texto del modelo, con respaldos y un reintento. Lanza si nadie contestó. */
-async function preguntarAlMotor(
-    clave: string, mensajes: { role: 'system' | 'user' | 'assistant'; content: string }[],
-): Promise<string> {
-    const cuerpo = JSON.stringify({
-        model: MODELO,
-        models: [MODELO, ...MODELOS_RESPALDO],
-        max_tokens: 320,
-        temperature: 0.3,
-        messages: mensajes,
-    });
-    let ultimoError: unknown = null;
-    for (let intento = 1; intento <= INTENTOS; intento++) {
-        if (intento > 1) await new Promise(r => setTimeout(r, PAUSA_REINTENTO_MS));
-        try {
-            const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${clave}`,
-                    'Content-Type': 'application/json',
-                    'HTTP-Referer': 'https://www.iurexia.com',
-                    'X-Title': 'Iurexia Soporte',
-                },
-                body: cuerpo,
-                signal: AbortSignal.timeout(TOPE_INTENTO_MS),
-            });
-            if (r.ok) {
-                const d = await r.json();
-                const texto = (d?.choices?.[0]?.message?.content || '').trim();
-                if (texto) {
-                    if (d?.model && !String(d.model).startsWith(MODELO)) {
-                        console.warn(`[soporte] contestó el respaldo ${d.model}`);
-                    }
-                    return texto;
-                }
-                ultimoError = new Error('OpenRouter: respuesta vacía');
-            } else {
-                ultimoError = new Error(`OpenRouter ${r.status}`);
-                // Un 4xx que no es de cupo (clave, saldo, petición) no se arregla reintentando.
-                if (r.status < 500 && r.status !== 408 && r.status !== 429) break;
+type Mensajes = { role: 'system' | 'user' | 'assistant'; content: string }[];
+type Proveedor = 'directo' | 'intermediario';
+
+/** Un fallo del motor. Un 4xx que no es de cupo (clave, saldo, petición) no se arregla reintentando. */
+class FalloDelMotor extends Error {
+    constructor(mensaje: string, readonly reintentable: boolean) { super(mensaje); }
+}
+
+/** Una llamada a un proveedor: el texto, o lanza. */
+async function llamarAlProveedor(proveedor: Proveedor, clave: string, mensajes: Mensajes): Promise<string> {
+    const directo = proveedor === 'directo';
+    const nombre = directo ? 'OpenAI' : 'OpenRouter';
+    const r = await fetch(directo
+        ? 'https://api.openai.com/v1/chat/completions'
+        : 'https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${clave}`,
+            'Content-Type': 'application/json',
+            ...(directo ? {} : { 'HTTP-Referer': 'https://www.iurexia.com', 'X-Title': 'Iurexia Soporte' }),
+        },
+        body: JSON.stringify(directo
+            ? {
+                model: MODELO_DIRECTO,
+                reasoning_effort: ESFUERZO_DIRECTO,
+                max_completion_tokens: TOPE_TOKENS_DIRECTO,
+                messages: mensajes,
             }
+            : {
+                model: MODELO,
+                models: [MODELO, ...MODELOS_RESPALDO],
+                max_tokens: 320,
+                temperature: 0.3,
+                messages: mensajes,
+            }),
+        signal: AbortSignal.timeout(TOPE_INTENTO_MS),
+    });
+    if (!r.ok) {
+        throw new FalloDelMotor(`${nombre} ${r.status}`, r.status >= 500 || r.status === 408 || r.status === 429);
+    }
+    const d = await r.json();
+    const texto = (d?.choices?.[0]?.message?.content || '').trim();
+    if (!texto) throw new FalloDelMotor(`${nombre}: respuesta vacía`, true);
+    if (!directo && d?.model && !String(d.model).startsWith(MODELO)) {
+        console.warn(`[soporte] contestó el respaldo ${d.model}`);
+    }
+    return texto;
+}
+
+/**
+ * El texto del modelo. Con las dos claves, el directo primero y, si falla, el
+ * intermediario con sus respaldos; con una sola, un reintento si el fallo lo
+ * admite. Lanza si nadie contestó.
+ */
+async function preguntarAlMotor(
+    claves: { directa?: string; intermediario?: string }, mensajes: Mensajes,
+): Promise<string> {
+    const turnos: [Proveedor, string][] = [];
+    if (claves.directa) turnos.push(['directo', claves.directa]);
+    if (claves.intermediario) turnos.push(['intermediario', claves.intermediario]);
+    let ultimoError: unknown = null;
+    for (let intento = 0; intento < INTENTOS && turnos.length; intento++) {
+        const [proveedor, clave] = turnos[Math.min(intento, turnos.length - 1)];
+        const mismo = intento > 0 && turnos.length === 1;
+        if (mismo) {
+            if (ultimoError instanceof FalloDelMotor && !ultimoError.reintentable) break;
+            await new Promise(r => setTimeout(r, PAUSA_REINTENTO_MS));
+        }
+        try {
+            const texto = await llamarAlProveedor(proveedor, clave, mensajes);
+            if (intento > 0 && !mismo) {
+                console.warn(`[soporte] el directo falló (${ultimoError instanceof Error ? ultimoError.message : ultimoError}); contestó el intermediario`);
+            }
+            return texto;
         } catch (e) {
             ultimoError = e;
         }
     }
-    throw ultimoError ?? new Error('OpenRouter: sin respuesta');
+    throw ultimoError ?? new Error('Soporte: sin motor que preguntar');
 }
 
 /** Sin motor, lo que se le dice: la ficha de su tema si la hay, y que ya quedó con el equipo. */
@@ -474,8 +517,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ respuesta: conFolio(respuesta, folio), escalado: true, cerrado: true });
     }
 
-    const clave = process.env.OPENROUTER_API_KEY;
-    if (!clave) {
+    const claves = { directa: process.env.OPENAI_API_KEY, intermediario: process.env.OPENROUTER_API_KEY };
+    if (!claves.directa && !claves.intermediario) {
         const { respuesta, conFicha } = respuestaSinMotor(ultimo.texto);
         const folioSM = await asentar({
             categoria: 'error', escalado: true,
@@ -487,7 +530,7 @@ export async function POST(req: NextRequest) {
 
     let texto = '';
     try {
-        texto = await preguntarAlMotor(clave, [
+        texto = await preguntarAlMotor(claves, [
             { role: 'system', content: sistema() },
             ...conversacion.map(t => ({
                 role: (t.rol === 'usuario' ? 'user' : 'assistant') as 'user' | 'assistant',
