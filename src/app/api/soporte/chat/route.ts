@@ -51,22 +51,22 @@ const MODELO = process.env.SOPORTE_MODELO || 'google/gemini-2.5-flash-lite';
    horas con un 429 de OpenRouter —el modelo no daba abasto; saldo había— y a
    cada usuario se le dijo «le escribirán a su correo». Ahora la petición
    declara modelos de respaldo en orden (`models`): cualquier error del primero
-   —límite, caída, filtro— pasa al siguiente. El primero es de otro proveedor
-   para que una caída de Google no se lleve a los dos; gpt-6-luna es el motor
-   del chat legal y ya habla de usted. Si aun así falla, un reintento; y si
-   tampoco, la ficha del tema (`fichaSinMotor`). */
-const MODELOS_RESPALDO = (process.env.SOPORTE_MODELOS_RESPALDO || 'openai/gpt-6-luna,google/gemini-3.1-flash-lite')
+   —límite, caída, filtro— pasa al siguiente. Si aun así falla, el respaldo
+   directo (abajo); y si tampoco, la ficha del tema (`fichaSinMotor`).
+   gpt-6-luna NO va aquí (3-nov-2026, David): es el motor de las consultas
+   jurídicas, y el soporte es sencillo. */
+const MODELOS_RESPALDO = (process.env.SOPORTE_MODELOS_RESPALDO || 'google/gemini-3.1-flash-lite')
     .split(',').map(m => m.trim()).filter(m => m && m !== MODELO);
-/* EL PROVEEDOR DIRECTO PRIMERO (3-nov-2026). Con `OPENAI_API_KEY` en Vercel
-   contesta gpt-6-luna directo, el motor del chat legal, y el intermediario
-   queda de respaldo mientras tenga saldo; sin esa clave, todo sigue como
-   antes. Razona con esfuerzo `low`, el que la API ya usa con este modelo, y
-   `max_completion_tokens` cuenta también lo que piensa: por eso el tope es
-   más alto que los 320 del intermediario. Lo corto de la respuesta lo pide el
-   prompt. */
-const MODELO_DIRECTO = process.env.SOPORTE_MODELO_DIRECTO || 'gpt-6-luna';
-const ESFUERZO_DIRECTO = process.env.SOPORTE_ESFUERZO_DIRECTO || 'low';
-const TOPE_TOKENS_DIRECTO = 1_500;
+/* EL RESPALDO DIRECTO (3-nov-2026). Gemini por OpenRouter sigue primero —es el
+   que se ajustó para hablar de usted y usa el saldo que ya hay allá—; con
+   `OPENAI_API_KEY` en Vercel, si OpenRouter falla o se queda sin saldo, contesta
+   gpt-5.4-nano directo en OpenAI, otro proveedor y casi lo más barato. Va con
+   razonamiento `none`: nano rechaza `minimal` (400, probado por la API el
+   2-sep-2026) y gpt-5-nano, el único más barato, razona a escondidas y llegó
+   a no devolver ni una palabra. Sin esa clave, todo sigue como antes. */
+const MODELO_DIRECTO = process.env.SOPORTE_MODELO_DIRECTO || 'gpt-5.4-nano';
+const ESFUERZO_DIRECTO = process.env.SOPORTE_ESFUERZO_DIRECTO || 'none';
+const TOPE_TOKENS_DIRECTO = 600;
 /** Dos intentos de hasta 12 s y una pausa caben en los 30 s de la función. */
 const INTENTOS = 2;
 const TOPE_INTENTO_MS = 12_000;
@@ -278,16 +278,16 @@ async function llamarAlProveedor(proveedor: Proveedor, clave: string, mensajes: 
 }
 
 /**
- * El texto del modelo. Con las dos claves, el directo primero y, si falla, el
- * intermediario con sus respaldos; con una sola, un reintento si el fallo lo
- * admite. Lanza si nadie contestó.
+ * El texto del modelo. Con las dos claves, el intermediario (Gemini y sus
+ * respaldos) primero y, si falla, el directo; con una sola, un reintento si el
+ * fallo lo admite. Lanza si nadie contestó.
  */
 async function preguntarAlMotor(
     claves: { directa?: string; intermediario?: string }, mensajes: Mensajes,
 ): Promise<string> {
     const turnos: [Proveedor, string][] = [];
-    if (claves.directa) turnos.push(['directo', claves.directa]);
     if (claves.intermediario) turnos.push(['intermediario', claves.intermediario]);
+    if (claves.directa) turnos.push(['directo', claves.directa]);
     let ultimoError: unknown = null;
     for (let intento = 0; intento < INTENTOS && turnos.length; intento++) {
         const [proveedor, clave] = turnos[Math.min(intento, turnos.length - 1)];
@@ -299,7 +299,7 @@ async function preguntarAlMotor(
         try {
             const texto = await llamarAlProveedor(proveedor, clave, mensajes);
             if (intento > 0 && !mismo) {
-                console.warn(`[soporte] el directo falló (${ultimoError instanceof Error ? ultimoError.message : ultimoError}); contestó el intermediario`);
+                console.warn(`[soporte] el intermediario falló (${ultimoError instanceof Error ? ultimoError.message : ultimoError}); contestó el respaldo directo`);
             }
             return texto;
         } catch (e) {
