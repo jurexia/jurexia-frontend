@@ -477,3 +477,56 @@ export function temaDelicado(texto: string): boolean {
     const t = normalizar(texto);
     return DISPARADORES.some(grupo => grupo.every(raiz => t.includes(normalizar(raiz))));
 }
+
+/* LA FICHA CUANDO NO HAY MOTOR (2-nov-2026).
+ *
+ * Ese día el modelo del asistente cayó tres veces en cuatro horas y a cada
+ * usuario se le contestó «le escribirán a su correo», cuando la respuesta de
+ * una persona tardaba días. Casi siempre la respuesta correcta ya estaba
+ * escrita aquí, en TEMAS: la mayoría de lo que llega es una consulta jurídica
+ * en la caja equivocada, un pago que no se refleja o un acceso que falla.
+ *
+ * Si el motor no contesta, se reconoce el tema con raíces y sin tildes —por la
+ * misma razón que DISPARADORES: nadie escribe como el ejemplo— y se da su
+ * ficha tal cual. El orden importa: lo de la cuenta y el dinero va antes que
+ * la consulta jurídica, que casa con palabras de todo el día («demanda»,
+ * «escrito»). Lo que no casa con nada se queda con el mensaje de siempre.
+ */
+const FICHAS_SIN_MOTOR: [string, string[][]][] = [
+    ['cuenta-suspendida', [['suspendid'], ['falta de pago'], ['bloquead']]],
+    ['pago-no-reflejado', [['pag', 'gratuit'], ['pag', 'no se refleja'], ['pag', 'no se activ'],
+        ['pag', 'no aparece'], ['pag', 'no se actualiz'], ['ya pague']]],
+    ['dos-cuentas', [['me quitaron', 'plan'], ['perdi', 'suscripcion'], ['aparezco', 'gratuit']]],
+    ['reembolso', [['reembols'], ['devuel', 'dinero'], ['mi dinero']]],
+    ['cancelar', [['cancel']]],
+    ['eliminar-cuenta', [['elimin', 'cuenta'], ['borr', 'cuenta'], ['dar de baja']]],
+    ['factura', [['factur'], ['cfdi'], ['datos fiscales']]],
+    ['acceso', [['no puedo entrar'], ['no me deja entrar'], ['no puedo ingresar'], ['no me deja ingresar'],
+        ['contrasen'], ['iniciar sesion'], ['no puedo acceder'], ['olvide', 'clave']]],
+    ['archivo', [['subir', 'archivo'], ['subir', 'document'], ['subir', 'pdf'], ['no me acepta'],
+        ['muy grande'], ['adjunt']]],
+    ['documento-versiones', [['no encuentro', 'escrito'], ['version anterior'], ['otra computadora']]],
+    ['sin-respuesta-chat', [['se atora'], ['se queda pensando'], ['no carga'], ['carga nada'],
+        ['no me contesta'], ['no responde'], ['se cort'], ['perdio el contacto'], ['no aparece nada'],
+        ['no me aparece nada'], ['marca error']]],
+    ['historial', [['historial'], ['consultas anteriores'], ['desaparec', 'conversac'], ['no veo mis consultas']]],
+    ['contador', [['cuantas consultas'], ['contador'], ['mi consumo']]],
+    ['internet', [['boton', 'internet'], ['buscar en internet'], ['candado', 'internet'], ['fuente', 'internet']]],
+    ['tesis', [['tesis', 'no exist'], ['tesis', 'inventa'], ['registro', 'no exist']]],
+    ['guia', [['guia'], ['manual'], ['tutorial'], ['tuturial'], ['como se usa'], ['como usar'], ['como funciona']]],
+    ['consulta-legal', [['amparo'], ['demanda'], ['redact'], ['escrito'], ['contrato'], ['juicio'],
+        ['articulo'], ['denuncia'], ['recurso'], ['sentencia'], ['delito'], ['divorci'], ['pension'],
+        ['custodia'], ['imss'], ['issste'], ['infonavit'], ['apelac'], ['incident'], ['fiscalia'], ['despido'],
+        ['ficha textual']]],
+];
+
+/** La ficha de TEMAS que corresponde al mensaje, o null si no casa con ninguna. */
+export function fichaSinMotor(texto: string): Tema | null {
+    const t = normalizar(texto);
+    for (const [id, grupos] of FICHAS_SIN_MOTOR) {
+        if (grupos.some(grupo => grupo.every(raiz => t.includes(raiz)))) {
+            return TEMAS.find(tema => tema.id === id) ?? null;
+        }
+    }
+    return null;
+}

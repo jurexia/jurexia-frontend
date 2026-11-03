@@ -33,7 +33,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
-import { conocimientoParaPrompt, temaDelicado, MAPA_PLATAFORMA } from '@/lib/soporte/conocimiento';
+import { conocimientoParaPrompt, temaDelicado, fichaSinMotor, MAPA_PLATAFORMA } from '@/lib/soporte/conocimiento';
 import { enviarConReintento, correoDeAviso, claveDeAviso } from '@/lib/soporte/aviso';
 import { registrarTurno, anotarAviso } from '@/lib/soporte/reportes';
 
@@ -46,6 +46,22 @@ export const maxDuration = 30;
    litigante mexicano eso se pierde en la primera línea. La diferencia son 36
    centavos de dólar por cada mil conversaciones. */
 const MODELO = process.env.SOPORTE_MODELO || 'google/gemini-2.5-flash-lite';
+
+/* LOS RESPALDOS (2-nov-2026). Ese día el asistente cayó tres veces en cuatro
+   horas con un 429 de OpenRouter —el modelo no daba abasto; saldo había— y a
+   cada usuario se le dijo «le escribirán a su correo». Ahora la petición
+   declara modelos de respaldo en orden (`models`): cualquier error del primero
+   —límite, caída, filtro— pasa al siguiente. El primero es de otro proveedor
+   para que una caída de Google no se lleve a los dos; gpt-6-luna es el motor
+   del chat legal y ya habla de usted. Si aun así falla, un reintento; y si
+   tampoco, la ficha del tema (`fichaSinMotor`). */
+const MODELOS_RESPALDO = (process.env.SOPORTE_MODELOS_RESPALDO || 'openai/gpt-6-luna,google/gemini-3.1-flash-lite')
+    .split(',').map(m => m.trim()).filter(m => m && m !== MODELO);
+/** Dos intentos de hasta 12 s y una pausa caben en los 30 s de la función. */
+const INTENTOS = 2;
+const TOPE_INTENTO_MS = 12_000;
+const PAUSA_REINTENTO_MS = 1_500;
+
 const MAX_TURNOS_USUARIO = 15;
 /** Lo que ve el modelo: los quince turnos de cada lado más el saludo. */
 const VENTANA_TURNOS = 2 * MAX_TURNOS_USUARIO + 2;
@@ -202,6 +218,70 @@ function admin() {
  * `reportes_soporte` si salió o no, para que el cron recoja lo que falló.
  * Ver `@/lib/soporte/aviso`.
  */
+/** El texto del modelo, con respaldos y un reintento. Lanza si nadie contestó. */
+async function preguntarAlMotor(
+    clave: string, mensajes: { role: 'system' | 'user' | 'assistant'; content: string }[],
+): Promise<string> {
+    const cuerpo = JSON.stringify({
+        model: MODELO,
+        models: [MODELO, ...MODELOS_RESPALDO],
+        max_tokens: 320,
+        temperature: 0.3,
+        messages: mensajes,
+    });
+    let ultimoError: unknown = null;
+    for (let intento = 1; intento <= INTENTOS; intento++) {
+        if (intento > 1) await new Promise(r => setTimeout(r, PAUSA_REINTENTO_MS));
+        try {
+            const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${clave}`,
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': 'https://www.iurexia.com',
+                    'X-Title': 'Iurexia Soporte',
+                },
+                body: cuerpo,
+                signal: AbortSignal.timeout(TOPE_INTENTO_MS),
+            });
+            if (r.ok) {
+                const d = await r.json();
+                const texto = (d?.choices?.[0]?.message?.content || '').trim();
+                if (texto) {
+                    if (d?.model && !String(d.model).startsWith(MODELO)) {
+                        console.warn(`[soporte] contestó el respaldo ${d.model}`);
+                    }
+                    return texto;
+                }
+                ultimoError = new Error('OpenRouter: respuesta vacía');
+            } else {
+                ultimoError = new Error(`OpenRouter ${r.status}`);
+                // Un 4xx que no es de cupo (clave, saldo, petición) no se arregla reintentando.
+                if (r.status < 500 && r.status !== 408 && r.status !== 429) break;
+            }
+        } catch (e) {
+            ultimoError = e;
+        }
+    }
+    throw ultimoError ?? new Error('OpenRouter: sin respuesta');
+}
+
+/** Sin motor, lo que se le dice: la ficha de su tema si la hay, y que ya quedó con el equipo. */
+function respuestaSinMotor(mensaje: string): { respuesta: string; conFicha: boolean } {
+    const ficha = fichaSinMotor(mensaje);
+    if (ficha) {
+        return {
+            respuesta: `${ficha.respuesta} Además, su mensaje ya está con el equipo por si hace falta algo más.`,
+            conFicha: true,
+        };
+    }
+    return {
+        respuesta: 'Se me complicó revisarlo desde aquí, así que ya mandé su mensaje al equipo con todo el detalle. ' +
+            'Le responderán a su correo.',
+        conFicha: false,
+    };
+}
+
 async function avisarAlEquipo(datos: {
     folio: string | null; folios: string[]; turnos: number;
     correo?: string | null; nombre?: string | null; userId?: string | null;
@@ -396,49 +476,33 @@ export async function POST(req: NextRequest) {
 
     const clave = process.env.OPENROUTER_API_KEY;
     if (!clave) {
-        const respuesta =
-            'Ahora mismo no puedo atenderle por aquí, así que mandé su mensaje directamente al equipo. ' +
-            'Le escribirán a su correo.';
+        const { respuesta, conFicha } = respuestaSinMotor(ultimo.texto);
         const folioSM = await asentar({
-            categoria: 'error', escalado: true, motivo: 'Soporte sin motor configurado', delicado: false, respuesta,
+            categoria: 'error', escalado: true,
+            motivo: conFicha ? 'Soporte sin motor configurado — contestó la ficha' : 'Soporte sin motor configurado',
+            delicado: false, respuesta,
         });
         return NextResponse.json({ respuesta: conFolio(respuesta, folioSM), escalado: true, cerrado: true });
     }
 
     let texto = '';
     try {
-        const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${clave}`,
-                'Content-Type': 'application/json',
-                'HTTP-Referer': 'https://www.iurexia.com',
-                'X-Title': 'Iurexia Soporte',
-            },
-            body: JSON.stringify({
-                model: MODELO,
-                max_tokens: 320,
-                temperature: 0.3,
-                messages: [
-                    { role: 'system', content: sistema() },
-                    ...conversacion.map(t => ({
-                        role: t.rol === 'usuario' ? 'user' : 'assistant',
-                        content: t.texto,
-                    })),
-                ],
-            }),
-        });
-        if (!r.ok) throw new Error(`OpenRouter ${r.status}`);
-        const d = await r.json();
-        texto = (d?.choices?.[0]?.message?.content || '').trim();
+        texto = await preguntarAlMotor(clave, [
+            { role: 'system', content: sistema() },
+            ...conversacion.map(t => ({
+                role: (t.rol === 'usuario' ? 'user' : 'assistant') as 'user' | 'assistant',
+                content: t.texto,
+            })),
+        ]);
     } catch (e) {
-        // El motor falló: NO se le deja sin respuesta. Se escala y se le dice.
+        // El motor y sus respaldos fallaron: NO se le deja sin respuesta. Se le
+        // da la ficha de su tema si la hay, se escala y se le dice.
         console.error('[soporte] motor caído:', e);
-        const respuesta =
-            'Se me complicó revisarlo desde aquí, así que ya mandé su mensaje al equipo con todo el detalle. ' +
-            'Le responderán a su correo.';
+        const { respuesta, conFicha } = respuestaSinMotor(ultimo.texto);
         const folio = await asentar({
-            categoria: 'error', escalado: true, motivo: 'Soporte no disponible — escalado directo', delicado: false, respuesta,
+            categoria: 'error', escalado: true,
+            motivo: conFicha ? 'Soporte no disponible — contestó la ficha' : 'Soporte no disponible — escalado directo',
+            delicado: false, respuesta,
         });
         return NextResponse.json({ respuesta: conFolio(respuesta, folio), escalado: true, cerrado: true });
     }
