@@ -176,8 +176,19 @@ function menuActivo(menu: Menu, pathname: string | null) {
    Normativa, el perfil, Estudiar y pensar…): con sesión abierta no se pinta
    esta barra pública sino la barra de trabajo del chat (MarcoTrabajo); sin
    sesión, esta. Mientras se sabe si hay sesión no se pinta ninguna, para no
-   enseñar una y cambiarla por la otra. */
-export default function Navbar({ sobreOscuro = false, plataforma = false }: { sobreOscuro?: boolean; plataforma?: boolean }) {
+   enseñar una y cambiarla por la otra.
+
+   `sinLemaOpenAI` lo pasa la portada (4-nov-2026): sin «Now powered by
+   OpenAI» bajo la marca, por el rechazo de Meta (ver components/web/Portada). */
+export default function Navbar({
+    sobreOscuro = false,
+    plataforma = false,
+    sinLemaOpenAI = false,
+}: {
+    sobreOscuro?: boolean;
+    plataforma?: boolean;
+    sinLemaOpenAI?: boolean;
+}) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [anclada, setAnclada] = useState(!sobreOscuro);
     /* Sobre el hero oscuro, en cuanto se baja un poco: el texto del hero pasaba
@@ -347,7 +358,7 @@ export default function Navbar({ sobreOscuro = false, plataforma = false }: { so
                             if (e.pointerType === 'mouse' && abierto) cerrarConGracia();
                         }}
                     >
-                        <Link href="/" className="flex flex-col items-start gap-1" aria-label="Iurexia — inicio. Now powered by OpenAI">
+                        <Link href="/" className="flex flex-col items-start gap-1" aria-label={sinLemaOpenAI ? 'Iurexia — inicio' : 'Iurexia — inicio. Now powered by OpenAI'}>
                             {/* La marca no cambia nunca de tipografía: Playfair/Georgia 600. */}
                             <span
                                 className={`font-marca text-2xl font-semibold leading-none transition-colors duration-300 ${
@@ -356,7 +367,7 @@ export default function Navbar({ sobreOscuro = false, plataforma = false }: { so
                             >
                                 Iurex<span className="text-accent-gold">ia</span>
                             </span>
-                            <LemaOpenAI sobreOscuro={enClaro} tamano="text-[9px]" />
+                            {!sinLemaOpenAI && <LemaOpenAI sobreOscuro={enClaro} tamano="text-[9px]" />}
                         </Link>
 
                         <span

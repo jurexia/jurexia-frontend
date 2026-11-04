@@ -71,7 +71,9 @@ const COLUMNAS: { titulo: string; enlaces: [string, string][] }[] = [
 const BOTON_RED =
     'inline-flex h-9 w-9 items-center justify-center rounded-lg border border-black/10 text-charcoal-700 transition-colors hover:border-charcoal-900 hover:text-charcoal-900';
 
-export default function PieDePagina({ className = '' }: { className?: string }) {
+/* `sinLemaOpenAI` lo pasa la portada (4-nov-2026): sin «Now powered by OpenAI»
+   bajo la marca, por el rechazo de Meta (ver components/web/Portada). */
+export default function PieDePagina({ className = '', sinLemaOpenAI = false }: { className?: string; sinLemaOpenAI?: boolean }) {
     return (
         <footer className={`solo-publico border-t border-black/5 bg-cream-300 pt-16 pb-10 ${className}`}>
             <div className="mx-auto max-w-6xl px-4">
@@ -80,7 +82,7 @@ export default function PieDePagina({ className = '' }: { className?: string }) 
                         <span className="font-marca text-2xl font-semibold tracking-wide text-charcoal-900">
                             Iurex<span className="text-accent-gold">ia</span>
                         </span>
-                        <LemaOpenAI tamano="text-[11px]" className="mt-2" />
+                        {!sinLemaOpenAI && <LemaOpenAI tamano="text-[11px]" className="mt-2" />}
                         <p className="mt-4 text-[13.5px] leading-relaxed text-charcoal-900/70">
                             Inteligencia artificial jurídica para México. Legislación federal y de
                             las 32 entidades, jurisprudencia del Semanario y cada cita verificada

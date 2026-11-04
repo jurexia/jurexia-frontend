@@ -111,8 +111,12 @@ function useRevelar() {
     return { raiz, hilo };
 }
 
-export default function Comparativa() {
+export default function Comparativa({ sinNombrarOpenAI = false }: { sinNombrarOpenAI?: boolean }) {
     const { raiz, hilo } = useRevelar();
+    /* Para el tráfico de anuncios no se nombra a OpenAI (4-nov-2026, rechazo de
+       Meta; ver components/web/Portada). Va en una sola cadena para que el
+       texto de siempre salga igual, sin cortes entre trozos. */
+    const motor = sinNombrarOpenAI ? 'los modelos de IA más avanzados' : 'modelos de OpenAI';
 
     return (
         <section className="bg-cream-300 py-16 sm:py-32">
@@ -123,9 +127,7 @@ export default function Comparativa() {
                         Una IA genérica frente a Iurexia
                     </h2>
                     <p className="mx-auto mt-5 max-w-2xl text-[1.0625rem] leading-relaxed text-piedra-700 sm:text-lg">
-                        Una IA de uso general sabe un poco de todo y responde de memoria: no distingue la ley de cada estado
-                        ni comprueba que la tesis exista. Iurexia usa modelos de OpenAI y no los deja responder de memoria:
-                        los pone a razonar sobre el derecho mexicano verificado.
+                        {`Una IA de uso general sabe un poco de todo y responde de memoria: no distingue la ley de cada estado ni comprueba que la tesis exista. Iurexia usa ${motor} y no los deja responder de memoria: los pone a razonar sobre el derecho mexicano verificado.`}
                     </p>
                 </div>
 
