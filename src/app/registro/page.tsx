@@ -8,7 +8,6 @@ import { signInWithGoogle, signInWithApple } from '@/lib/supabase';
 import { destinoTrasEntrar } from '@/lib/destino-tras-entrar';
 import { entrarConCodigo, pedirCodigo } from '@/lib/entrada-con-codigo';
 import { OfertaContrasena, PasoCodigo } from '@/components/EntradaConCodigo';
-import LemaOpenAI from '@/components/LemaOpenAI';
 import AvisoNavegadorIntegrado, { useNavegadorIntegrado } from '@/components/AvisoNavegadorIntegrado';
 import { medirAltaIurexia } from '@/components/MetaPixel';
 import { verPreguntaPortada } from '@/lib/gratis';
@@ -149,7 +148,6 @@ export default function RegistroPage() {
                     <span className="font-serif text-3xl font-semibold text-charcoal-900 tracking-tight">
                         Iurex<span className="text-accent-gold">ia</span>
                     </span>
-                    <LemaOpenAI tamano="text-[11px]" />
                 </Link>
 
                 {/* Register Card */}

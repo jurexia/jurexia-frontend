@@ -178,12 +178,13 @@ function menuActivo(menu: Menu, pathname: string | null) {
    sesión, esta. Mientras se sabe si hay sesión no se pinta ninguna, para no
    enseñar una y cambiarla por la otra.
 
-   `sinLemaOpenAI` lo pasa la portada (4-nov-2026): sin «Now powered by
-   OpenAI» bajo la marca, por el rechazo de Meta (ver components/web/Portada). */
+   Sin «Now powered by OpenAI» bajo la marca en toda la web pública (5-nov-2026;
+   antes sólo en la portada): ver components/LemaOpenAI. `sinLemaOpenAI={false}`
+   lo vuelve a poner. */
 export default function Navbar({
     sobreOscuro = false,
     plataforma = false,
-    sinLemaOpenAI = false,
+    sinLemaOpenAI = true,
 }: {
     sobreOscuro?: boolean;
     plataforma?: boolean;

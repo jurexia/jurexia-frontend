@@ -12,7 +12,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import LemaOpenAI from '@/components/LemaOpenAI';
 
 export default function EntrarPage() {
     const [testigo, setTestigo] = useState<string | null>(null);
@@ -41,10 +40,9 @@ export default function EntrarPage() {
     return (
         <div className="min-h-screen bg-cream-200 flex items-center justify-center px-4">
             <div className="w-full max-w-md bg-white border border-cream-300 rounded-2xl p-8">
-                <div className="font-serif text-2xl font-semibold text-charcoal-900 tracking-wide">
+                <div className="mb-8 font-serif text-2xl font-semibold text-charcoal-900 tracking-wide">
                     Iurexia
                 </div>
-                <LemaOpenAI tamano="text-[11px]" className="mt-2 mb-8" />
 
                 {!testigo ? (
                     <>

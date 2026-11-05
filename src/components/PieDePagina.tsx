@@ -71,9 +71,9 @@ const COLUMNAS: { titulo: string; enlaces: [string, string][] }[] = [
 const BOTON_RED =
     'inline-flex h-9 w-9 items-center justify-center rounded-lg border border-black/10 text-charcoal-700 transition-colors hover:border-charcoal-900 hover:text-charcoal-900';
 
-/* `sinLemaOpenAI` lo pasa la portada (4-nov-2026): sin «Now powered by OpenAI»
-   bajo la marca, por el rechazo de Meta (ver components/web/Portada). */
-export default function PieDePagina({ className = '', sinLemaOpenAI = false }: { className?: string; sinLemaOpenAI?: boolean }) {
+/* Sin «Now powered by OpenAI» bajo la marca en toda la web pública (5-nov-2026;
+   antes sólo en la portada): ver components/LemaOpenAI. */
+export default function PieDePagina({ className = '', sinLemaOpenAI = true }: { className?: string; sinLemaOpenAI?: boolean }) {
     return (
         <footer className={`solo-publico border-t border-black/5 bg-cream-300 pt-16 pb-10 ${className}`}>
             <div className="mx-auto max-w-6xl px-4">

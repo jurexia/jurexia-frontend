@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { signInWithEmail, signInWithGoogle, signInWithApple, resetPassword } from '@/lib/supabase';
 import { destinoTrasEntrar, recordarDestino } from '@/lib/destino-tras-entrar';
 import { EntrarConCodigo } from '@/components/EntradaConCodigo';
-import LemaOpenAI from '@/components/LemaOpenAI';
 import AvisoNavegadorIntegrado, { useNavegadorIntegrado } from '@/components/AvisoNavegadorIntegrado';
 
 export default function LoginPage() {
@@ -109,7 +108,6 @@ export default function LoginPage() {
                     <span className="font-serif text-3xl font-semibold text-charcoal-900 tracking-tight">
                         Iurex<span className="text-accent-gold">ia</span>
                     </span>
-                    <LemaOpenAI tamano="text-[11px]" />
                 </Link>
 
                 {/* Login Card */}

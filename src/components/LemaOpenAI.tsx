@@ -12,7 +12,18 @@
    Sin el logotipo de OpenAI, sólo el texto: el nombre describe un hecho. El
    anuncio largo —qué cambia y cómo se cuida la privacidad— está en la
    portada (AnuncioOpenAI). La marca «Iurexia» no cambia: Playfair 600, como
-   siempre. */
+   siempre.
+
+   FUERA DE LA WEB PÚBLICA (5-nov-2026). El 4-nov Meta rechazó de golpe los 9
+   anuncios que llevaban a iurexia.com —también los que ya habían terminado— y
+   restringió el perfil que los creó, todo por `cybersecurity_policy`. Esa norma
+   castiga las páginas que nombran una marca ajena junto a un formulario de
+   acceso, como si la suplantaran para pedir contraseñas; y aquí estaba «Now
+   powered by OpenAI» justo encima del inicio de sesión, del registro y del
+   cambio de contraseña. Ahora sólo se pinta DENTRO de la plataforma, con la
+   sesión abierta (chat, taller, redactor), donde el robot de Meta no entra. En
+   la web pública (Navbar, PieDePagina, /login, /registro, /entrar, /activar,
+   /auth/reset-password, /pro50) ya no aparece. */
 
 export const LEMA_OPENAI = 'Now powered by OpenAI';
 
