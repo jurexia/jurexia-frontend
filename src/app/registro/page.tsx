@@ -245,8 +245,28 @@ export default function RegistroPage() {
                             </button>
 
                             {/* Trust signal */}
-                            <p className="text-center text-xs text-charcoal-400 mb-5">
+                            <p className="text-center text-xs text-charcoal-400 mb-2">
                                 Registro instantáneo · Sin contraseñas
+                            </p>
+
+                            {/* EL AVISO LEGAL, A LA VISTA (4-nov-2026). Meta rechazó
+                                L3 por cybersecurity_policy y pide que la página donde
+                                se registran tenga enlace visible a las políticas de
+                                privacidad. Google y Apple crean la cuenta sin pasar
+                                por la casilla del formulario de correo, así que el
+                                aviso va aquí, bajo los dos botones, para los tres
+                                caminos. Subrayado de siempre: que se lea como enlace
+                                sin pasarle el ratón. */}
+                            <p className="text-center text-xs leading-relaxed text-piedra-600 mb-5">
+                                Al crear tu cuenta aceptas los{' '}
+                                <Link href="/terminos" className="whitespace-nowrap font-medium text-accent-brown underline underline-offset-2 hover:text-charcoal-900">
+                                    Términos y condiciones
+                                </Link>{' '}
+                                y el{' '}
+                                <Link href="/privacidad" className="whitespace-nowrap font-medium text-accent-brown underline underline-offset-2 hover:text-charcoal-900">
+                                    Aviso de privacidad
+                                </Link>
+                                .
                             </p>
 
                             {error && !showEmailForm && (
