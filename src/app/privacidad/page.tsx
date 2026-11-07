@@ -7,7 +7,7 @@ import { Shield } from 'lucide-react';
 
 import { claseWeb } from '@/lib/fuentes-web';
 export default function PrivacidadPage() {
-    const fechaActualizacion = "6 de octubre de 2026";
+    const fechaActualizacion = "6 de noviembre de 2026";
 
     return (
         <main className={`${claseWeb} min-h-screen bg-cream-300`}>
@@ -115,7 +115,7 @@ export default function PrivacidadPage() {
                                 <li>Envío de comunicaciones sobre nuevas funcionalidades</li>
                                 <li>Análisis estadísticos para mejora del servicio</li>
                                 <li>Encuestas de satisfacción</li>
-                                <li>Medición y optimización de nuestros anuncios en Meta (ver sección VII)</li>
+                                <li>Medición y optimización de nuestros anuncios en Meta y TikTok (ver sección VII)</li>
                             </ul>
                         </section>
 
@@ -248,6 +248,14 @@ export default function PrivacidadPage() {
                                 exclusivamente la medición y optimización publicitaria.
                             </p>
                             <p className="text-charcoal-700 leading-relaxed mb-4">
+                                <strong>Píxel de TikTok.</strong> Si acepta las cookies de Marketing, usamos también
+                                el píxel de TikTok para medir la eficacia de nuestros anuncios en esa red. Registra
+                                las visitas a las páginas de iurexia.com y el hecho de que usted se registró, junto
+                                con datos técnicos de su navegador (dirección IP, agente de usuario e identificadores
+                                de las cookies de TikTok), que recibe TikTok. No le enviamos su correo electrónico ni
+                                su teléfono. La finalidad es exclusivamente la medición y optimización publicitaria.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
                                 Puede oponerse en cualquier momento: rechazando las cookies de Marketing en{' '}
                                 <button
                                     type="button"
@@ -256,7 +264,7 @@ export default function PrivacidadPage() {
                                 >
                                     sus preferencias de cookies
                                 </button>
-                                , desde la configuración de anuncios de su cuenta de Meta, o escribiendo a{' '}
+                                , desde la configuración de anuncios de su cuenta de Meta o de TikTok, o escribiendo a{' '}
                                 <a href="mailto:soporte@iurexia.com" className="text-accent-brown hover:underline">
                                     soporte@iurexia.com
                                 </a>.

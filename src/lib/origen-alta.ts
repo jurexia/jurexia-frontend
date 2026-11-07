@@ -35,6 +35,8 @@ declare global {
     interface Window {
         fbq?: (...args: unknown[]) => void;
         _fbq?: unknown;
+        ttq?: any;
+        TiktokAnalyticsObject?: string;
     }
 }
 
@@ -296,6 +298,30 @@ export function dispararPendientes(): void {
     } catch { /* nada que hacer */ }
 }
 
+/** Lo mismo para TikTok: `ttq` existe sólo con permiso de Marketing. */
+const LLAVE_PENDIENTE_TIKTOK = 'iurexia:tiktok-alta-pendiente';
+
+export function rastrearAltaTikTok(eventID: string): void {
+    if (!hayNavegador()) return;
+    try {
+        if (window.ttq?.track) {
+            window.ttq.track('CompleteRegistration', {}, { event_id: eventID });
+            return;
+        }
+        window.sessionStorage.setItem(LLAVE_PENDIENTE_TIKTOK, eventID);
+    } catch { /* nada que hacer */ }
+}
+
+export function dispararPendientesTikTok(): void {
+    if (!hayNavegador() || !window.ttq?.track) return;
+    try {
+        const eventID = window.sessionStorage.getItem(LLAVE_PENDIENTE_TIKTOK);
+        if (!eventID) return;
+        window.sessionStorage.removeItem(LLAVE_PENDIENTE_TIKTOK);
+        window.ttq.track('CompleteRegistration', {}, { event_id: eventID });
+    } catch { /* nada que hacer */ }
+}
+
 // ─── El alta ────────────────────────────────────────────────────────────────
 
 /** Etiquetas de conversión «Registro» de Google Ads (las mismas de /registro). */
@@ -361,6 +387,7 @@ export async function medirAlta(opciones: {
         if (marketing) {
             asegurarCookieFbc();
             rastrearMeta('CompleteRegistration', 'reg_' + id);
+            rastrearAltaTikTok('reg_' + id);
         }
 
         await fetch('/api/medicion/alta', {

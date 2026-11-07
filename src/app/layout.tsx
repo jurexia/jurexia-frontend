@@ -23,6 +23,7 @@ import { AvisoRelojDesfasado } from '@/components/AvisoRelojDesfasado'
 import { WakeUpProvider } from '@/components/WakeUpProvider'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import MetaPixel from '@/components/MetaPixel'
+import TikTokPixel from '@/components/TikTokPixel'
 
 export const metadata: Metadata = {
     // El dominio que sirve Vercel es www (iurexia.com redirige ahí). Canonical, og:url, sitemap y
@@ -116,6 +117,7 @@ export default function RootLayout({
                 {/* El píxel de Meta: sólo con NEXT_PUBLIC_META_PIXEL_ID y permiso de
                     Marketing. Guarda además el primer contacto (utm/fbclid). */}
                 <MetaPixel />
+                <TikTokPixel />
                 <AuthProvider>
                     <WakeUpProvider>
                         {children}
