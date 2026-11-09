@@ -27,6 +27,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
 import { supabase } from '@/lib/supabase';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
+import PanelFinanzas from '@/components/admin/PanelFinanzas';
 import {
     LayoutDashboard, Users, CreditCard, Megaphone, LifeBuoy, ShieldAlert,
     Gem, Search, Loader2, ChevronLeft, ChevronRight, X, Check, RefreshCw, Scale, Star,
@@ -96,6 +97,7 @@ export default function PanelAdmin() {
     const [datos, setDatos] = useState<Record<string, any>>({});
     const [cargando, setCargando] = useState<Seccion | null>(null);
     const [error, setError] = useState('');
+    const [vueltaFinanzas, setVueltaFinanzas] = useState(0);
 
     const [busca, setBusca] = useState('');
     const [plan, setPlan] = useState('');
@@ -124,30 +126,12 @@ export default function PanelAdmin() {
         }
     }, []);
 
-    // Finanzas vive en su propia ruta porque su fuente es Stripe, no Supabase.
-    // La cabecera no es opcional: esa ruta estuvo devolviendo el MRR de la
-    // empresa a cualquiera hasta el 23-ago-2026, y al ponerle cerradura esta
-    // llamada —la única de la página que no mandaba el token— se quedó fuera.
-    const pedirFinanzas = useCallback(async () => {
-        setCargando('finanzas'); setError('');
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            const r = await fetch('/api/admin/finances', {
-                headers: { Authorization: `Bearer ${session?.access_token ?? ''}` },
-            });
-            if (!r.ok) { setError(r.status === 401 ? 'Sesión no autorizada.' : 'No se pudo leer Stripe.'); return; }
-            const j = await r.json();
-            setDatos(d => ({ ...d, finanzas: j }));
-        } catch { setError('No se pudo leer Stripe.'); }
-        finally { setCargando(null); }
-    }, []);
-
     useEffect(() => {
         if (!user || !isAdmin(user.email)) return;
         if (datos[seccion]) return;                 // ya está: no se vuelve a pedir
-        if (seccion === 'finanzas') pedirFinanzas();
-        else if (seccion !== 'cuentas') pedir(seccion);
-    }, [seccion, user, datos, pedir, pedirFinanzas]);
+        // Finanzas se carga sola en PanelFinanzas: su fuente es Stripe y sus tablas.
+        if (seccion !== 'cuentas' && seccion !== 'finanzas') pedir(seccion);
+    }, [seccion, user, datos, pedir]);
 
     // Búsqueda con freno: se escribe «gonzález» y no se disparan ocho
     // consultas, una por letra.
@@ -209,7 +193,10 @@ export default function PanelAdmin() {
                             </button>
                         ))}
                     </nav>
-                    <button onClick={() => { setDatos(x => ({ ...x, [seccion]: undefined })); }}
+                    <button onClick={() => {
+                        if (seccion === 'finanzas') setVueltaFinanzas(n => n + 1);
+                        else setDatos(x => ({ ...x, [seccion]: undefined }));
+                    }}
                         title="Volver a consultar"
                         className="p-2 rounded-lg text-charcoal-500 hover:bg-cream-100 shrink-0">
                         <RefreshCw className={`w-4 h-4 ${cargando ? 'animate-spin' : ''}`} />
@@ -338,39 +325,7 @@ export default function PanelAdmin() {
                 )}
 
                 {/* ── FINANZAS ───────────────────────────────────────────── */}
-                {seccion === 'finanzas' && d && !d.error && (
-                    <>
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-                            <Cifra etiqueta="Ingreso mensual" valor={dinero(d.mrr ?? 0)} acento="oro"
-                                pie="MRR según Stripe" />
-                            <Cifra etiqueta="Suscripciones activas" valor={d.active_count ?? 0} />
-                            <Cifra etiqueta="Proyección anual" valor={dinero((d.mrr ?? 0) * 12)} />
-                            <Cifra etiqueta="Ingreso por cuenta" valor={d.active_count ? dinero((d.mrr ?? 0) / d.active_count) : '—'} />
-                        </div>
-                        {d.by_plan && (
-                            <div className="rounded-xl border border-cream-400 bg-white p-5">
-                                <p className="text-[11px] uppercase tracking-wider text-accent-brown mb-3">Por plan</p>
-                                <table className="w-full text-sm">
-                                    <tbody>
-                                        {Object.entries(d.by_plan as Record<string, any>).map(([k, v]: any) => (
-                                            <tr key={k} className="border-b border-cream-200 last:border-0">
-                                                <td className="py-2 text-charcoal-900">{k}</td>
-                                                <td className="py-2 text-charcoal-700 tabular-nums text-right">{v.count ?? v}</td>
-                                                <td className="py-2 text-charcoal-900 tabular-nums text-right">
-                                                    {typeof v.total === 'number' ? dinero(v.total) : ''}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </>
-                )}
-                {seccion === 'finanzas' && d?.error && (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                        Stripe no respondió: {d.error}
-                    </div>
-                )}
+                {seccion === 'finanzas' && <PanelFinanzas key={vueltaFinanzas} />}
 
                 {/* ── CAMPAÑAS ───────────────────────────────────────────── */}
                 {seccion === 'campanias' && d && (

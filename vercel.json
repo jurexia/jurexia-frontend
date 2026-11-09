@@ -107,6 +107,10 @@
     {
       "path": "/api/cron/atencion",
       "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/finanzas-avisos",
+      "schedule": "0 14 * * *"
     }
   ]
 }
