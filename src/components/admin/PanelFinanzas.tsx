@@ -149,7 +149,7 @@ export default function PanelFinanzas() {
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm"><tbody>
-                        {d.calendario.map((e: any) => (
+                        {d.calendario.filter((e: any) => e.faltan <= 30).map((e: any) => (
                             <tr key={e.clave} className="border-b border-cream-200 last:border-0">
                                 <td className="py-2 pr-3">
                                     <span className="block text-charcoal-900">{e.nombre}{e.por_confirmar && <span className={`ml-2 text-xs ${tenue}`}>estimado</span>}</span>
@@ -218,7 +218,7 @@ export default function PanelFinanzas() {
                 </p>
                 {rezagoTotal > 0 && (
                     <div className="mt-4 px-4 py-3 rounded-lg border border-red-200 bg-red-50 text-sm text-red-900">
-                        <strong>Meses vencidos sin marcar como pagados: {pesos(rezagoTotal)}</strong> (IVA {pesos(d.rezago.iva)} · ISR {pesos(d.rezago.isr)}), sin recargos ni actualización. Va de {nombreMes(d.rezago.meses[0].mes)} a {nombreMes(d.rezago.meses[d.rezago.meses.length - 1].mes)}. Antes de septiembre no hay gastos cargados, así que no se restan.
+                        <strong>Meses vencidos sin marcar como pagados: {pesos(rezagoTotal)}</strong> (IVA {pesos(d.rezago.iva)} · ISR {pesos(d.rezago.isr)}), sin recargos ni actualización. Va de {nombreMes(d.rezago.meses[0].mes)} a {nombreMes(d.rezago.meses[d.rezago.meses.length - 1].mes)}.
                     </div>
                 )}
                 <div className="flex flex-wrap items-center gap-2 mt-4">
