@@ -244,20 +244,17 @@ export async function POST(request: NextRequest) {
             },
             // Código ya aplicado, o la casilla para teclearlo: uno u otro.
             ...(descuento ? { discounts: descuento } : { allow_promotion_codes: true }),
-            // Billing address collection
-            billing_address_collection: 'required',
-            // Tax ID collection (RFC for Mexico)
-            tax_id_collection: {
-                enabled: true,
-            },
-            // CRITICAL FIX: When customer exists, Stripe needs permission to update their name
-            // This is required when tax_id_collection is enabled for existing customers
-            ...(customerId && {
-                customer_update: {
-                    name: 'auto',  // Allow Stripe to update customer name from billing details
-                    address: 'auto', // Also update address for consistency
-                }
-            }),
+            // FORMULARIO MÍNIMO (9-nov-2026, pedido de David: «no queremos que
+            // rfc en stripe entorpezca el pago»). Pedía la dirección completa y
+            // ofrecía el RFC: ninguno de los 17 que pagaron del 4 al 9-nov
+            // capturó RFC, y 21 abrieron el pago y se fueron sin intentarlo.
+            // Los datos de factura viven en /perfil (`/api/fiscal/save`), que
+            // los escribe en el cliente de Stripe por su cuenta. Por eso ya no
+            // va `customer_update`: con él, lo que se tecleara aquí pisaba el
+            // domicilio fiscal guardado en /perfil.
+            billing_address_collection: 'auto',
+            // El recordatorio de pago pendiente (`/api/cron/pago-pendiente`)
+            // usa el enlace de esta misma sesión mientras siga abierta.
             // Locale
             locale: 'es',
         });
