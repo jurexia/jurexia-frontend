@@ -221,7 +221,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Create Stripe Checkout Session
-        const checkoutSession = await stripe.checkout.sessions.create({
+        const crearSesion = (conCodigo: boolean) => stripe.checkout.sessions.create({
             mode: 'subscription',
             payment_method_types: ['card'],
             customer: customerId,
@@ -243,7 +243,7 @@ export async function POST(request: NextRequest) {
                 },
             },
             // Código ya aplicado, o la casilla para teclearlo: uno u otro.
-            ...(descuento ? { discounts: descuento } : { allow_promotion_codes: true }),
+            ...(conCodigo && descuento ? { discounts: descuento } : { allow_promotion_codes: true }),
             // FORMULARIO MÍNIMO (9-nov-2026, pedido de David: «no queremos que
             // rfc en stripe entorpezca el pago»). Pedía la dirección completa y
             // ofrecía el RFC: ninguno de los 17 que pagaron del 4 al 9-nov
@@ -258,6 +258,21 @@ export async function POST(request: NextRequest) {
             // Locale
             locale: 'es',
         });
+
+
+        // Si el código no aplica a esta cuenta —BUENFIN30 es sólo para quien
+        // nunca ha pagado, y Stripe lo rechaza al crear la sesión—, el pago se
+        // abre igual, sin descuento y con la casilla de código: nunca se deja a
+        // alguien sin poder pagar por culpa de una promoción (9-nov-2026).
+        let checkoutSession;
+        try {
+            checkoutSession = await crearSesion(true);
+        } catch (e) {
+            if (!descuento) throw e;
+            console.warn(`⚠️ El código ${promo} no aplica a ${customerEmail}; se abre el pago sin descuento:`,
+                e instanceof Error ? e.message : e);
+            checkoutSession = await crearSesion(false);
+        }
 
         console.log('✅ Checkout Session created successfully:', checkoutSession.id);
         return NextResponse.json({ url: checkoutSession.url });

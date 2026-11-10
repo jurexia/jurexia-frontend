@@ -161,7 +161,9 @@ function filtrar(q: any, campania: NombreCampania) {
     // primera compra y Stripe se lo rechazaría: ofrecerles un descuento que
     // no pueden usar sería peor que no escribirles. Medido contra los 1,622
     // cobros de Stripe: cero coincidencias en el segmento.
-    if (campania === 'descuento_pro') {
+    // BUEN FIN 2026 (9-nov-2026): el mismo filtro, por la misma razón — el
+    // código BUENFIN30 sólo vale en la primera compra.
+    if (campania === 'descuento_pro' || campania === 'buen_fin' || campania === 'buen_fin_ultimo') {
         return q.eq('subscription_type', 'gratuito')
                 .eq('is_active', true)
                 .not('last_query_at', 'is', null)
@@ -279,6 +281,10 @@ async function segmentoCasosUso(): Promise<Destinatario[]> {
     });
 }
 
+function esBuenFin(campania: NombreCampania): boolean {
+    return campania === 'buen_fin' || campania === 'buen_fin_ultimo';
+}
+
 export async function segmento(campania: NombreCampania): Promise<Destinatario[]> {
     if (campania === 'registro_pendiente') return segmentoRegistroPendiente();
     if (campania === 'casos_uso') return segmentoCasosUso();
@@ -293,7 +299,8 @@ export async function segmento(campania: NombreCampania): Promise<Destinatario[]
 
     for (let desde = 0; ; desde += TAMANO) {
         const columnas = origen(campania) !== 'user_profiles' ? COLUMNAS
-            : campania === 'actualizacion' ? COLUMNAS_PLAN : COLUMNAS_PERFIL;
+            : campania === 'actualizacion' ? COLUMNAS_PLAN
+            : esBuenFin(campania) ? `${COLUMNAS_PERFIL}, last_query_at` : COLUMNAS_PERFIL;
         const q = filtrar(admin().from(origen(campania)).select(columnas), campania);
         // Orden estable al paginar, o las páginas pueden solaparse y perder gente.
         const { data, error } = await q.order('id', { ascending: true }).range(desde, desde + TAMANO - 1);
@@ -309,6 +316,16 @@ export async function segmento(campania: NombreCampania): Promise<Destinatario[]
     const limpias = filas.filter(
         (u: Destinatario) => u.email && !ADMINS.includes(u.email.toLowerCase()),
     );
+
+    // Buen Fin: sin cuentas de prueba, y primero quien usó Iurexia más
+    // recientemente. El cupo diario no alcanza para todos el primer día, y
+    // quien la usó ayer está más cerca de comprar que quien la usó en julio.
+    if (esBuenFin(campania)) {
+        type ConUso = Destinatario & { last_query_at?: string | null };
+        return (limpias as ConUso[])
+            .filter((u) => !esPrueba(u.email))
+            .sort((x, y) => String(y.last_query_at ?? '').localeCompare(String(x.last_query_at ?? '')));
+    }
 
     // El filtro por dominio va AQUÍ y no en la consulta: Supabase no permite
     // filtrar por la parte derecha del correo sin un `like` que barrería

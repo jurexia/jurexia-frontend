@@ -41,6 +41,7 @@ import { revisarSaldoMotor } from '@/lib/correo/alerta-saldo-motor';
 import { revisarRecuperacion } from '@/lib/correo/alerta-recuperacion';
 import { revisarCorrecciones } from '@/lib/correo/alerta-correcciones';
 import { revisarCreditosVoz } from '@/lib/correo/alerta-voz';
+import { buenFinVigente, esUltimoDiaBuenFin } from '@/lib/buen-fin';
 
 // Sin caché de datos de Next en esta ruta GET: ver api/cron/incidencias (2-nov-2026).
 export const fetchCache = 'force-no-store';
@@ -79,6 +80,24 @@ export const maxDuration = 300;
 const PRIORIDAD: NombreCampania[] = ['suscripcion', 'vitrina', 'referidos', 'entrada'];
 
 /**
+ * BUEN FIN 2026 (13 al 17-nov). Va primero y desplaza a `suscripcion`, que
+ * le hablaría del plan sin el descuento a la misma gente. El 17 sale la
+ * versión «último día» en su lugar. El fin de semana del Buen Fin el cron
+ * también corre (ver vercel.json), pero sólo con la campaña del Buen Fin.
+ */
+function prioridadDeHoy(ahora = new Date()): NombreCampania[] {
+    if (!buenFinVigente(ahora)) return PRIORIDAD;
+    const resto = PRIORIDAD.filter((c) => c !== 'suscripcion');
+    const primera: NombreCampania = esUltimoDiaBuenFin(ahora) ? 'buen_fin_ultimo' : 'buen_fin';
+    return finDeSemanaCDMX(ahora) ? [primera] : [primera, ...resto];
+}
+
+function finDeSemanaCDMX(ahora = new Date()): boolean {
+    const dia = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Mexico_City', weekday: 'short' }).format(ahora);
+    return dia === 'Sat' || dia === 'Sun';
+}
+
+/**
  * Vercel firma sus crons con CRON_SECRET. Se acepta también la clave de
  * administración para poder dispararlo a mano.
  *
@@ -110,6 +129,12 @@ export async function GET(req: NextRequest) {
     // nadie se enteraría, porque un simulacro responde 200 igual que un envío.
     // Quien llama es lo que manda; el parámetro sólo sirve para forzarlo a
     // mano.
+    // El cron del fin de semana existe sólo para el Buen Fin: fuera de esas
+    // fechas no hace nada, para que sábado y domingo sigan como siempre.
+    if (llamante === 'cron' && finDeSemanaCDMX() && !buenFinVigente()) {
+        return NextResponse.json({ omitido: 'fin de semana fuera del Buen Fin' });
+    }
+
     const forzarReal = req.nextUrl.searchParams.get('modo') === 'real';
     const simulacro = llamante === 'cron' ? false : !forzarReal;
 
@@ -147,7 +172,7 @@ export async function GET(req: NextRequest) {
         // las 8:00 en punto. Si se dispara a mano después de las 8:00, sale ya.
         const programadoPara = proximaEntrega();
 
-        for (const campania of PRIORIDAD) {
+        for (const campania of prioridadDeHoy()) {
             if (restante <= 0) break;
             if (Date.now() > plazoHasta) break;
 

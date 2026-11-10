@@ -156,7 +156,11 @@ export async function recordarPagosPendientes({ ensayo = false, ahora = new Date
                 nombre: nombrePila(perfil.full_name, email),
                 tratamiento: perfil.tratamiento,
                 plan,
-                precio: precioEnLetra(planId),
+                // Si la sesión ya trae descuento (Buen Fin, por ejemplo), se dice
+                // lo que de verdad pagaría, no el precio de lista.
+                precio: (s.total_details?.amount_discount ?? 0) > 0 && s.amount_total != null
+                    ? `$${(s.amount_total / 100).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN en su primer pago, con su descuento`
+                    : precioEnLetra(planId),
                 url: s.url,
                 vence: new Date(s.expires_at * 1000),
             });

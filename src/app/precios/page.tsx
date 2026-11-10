@@ -8,6 +8,8 @@ import { redirectToCheckout } from '@/lib/stripe-client';
 import Navbar from '@/components/Navbar';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 import { PLANS } from '@/lib/stripe';
+import AvisoBuenFin from '@/components/AvisoBuenFin';
+import { BUEN_FIN, buenFinVigente } from '@/lib/buen-fin';
 import { ObraClara, ObraOscura } from '@/components/FondosDePlan';
 import Image from 'next/image';
 import PieDePagina from '@/components/PieDePagina';
@@ -290,6 +292,7 @@ export default function PreciosPage() {
                     style={estiloPanel(vista === 'individual')}
                 >
                 <div className="max-w-7xl mx-auto">
+                    <AvisoBuenFin />
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch pt-8">
                         <AnimateOnScroll delay={0} className="h-full">
                             <PricingCard
@@ -1094,7 +1097,9 @@ function PricingCard({
         setLoading(true);
         try {
             console.log('🔄 Starting checkout with:', { priceId, email: user.email });
-            await redirectToCheckout(priceId, user.email);
+            // Buen Fin (13 al 17-nov-2026): el código va ya aplicado. Si la
+            // cuenta no califica (ya pagó antes), el cobro abre sin descuento.
+            await redirectToCheckout(priceId, user.email, buenFinVigente() ? BUEN_FIN.codigo : undefined);
         } catch (error: any) {
             console.error('❌ Checkout error:', error);
 

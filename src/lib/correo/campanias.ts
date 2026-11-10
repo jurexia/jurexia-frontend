@@ -32,6 +32,7 @@ import {
     codigoReferido, enlaceInvitacion, CONSULTAS_DE_BIENVENIDA, ESCALERA,
 } from './referidos';
 import type { Correo, Destinatario } from './enviar';
+import { BUEN_FIN, cuenta, pesos } from '@/lib/buen-fin';
 
 const CHAT = `${SITIO}/chat`;
 
@@ -858,6 +859,117 @@ export function correoCasosUso(d: Destinatario): Correo {
     };
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────
+// BUEN FIN 2026 — 13 al 17 de noviembre (aprobado por David el 9-nov-2026).
+//
+// «Que el comprador se sienta inteligente por adquirir el producto». No se
+// le dice que es una oportunidad única: se le enseña la cuenta, con cifras
+// que puede comprobar (todas salen de PLANS vía `src/lib/buen-fin.ts`), se
+// le recomienda lo que más le conviene —el anual— y las condiciones van sin
+// letra chiquita. Va a quien ya usó Iurexia en su cuenta gratuita y nunca
+// pagó: el mismo filtro de `descuento_pro`, que deja fuera a los antiguos
+// clientes porque el código sólo vale en la primera compra.
+// ─────────────────────────────────────────────────────────────────────────
+const BUEN_FIN_URL = `${SITIO}/buen-fin`;
+
+function cuentaBuenFin(): string {
+    const pro = cuenta('pro');
+    return caja(
+        rotulo('Un año de Iurexia Pro') +
+        listado([
+            `Pagando mes a mes: ${pesos(pro.anioMesAMes)} MXN.`,
+            `Plan anual en Buen Fin: ${pesos(pro.anualBuenFin)} MXN.`,
+            `Diferencia a su favor: ${pesos(pro.ahorro)} MXN, ${pro.ahorroPct} % menos.`,
+        ]) +
+        `<p style="margin:14px 0 0;font-size:13px;color:#404040;">Cada una de sus ` +
+        `${(pro.consultas * 12).toLocaleString('es-MX')} consultas del año le sale en ${pesos(pro.porConsulta)}.</p>`,
+    );
+}
+
+function sinLetraChiquita(): string {
+    return `<p style="margin:16px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.65;color:#8b7355;">` +
+        `Sin letra chiquita: 30 % sobre el primer pago de los planes Básico, Pro y Platinum (el primer mes en ` +
+        `los mensuales, el primer año en los anuales). Después, el plan se renueva a su precio normal hasta que ` +
+        `usted lo cancele, lo que puede hacer en cualquier momento desde su perfil. Para cuentas sin un plan de ` +
+        `pago previo. Vigente hasta el ${BUEN_FIN.finEnLetra}, hora de la Ciudad de México. Aplican los ` +
+        `Términos y Condiciones de Iurexia.</p>`;
+}
+
+const FIRMA_SOPORTE = `<p style="margin:20px 0 0;color:#1a1a1a;">Atentamente,<br><strong style="color:#1a1a1a;">Soporte de Iurexia</strong></p>`;
+
+export function correoBuenFin(d: Destinatario): Correo {
+    const nombre = capitalizar(nombrePila(d.full_name, d.email));
+    const pro = cuenta('pro');
+
+    const cuerpo =
+        parrafo(saludo(d, nombre), '0 0 22px 0') +
+        parrafo(
+            `Este Buen Fin, Iurexia tiene ${fuerte('30 % de descuento en el primer pago de cualquier plan')}. ` +
+            'No le vamos a decir que es una oportunidad única: le escribimos con una cuenta, porque sabemos ' +
+            'que usted decide con números.',
+        ) +
+        cuentaBuenFin() +
+        parrafo(
+            `Si prefiere ir mes a mes, el 30 % también aplica: su primer mes de Pro queda en ` +
+            `${fuerte(`${pesos(pro.primerMes)} MXN`)}. Y hay descuento en Básico y en Platinum.`,
+            '20px 0 22px 0',
+        ) +
+        boton('Ver la cuenta completa', BUEN_FIN_URL) +
+        parrafo(
+            'Usted ya conoce Iurexia: la usó con sus propios asuntos. Lo que compra es eso mismo, sin el tope ' +
+            'de cinco consultas. Y el descuento ya va aplicado al pagar: no hay que teclear ningún código.',
+            '22px 0 22px 0',
+        ) +
+        evidenciaIA() +
+        FIRMA_SOPORTE +
+        sinLetraChiquita();
+
+    return {
+        asunto: `${trato(d)} ${nombre}, haga la cuenta: 30 % en Iurexia este Buen Fin`,
+        html: envolver({
+            cuerpo,
+            urlBaja: urlBaja(d.email),
+            logo: true,
+            preencabezado: `Un año de Pro por ${pesos(pro.anualBuenFin)} en lugar de ${pesos(pro.anioMesAMes)} mes a mes. Hasta el martes 17.`,
+        }),
+        texto: aTexto(cuerpo) + `\n\nVer la cuenta completa: ${BUEN_FIN_URL}\nDarse de baja: ${urlBaja(d.email)}`,
+    };
+}
+
+export function correoBuenFinUltimo(d: Destinatario): Correo {
+    const nombre = capitalizar(nombrePila(d.full_name, d.email));
+    const pro = cuenta('pro');
+
+    const cuerpo =
+        parrafo(saludo(d, nombre), '0 0 22px 0') +
+        parrafo(
+            `Hoy, martes 17 de noviembre, a las 23:59 termina el Buen Fin en Iurexia: ` +
+            `${fuerte('30 % en el primer pago de cualquier plan')}. Mañana, los planes vuelven a su precio normal.`,
+        ) +
+        cuentaBuenFin() +
+        parrafo('', '18px 0 0 0') +
+        boton('Hacer la cuenta y elegir mi plan', BUEN_FIN_URL) +
+        parrafo(
+            'Y si ya lo pensó y no es para usted, no pasa nada: su cuenta gratuita sigue igual, con sus cinco ' +
+            'consultas cada mes. Preferimos un cliente convencido a uno apurado.',
+            '22px 0 0 0',
+        ) +
+        FIRMA_SOPORTE +
+        sinLetraChiquita();
+
+    return {
+        asunto: `${trato(d)} ${nombre}, hoy a las 23:59 termina el 30 % de Iurexia`,
+        html: envolver({
+            cuerpo,
+            urlBaja: urlBaja(d.email),
+            logo: true,
+            preencabezado: `La cuenta no cambia: un año de Pro por ${pesos(pro.anualBuenFin)} en lugar de ${pesos(pro.anioMesAMes)}.`,
+        }),
+        texto: aTexto(cuerpo) + `\n\nHacer la cuenta: ${BUEN_FIN_URL}\nDarse de baja: ${urlBaja(d.email)}`,
+    };
+}
+
 export const CAMPANIAS = {
     entrada: { construir: correoEntrada, etiqueta: 'Entrada — nunca inició sesión' },
     activacion: { construir: correoActivacion, etiqueta: 'Activación — nunca consultó' },
@@ -869,6 +981,8 @@ export const CAMPANIAS = {
     registro_pendiente: { construir: correoRegistroPendiente, etiqueta: 'Registro pendiente — pidió el código y no entró' },
     actualizacion: { construir: correoActualizacion, etiqueta: 'Actualización de la pantalla — clientes de pago' },
     casos_uso: { construir: correoCasosUso, etiqueta: 'Casos de uso con animaciones — todos los registrados' },
+    buen_fin: { construir: correoBuenFin, etiqueta: 'Buen Fin 2026 — 30 % en el primer pago (13 al 16-nov)' },
+    buen_fin_ultimo: { construir: correoBuenFinUltimo, etiqueta: 'Buen Fin 2026 — último día (17-nov)' },
 } as const;
 
 export type NombreCampania = keyof typeof CAMPANIAS;
