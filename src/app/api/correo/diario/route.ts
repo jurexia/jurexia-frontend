@@ -72,7 +72,11 @@ export const maxDuration = 300;
 // correos del 18 al 30-oct (463 y 22) con un código que ya no valía. Además, el
 // 3-nov cambian los precios. `registro_pendiente` vuelve cuando su correo deje
 // de llevar la oferta; `descuento_pro`, sólo con oferta y fecha nuevas.
-const PRIORIDAD: NombreCampania[] = ['vitrina', 'referidos', 'entrada'];
+// VUELVE `suscripcion`, y PRIMERO (9-nov-2026, visto bueno de David al texto
+// nuevo con precios). La razón de su pausa —competía con el descuento— ya no
+// existe: `descuento_pro` está fuera desde el 31-oct. Va primero porque es la
+// gente que ya topó el límite: 267 elegibles, 269 nunca lo habían recibido.
+const PRIORIDAD: NombreCampania[] = ['suscripcion', 'vitrina', 'referidos', 'entrada'];
 
 /**
  * Vercel firma sus crons con CRON_SECRET. Se acepta también la clave de

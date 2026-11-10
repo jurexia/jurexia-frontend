@@ -191,7 +191,7 @@ export const PLANS = {
             '30 flujos de trabajo/mes: escritos completos paso a paso',
             'IA Jurídica Avanzada (Análisis complejo y deducción)',
             'Todo lo del Plan Pro incluido',
-            'Ahorro de $910 MXN al año',
+            'Ahorro de $298 MXN al año',
             'Precio fijo garantizado',
             'Soporte prioritario'
         ]
@@ -227,7 +227,7 @@ export const PLANS = {
             '60 flujos de trabajo/mes: escritos completos paso a paso',
             'IA Jurídica de Élite (Máxima precisión argumentativa)',
             'Todo lo del Plan Platinum incluido',
-            'Ahorro de $4,810 MXN al año',
+            'Ahorro de $1,198 MXN al año',
             'Precio fijo garantizado',
             'Soporte VIP dedicado'
         ]

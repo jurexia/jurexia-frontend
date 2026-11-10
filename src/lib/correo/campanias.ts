@@ -214,11 +214,17 @@ export function correoReactivacion(d: Destinatario): Correo {
 export function correoSuscripcion(d: Destinatario): Correo {
     const nombre = capitalizar(nombrePila(d.full_name, d.email));
     const usadas = d.queries_used ?? 0;
+    const agoto = usadas >= 5;
 
+    // Texto aprobado por David el 9-nov-2026. Lleva precios y consultas por
+    // plan (el de agosto no decía cuánto cuesta) y sólo promete lo que dice
+    // PLANS en `src/lib/stripe.ts`. Que las cinco consultas gratuitas se
+    // renuevan cada mes está comprobado: el cron de Postgres
+    // `reset-per-user-monthly-queries` las reinicia en el aniversario del alta.
     const cuerpo =
         parrafo(saludo(d, nombre), '0 0 22px 0') +
         parrafo(
-            `Usted agotó las consultas de su plan gratuito${usadas >= 5 ? '' : ' o está por hacerlo'}, ` +
+            `${agoto ? 'Usted agotó' : 'Usted está por agotar'} las cinco consultas de su plan gratuito, ` +
             'y eso lo coloca en un grupo reducido: el de quienes le dieron a la plataforma un uso ' +
             'profesional sostenido. Le agradecemos de veras esa confianza.',
         ) +
@@ -227,29 +233,30 @@ export function correoSuscripcion(d: Destinatario): Correo {
             'usted ya lo comprobó con sus propios asuntos.',
         ) +
         caja(
-            rotulo('Lo que se abre al ampliar su plan') +
+            rotulo('Para seguir trabajando hoy mismo') +
             listado([
-                'Consultas sin el tope de cinco.',
-                'Redacción de escritos y demandas fundada en la legislación de su estado.',
-                'Carpetas de trabajo sin límite, para llevar varios asuntos en paralelo.',
-                'Modos de razonamiento extendido para los asuntos que lo ameriten.',
+                // `listado` escapa el HTML: el texto va sin negritas.
+                'Plan Básico, $79 MXN al mes: 70 consultas mensuales.',
+                'Plan Pro, $149 MXN al mes: 140 consultas y 30 flujos de trabajo al mes, ' +
+                    'para redactar escritos completos paso a paso, con análisis de documentos.',
             ]),
         ) +
         parrafo(
-            `La plataforma sigue siendo ${fuerte('gratuita en su base')}. Lo que usted paga no es el acceso: ` +
-            'es la capacidad, y sube o baja según lo que su despacho exija ese mes. Usted decide el ritmo.',
+            'Su plan se activa en el momento del pago y puede cancelarlo cuando quiera desde su cuenta.',
             '20px 0 22px 0',
         ) +
         boton('Ver los planes', PRECIOS) +
         parrafo(
             'Y si prefiere continuar en el plan gratuito, cuente con ello: su cuenta y todo su trabajo ' +
-            'permanecen intactos, el tope se reinicia, y seguirá siendo bienvenido cuando nos necesite.',
-            '22px 0 0 0',
-        );
+            'permanecen intactos, sus cinco consultas se renuevan cada mes, y seguirá siendo bienvenido ' +
+            'cuando nos necesite.',
+            '22px 0 22px 0',
+        ) +
+        parrafo('Soporte de Iurexia', '0');
 
-    const html = envolver({ cuerpo, urlBaja: urlBaja(d.email) });
+    const html = envolver({ cuerpo, urlBaja: urlBaja(d.email), logo: true });
     return {
-        asunto: `${trato(d)} ${nombre}, su plan gratuito llegó al límite`,
+        asunto: `${trato(d)} ${nombre}, su plan gratuito ${agoto ? 'llegó' : 'está por llegar'} al límite`,
         html,
         texto: aTexto(cuerpo) + `\n\nVer los planes: ${PRECIOS}\nDarse de baja: ${urlBaja(d.email)}`,
     };
