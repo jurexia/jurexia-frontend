@@ -41,7 +41,7 @@ import { revisarSaldoMotor } from '@/lib/correo/alerta-saldo-motor';
 import { revisarRecuperacion } from '@/lib/correo/alerta-recuperacion';
 import { revisarCorrecciones } from '@/lib/correo/alerta-correcciones';
 import { revisarCreditosVoz } from '@/lib/correo/alerta-voz';
-import { buenFinVigente, esUltimoDiaBuenFin } from '@/lib/buen-fin';
+import { buenFinVigente, esUltimoDiaBuenFin, fechaCDMX } from '@/lib/buen-fin';
 
 // Sin caché de datos de Next en esta ruta GET: ver api/cron/incidencias (2-nov-2026).
 export const fetchCache = 'force-no-store';
@@ -89,7 +89,21 @@ const PRIORIDAD: NombreCampania[] = ['suscripcion', 'vitrina', 'referidos', 'ent
  *  para quien el Buen Fin no alcanzó, después del aviso del límite. */
 const POSICION_DESDE = new Date('2026-11-18T06:00:00Z');
 
+/**
+ * EL FRENO (11-nov-2026). Si en el panel de Resend o en Google Postmaster las
+ * quejas de spam pasan de 1 por cada 1,000 o los rebotes del 2 %, se pone
+ * `CORREO_PAUSA_POSICION=1` en Vercel y las cartas del Buen Fin y de
+ * posicionamiento dejan de salir al día siguiente, sin tocar código. El resto
+ * de las campañas sigue igual.
+ */
+const CARTAS: NombreCampania[] = ['buen_fin', 'buen_fin_ultimo', 'posicion'];
+
 function prioridadDeHoy(ahora = new Date()): NombreCampania[] {
+    const lista = prioridadSinFreno(ahora);
+    return process.env.CORREO_PAUSA_POSICION === '1' ? lista.filter((c) => !CARTAS.includes(c)) : lista;
+}
+
+function prioridadSinFreno(ahora: Date): NombreCampania[] {
     if (!buenFinVigente(ahora)) {
         if (ahora < POSICION_DESDE) return PRIORIDAD;
         const [primera, ...resto] = PRIORIDAD;
@@ -98,6 +112,34 @@ function prioridadDeHoy(ahora = new Date()): NombreCampania[] {
     const resto = PRIORIDAD.filter((c) => c !== 'suscripcion');
     const primera: NombreCampania = esUltimoDiaBuenFin(ahora) ? 'buen_fin_ultimo' : 'buen_fin';
     return finDeSemanaCDMX(ahora) ? [primera] : [primera, ...resto];
+}
+
+/**
+ * POR BLOQUES (11-nov-2026). David: «ir por bloques para que no se nos vayan a
+ * promociones ni spam». Gmail mide la forma del envío: un remitente que manda
+ * de golpe muchos más correos de los que suele es sospechoso. Así que:
+ *   · un tope por día que crece poco a poco —fin de semana más bajo, porque
+ *     los abogados abren menos y una carta sin abrir pesa en contra—;
+ *   · primero quien usó Iurexia más recientemente (lo ordena el segmento):
+ *     es quien más abre y responde, y su respuesta le enseña a Gmail que el
+ *     remitente es bueno antes de llegar a las cuentas viejas;
+ *   · y cada bloque repartido de 8:00 a 18:00, no todo a la misma hora.
+ * El cupo diario de Resend sigue mandando por encima de esto.
+ */
+const RAMPA_BUEN_FIN: Record<string, number> = {
+    '2026-11-13': 400,
+    '2026-11-14': 250,
+    '2026-11-15': 250,
+    '2026-11-16': 800,
+    '2026-11-17': 800,
+};
+const TOPE_POSICION = 600;
+const VENTANA_BLOQUE_MS = 10 * 3600_000;
+
+function topeDelBloque(campania: NombreCampania, ahora = new Date()): number | null {
+    if (campania === 'buen_fin' || campania === 'buen_fin_ultimo') return RAMPA_BUEN_FIN[fechaCDMX(ahora)] ?? 400;
+    if (campania === 'posicion') return TOPE_POSICION;
+    return null;
 }
 
 function finDeSemanaCDMX(ahora = new Date()): boolean {
@@ -222,14 +264,16 @@ export async function GET(req: NextRequest) {
                 }
             }
 
+            const bloque = topeDelBloque(campania);
             const r = await enviarCampania({
                 campania,
                 destinatarios,
                 construir: CAMPANIAS[campania].construir,
                 simulacro,
-                maximo: restante,
+                maximo: bloque == null ? restante : Math.min(restante, bloque),
                 plazoHasta,
                 programadoPara,
+                ...(bloque != null && programadoPara ? { ventanaMs: VENTANA_BLOQUE_MS } : {}),
             });
 
             tandas.push(r);

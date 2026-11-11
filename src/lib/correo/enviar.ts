@@ -222,6 +222,16 @@ export function proximaEntrega(ahora = new Date(), margenHoras = 6): string | un
 const LOTE = 100;
 
 /**
+ * EL REMITENTE DE LAS CAMPAÑAS (11-nov-2026). Era `FROM_EMAIL`, el mismo de
+ * los códigos de acceso (`send-otp`), con `noreply@iurexia.com` por omisión.
+ * Dos problemas: «no responder» baja la interacción, que es lo que Gmail más
+ * pesa para decidir la bandeja, y las quejas de una campaña manchaban al
+ * remitente de los códigos para entrar. Además, la regla de David: todo
+ * correo a usuarios sale de soporte@ y lo firma Soporte de Iurexia.
+ */
+export const REMITENTE_CAMPANIAS = process.env.CORREO_CAMPANIAS_FROM || 'Soporte de Iurexia <soporte@iurexia.com>';
+
+/**
  * Envía una campaña.
  *
  * `construir` recibe cada destinatario y devuelve el correo ya compuesto, así
@@ -316,7 +326,7 @@ export async function enviarCampania(opciones: {
     const bajas = await leerBajas();
     const yaEnviados = await leerYaEnviados(campania);
     const recientes = await leerRecientes(DIAS_ENTRE_CAMPANIAS);
-    const remitente = process.env.FROM_EMAIL || 'Iurexia <noreply@iurexia.com>';
+    const remitente = REMITENTE_CAMPANIAS;
     // Las campañas invitan a responder («responda este correo y le
     // contestamos nosotros»). Salían sin dirección de respuesta, así que la
     // respuesta iba al remitente de campañas y nadie la leía.

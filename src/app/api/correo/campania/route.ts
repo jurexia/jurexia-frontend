@@ -18,7 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { CAMPANIAS, type NombreCampania } from '@/lib/correo/campanias';
 import { segmento } from '@/lib/correo/segmentos';
-import { ADMINS, enviarCampania, type Destinatario } from '@/lib/correo/enviar';
+import { ADMINS, enviarCampania, type Destinatario, REMITENTE_CAMPANIAS } from '@/lib/correo/enviar';
 
 // Sin caché de datos de Next en esta ruta GET: ver api/cron/incidencias (2-nov-2026).
 export const fetchCache = 'force-no-store';
@@ -51,7 +51,7 @@ function autorizado(req: NextRequest): boolean {
 async function mandarARevision(soloEstas?: string[]) {
     const { Resend } = await import('resend');
     const resend = new Resend(process.env.RESEND_API_KEY!);
-    const remitente = process.env.FROM_EMAIL || 'Iurexia <noreply@iurexia.com>';
+    const remitente = REMITENTE_CAMPANIAS;
 
     /* CON SU PERFIL DE VERDAD (18-sep-2026). La muestra llevaba datos
        inventados y `id: null`, así que las plantillas que dependen del perfil

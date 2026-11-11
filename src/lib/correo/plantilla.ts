@@ -240,3 +240,32 @@ export function nombrePila(nombre: string | null | undefined, correo: string): s
     if (limpio) return limpio.split(/\s+/)[0];
     return correo.split('@')[0];
 }
+
+/* ═══ LA CARTA (11-nov-2026) ═══
+   David: «trata de que este correo no vaya a spam ni a promociones; queremos
+   que llegue a los abogados». Gmail manda a Promociones lo que tiene forma de
+   publicidad: membrete, cajas, botones, imágenes, muchos enlaces, precios en
+   tabla. Esta envoltura escribe como escribe una persona: fondo blanco, un
+   solo bloque de texto, sin imágenes ni tablas, un enlace visible en el
+   cuerpo y el pie de baja. No garantiza la bandeja principal —eso lo decide
+   Gmail, y pesa sobre todo cómo responde la gente—, pero le quita a Gmail las
+   razones de forma para mandarla a Promociones. */
+export function envolverCarta({ cuerpo, urlBaja, preencabezado }: {
+    cuerpo: string;
+    urlBaja: string;
+    preencabezado?: string;
+}): string {
+    const pre = preencabezado
+        ? `<div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">${esc(preencabezado)}</div>\n`
+        : '';
+    return `${pre}<div style="max-width:600px;margin:0 auto;padding:20px 18px;background-color:#ffffff;font-family:${SERIF};font-size:16px;line-height:1.65;color:${PALETA.texto};">
+${cuerpo}
+<p style="margin:30px 0 0;font-family:${SANS};font-size:11px;line-height:1.6;color:#8a8a8a;">Iurexia · iurexia.com · Le escribimos porque tiene una cuenta en Iurexia. <a href="${esc(urlBaja)}" style="color:#8a8a8a;text-decoration:underline;">Darse de baja</a></p>
+</div>`;
+}
+
+/** Un enlace como lo pone una persona: la dirección misma, subrayada. */
+export function enlaceCarta(url: string): string {
+    const visible = url.replace(/^https?:\/\//, '');
+    return `<a href="${esc(url)}" style="color:#1a4fa0;text-decoration:underline;">${esc(visible)}</a>`;
+}
