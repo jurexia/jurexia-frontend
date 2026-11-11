@@ -399,12 +399,12 @@ export function correoVitrina(d: Destinatario): Correo {
     const cuerpo =
         parrafo(saludo(d, nombre), '0 0 22px 0') +
         parrafo(
-            'Le escribo para invitar a su despacho a la vitrina de firmas de Iurexia: el ' +
+            'Le escribimos para invitar a su despacho a la vitrina de firmas de Iurexia: el ' +
             `espacio de nuestra portada donde aparecerán ${fuerte('los logotipos de los ' +
             'despachos que ejercen con la plataforma')}.`,
         ) +
         parrafo(
-            'Antes de decirle en qué consiste, permítame explicarle por qué usted.',
+            'Antes de decirle en qué consiste, permítanos explicarle por qué usted.',
         ) +
         parrafo(
             'La mayoría de los abogados que hoy usan inteligencia artificial lo hacen con ' +
@@ -459,7 +459,10 @@ export function correoVitrina(d: Destinatario): Correo {
             'Y si prefiere mantener su práctica fuera de escaparates, lo entendemos sin ' +
             'reservas y no volveremos a insistir.',
             '18px 0 0 0',
-        );
+        ) +
+        // 11-nov-2026: en plural y con firma, como todo correo a usuarios
+        // (regla global de David). Decía «Le escribo» y «permítame».
+        FIRMA_SOPORTE;
 
     return {
         asunto: `${trato(d)} ${nombre}, su despacho en la portada de Iurexia`,
