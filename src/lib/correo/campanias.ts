@@ -22,7 +22,8 @@
  */
 
 import {
-    animacion, boton, caja, enlaceCarta, enlaceTexto, envolver, envolverCarta, esc, fuerte, listado, nombrePila,
+    animacion, boton, botonNoche, caja, enlaceTexto, envolver, envolverNoche, esc, fuerte, fuerteNoche, listado,
+    marcadoPromocion, nombrePila, notaNoche,
     parrafo, rotulo, SITIO,
     videoChat, vistaDocumento,
 } from './plantilla';
@@ -905,29 +906,43 @@ const BUEN_FIN_URL = `${SITIO}/buen-fin`;
 
 const FIRMA_SOPORTE = `<p style="margin:20px 0 0;color:#1a1a1a;">Atentamente,<br><strong style="color:#1a1a1a;">Soporte de Iurexia</strong></p>`;
 
-const NOTA = (texto: string) =>
-    `<p style="margin:12px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.65;color:#8b7355;">${texto}</p>`;
-
-/* ═══ LAS CARTAS DEL BUEN FIN Y SU CONTINUACIÓN (11-nov-2026) ═══
-   David: «que no vaya a spam ni a promociones; queremos que llegue a los
-   abogados». El mensaje es el mismo —los tres grupos, Stanford, la cuenta
-   contra ChatGPT Pro, el plazo real, la salida sin riesgo—; cambia la forma:
-   `envolverCarta` (sin membrete, cajas, botón ni imágenes), las cifras en
-   prosa («1,989 pesos»), un solo enlace visible y una pregunta que invita a
-   responder. Las respuestas llegan a soporte@ y son la señal que más pesa en
-   Gmail para la bandeja principal. */
+/* ═══ EL BUEN FIN Y SU CONTINUACIÓN, EN NEGRO (11-nov-2026) ═══
+   El mensaje es el que aprobó David —los tres grupos, Stanford, la cuenta
+   contra ChatGPT Pro, el plazo real, la salida sin riesgo, la pregunta que
+   invita a responder—. La forma es la «noche» de `plantilla.ts`: fondo negro,
+   el logotipo con su halo, la portada (la hoja oficial del Buen Fin 2026, o la
+   cuenta contra ChatGPT Pro en `posicion`), texto justificado y un botón.
+   Primero se probó una carta sin diseño para esquivar Promociones y cayó en
+   Promociones igual (prueba de bandeja en el Gmail de David, 11-nov). */
 const enPesos = (n: number) =>
     `${n.toLocaleString('es-MX', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })} pesos`;
 
-const FIRMA_CARTA = parrafo('Atentamente,<br>Soporte de Iurexia', '26px 0 0 0');
+const FIRMA_NOCHE = parrafo(`Atentamente,<br>${fuerteNoche('Soporte de Iurexia')}`, '26px 0 0 0');
+
+const PORTADA_BUEN_FIN = `${SITIO}/correo/buen-fin-2026.jpg`;
+const PORTADA_BUEN_FIN_ULTIMO = `${SITIO}/correo/buen-fin-2026-ultimo.jpg`;
+const PORTADA_POSICION = `${SITIO}/correo/iurexia-vs-chatgpt.jpg`;
+
+/** Gmail: la ficha de la oferta en Promociones (código, vencimiento, portada). */
+function marcadoBuenFin(imagen: string): string {
+    return marcadoPromocion({
+        descripcion: '30 % en su primer pago',
+        codigo: BUEN_FIN.codigo,
+        desde: '2026-11-13T00:00:00-06:00',
+        hasta: '2026-11-17T23:59:59-06:00',
+        imagen,
+        url: BUEN_FIN_URL,
+        titular: 'Buen Fin en Iurexia: 30 % en su primer pago',
+    });
+}
 
 /** Los tres grupos: el posicionamiento que llevan todas las cartas. */
 function tresGrupos(): string {
     return parrafo(
         'Frente a la inteligencia artificial hay tres tipos de abogados: los que todavía no la usan, ' +
         'los que le preguntan a herramientas genéricas como ChatGPT y los que trabajan con una ' +
-        'plataforma hecha para el derecho mexicano. Usted ya está en el tercer grupo: probó Iurexia ' +
-        'con sus propios asuntos.',
+        `plataforma hecha para el derecho mexicano. ${fuerteNoche('Usted ya está en el tercer grupo')}: probó ` +
+        'Iurexia con sus propios asuntos.',
     ) +
     parrafo(
         'La diferencia se nota. Un estudio de la Universidad de Stanford midió que los modelos ' +
@@ -943,6 +958,7 @@ function preguntaFinal(): string {
     return parrafo(
         '¿Duda sobre qué plan le conviene? Respóndanos este correo, cuéntenos qué materia lleva y se ' +
         'lo decimos.',
+        '26px 0 0 0',
     );
 }
 
@@ -954,7 +970,7 @@ function confianza(): string {
 }
 
 function sinLetraChiquita(): string {
-    return NOTA(
+    return notaNoche(
         'Condiciones: 30 % sobre el primer pago de los planes Básico, Pro y Platinum (el primer mes en los ' +
         'mensuales, el primer año en los anuales). Después, el plan se renueva a su precio normal hasta que ' +
         'usted lo cancele. Para cuentas sin un plan de pago previo. Vigente hasta el ' +
@@ -963,12 +979,18 @@ function sinLetraChiquita(): string {
 }
 
 function fuentes(): string {
-    return NOTA(`Fuentes: Universidad de Stanford, ${STANFORD.nota}. ${NOTA_PRECIOS_CHATGPT}`);
+    return notaNoche(`Fuentes: Universidad de Stanford, ${STANFORD.nota}. ${NOTA_PRECIOS_CHATGPT}`);
+}
+
+/** El texto plano no tiene botón: ahí va la dirección escrita. */
+function textoPlano(cuerpo: string, enlace: string, d: Destinatario): string {
+    return aTexto(cuerpo) + `\n\n${enlace}\n\nDarse de baja: ${urlBaja(d.email)}`;
 }
 
 export function correoBuenFin(d: Destinatario): Correo {
     const nombre = capitalizar(nombrePila(d.full_name, d.email));
     const pro = cuenta('pro');
+    const asunto = `${trato(d)} ${nombre}, un año de Iurexia cuesta menos que un mes de ChatGPT Pro`;
 
     const cuerpo =
         parrafo(saludo(d, nombre), '0 0 18px 0') +
@@ -976,63 +998,85 @@ export function correoBuenFin(d: Destinatario): Correo {
         parrafo(
             `Y le hicimos la cuenta. ChatGPT Pro cuesta desde ${enPesos(CHATGPT.proDesde)} al mes en la ` +
             `${CHATGPT.fuente}. Un año completo de Iurexia Pro cuesta ${enPesos(pro.anual)}, y esta semana, ` +
-            `por el Buen Fin, ${enPesos(pro.anualBuenFin)}: menos que un solo mes de ChatGPT Pro, y menos de ` +
+            `por el Buen Fin, ${fuerteNoche(enPesos(pro.anualBuenFin))}: ` +
+            `${fuerteNoche('menos que un solo mes de ChatGPT Pro')}, y menos de ` +
             `${Math.ceil(pro.anualBuenFin / 365)} pesos al día. Si prefiere ir mes a mes, su primer mes de Pro ` +
             `queda en ${enPesos(pro.primerMes)} en lugar de ${pro.mensual}.`,
         ) +
         parrafo(
-            `El precio vence el ${BUEN_FIN.finEnLetra}. Su código ${BUEN_FIN.codigo} ya va aplicado en esta ` +
-            `página:<br>${enlaceCarta(BUEN_FIN_URL)}`,
+            `El precio vence el ${BUEN_FIN.finEnLetra}. Su código ${fuerteNoche(BUEN_FIN.codigo)} ya va ` +
+            'aplicado en la página del Buen Fin:',
+            '0 0 0 0',
         ) +
+        botonNoche('Ver mi precio del Buen Fin', BUEN_FIN_URL) +
+        parrafo('', '24px 0 0 0') +
         confianza() +
         preguntaFinal() +
-        FIRMA_CARTA +
+        FIRMA_NOCHE +
         sinLetraChiquita() +
         fuentes();
 
     return {
-        asunto: `${trato(d)} ${nombre}, un año de Iurexia cuesta menos que un mes de ChatGPT Pro`,
-        html: envolverCarta({
+        asunto,
+        html: envolverNoche({
             cuerpo,
             urlBaja: urlBaja(d.email),
+            titulo: asunto,
             preencabezado: 'Usted ya va por delante de muchos colegas. Esta semana, su primer pago tiene 30 % menos.',
+            portada: {
+                src: PORTADA_BUEN_FIN,
+                url: BUEN_FIN_URL,
+                alt: `Buen Fin en Iurexia, del 13 al 17 de noviembre: 30 % en su primer pago. Un año de Pro por $${pro.anualBuenFin.toLocaleString('es-MX')}.`,
+            },
+            marcado: marcadoBuenFin(PORTADA_BUEN_FIN),
         }),
-        texto: aTexto(cuerpo) + `\n\nDarse de baja: ${urlBaja(d.email)}`,
+        texto: textoPlano(cuerpo, `Su página del Buen Fin: ${BUEN_FIN_URL}`, d),
     };
 }
 
 export function correoBuenFinUltimo(d: Destinatario): Correo {
     const nombre = capitalizar(nombrePila(d.full_name, d.email));
     const pro = cuenta('pro');
+    const asunto = `${trato(d)} ${nombre}, hoy a las 23:59 cierra el Buen Fin de Iurexia`;
 
     const cuerpo =
         parrafo(saludo(d, nombre), '0 0 18px 0') +
         parrafo(
-            'Hoy, martes 17 de noviembre, a las 23:59 termina el Buen Fin en Iurexia. Usted ya va por delante ' +
-            'de muchos colegas: trabaja con una plataforma hecha para el derecho mexicano, con la fuente de ' +
-            'cada cita a la vista.',
+            `${fuerteNoche('Hoy, martes 17 de noviembre, a las 23:59 termina el Buen Fin en Iurexia.')} Usted ya ` +
+            'va por delante de muchos colegas: trabaja con una plataforma hecha para el derecho mexicano, con ' +
+            'la fuente de cada cita a la vista.',
         ) +
         parrafo(
-            `La cuenta sigue igual: un año de Iurexia Pro por ${enPesos(pro.anualBuenFin)}, menos que un solo ` +
-            `mes de ChatGPT Pro (desde ${enPesos(CHATGPT.proDesde)} en la ${CHATGPT.fuente}). Su código ` +
-            `${BUEN_FIN.codigo} ya va aplicado aquí:<br>${enlaceCarta(BUEN_FIN_URL)}`,
+            `La cuenta sigue igual: un año de Iurexia Pro por ${fuerteNoche(enPesos(pro.anualBuenFin))}, menos ` +
+            `que un solo mes de ChatGPT Pro (desde ${enPesos(CHATGPT.proDesde)} en la ${CHATGPT.fuente}). Su ` +
+            `código ${fuerteNoche(BUEN_FIN.codigo)} ya va aplicado:`,
+            '0 0 0 0',
         ) +
+        botonNoche('Ver mi precio antes de las 23:59', BUEN_FIN_URL) +
+        parrafo('', '24px 0 0 0') +
         parrafo(
             'Y si ya lo pensó y no es para usted, no pasa nada: su cuenta gratuita sigue igual, con sus cinco ' +
             'consultas cada mes. Preferimos un cliente convencido a uno apurado.',
         ) +
-        FIRMA_CARTA +
+        FIRMA_NOCHE +
         sinLetraChiquita() +
         fuentes();
 
     return {
-        asunto: `${trato(d)} ${nombre}, hoy a las 23:59 cierra el Buen Fin de Iurexia`,
-        html: envolverCarta({
+        asunto,
+        html: envolverNoche({
             cuerpo,
             urlBaja: urlBaja(d.email),
+            titulo: asunto,
             preencabezado: `Un año de Iurexia Pro por ${enPesos(pro.anualBuenFin)}: menos que un mes de ChatGPT Pro.`,
+            portada: {
+                src: PORTADA_BUEN_FIN_ULTIMO,
+                url: BUEN_FIN_URL,
+                alt: `Último día del Buen Fin en Iurexia: 30 % en su primer pago, hoy hasta las 23:59. Un año de Pro por $${pro.anualBuenFin.toLocaleString('es-MX')}.`,
+            },
+            marcado: marcadoBuenFin(PORTADA_BUEN_FIN_ULTIMO),
         }),
-        texto: aTexto(cuerpo) + `\n\nDarse de baja: ${urlBaja(d.email)}`,
+        texto: textoPlano(cuerpo, `Su página del Buen Fin: ${BUEN_FIN_URL}`, d),
     };
 }
 
@@ -1040,30 +1084,39 @@ export function correoBuenFinUltimo(d: Destinatario): Correo {
 export function correoPosicion(d: Destinatario): Correo {
     const nombre = capitalizar(nombrePila(d.full_name, d.email));
     const pro = cuenta('pro');
+    const asunto = `${trato(d)} ${nombre}, un año de Iurexia cuesta menos que un mes de ChatGPT Pro`;
 
     const cuerpo =
         parrafo(saludo(d, nombre), '0 0 18px 0') +
         tresGrupos() +
         parrafo(
             `Y le hicimos la cuenta. ChatGPT Pro cuesta desde ${enPesos(CHATGPT.proDesde)} al mes en la ` +
-            `${CHATGPT.fuente}. Un año completo de Iurexia Pro cuesta ${enPesos(pro.anual)}: menos que un ` +
-            `solo mes de ChatGPT Pro, poco más de ${Math.floor(pro.anual / 365)} pesos al día. Si prefiere ir ` +
-            `mes a mes, son ${enPesos(pro.mensual)}.`,
+            `${CHATGPT.fuente}. Un año completo de Iurexia Pro cuesta ${fuerteNoche(enPesos(pro.anual))}: ` +
+            `${fuerteNoche('menos que un solo mes de ChatGPT Pro')}, poco más de ${Math.floor(pro.anual / 365)} ` +
+            `pesos al día. Si prefiere ir mes a mes, son ${enPesos(pro.mensual)}.`,
+            '0 0 0 0',
         ) +
-        parrafo(`Aquí puede elegir su plan:<br>${enlaceCarta(PRECIOS)}`) +
+        botonNoche('Elegir mi plan', PRECIOS) +
+        parrafo('', '24px 0 0 0') +
         confianza() +
         preguntaFinal() +
-        FIRMA_CARTA +
+        FIRMA_NOCHE +
         fuentes();
 
     return {
-        asunto: `${trato(d)} ${nombre}, un año de Iurexia cuesta menos que un mes de ChatGPT Pro`,
-        html: envolverCarta({
+        asunto,
+        html: envolverNoche({
             cuerpo,
             urlBaja: urlBaja(d.email),
+            titulo: asunto,
             preencabezado: `Hecha para el derecho mexicano, con la fuente de cada cita. Desde ${enPesos(pro.mensual)} al mes.`,
+            portada: {
+                src: PORTADA_POSICION,
+                url: PRECIOS,
+                alt: `Haga la cuenta: un año de Iurexia Pro, $${pro.anual.toLocaleString('es-MX')}; un mes de ChatGPT Pro, desde $${CHATGPT.proDesde.toLocaleString('es-MX')}.`,
+            },
         }),
-        texto: aTexto(cuerpo) + `\n\nDarse de baja: ${urlBaja(d.email)}`,
+        texto: textoPlano(cuerpo, `Elija su plan: ${PRECIOS}`, d),
     };
 }
 

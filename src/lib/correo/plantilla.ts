@@ -241,31 +241,134 @@ export function nombrePila(nombre: string | null | undefined, correo: string): s
     return correo.split('@')[0];
 }
 
-/* ═══ LA CARTA (11-nov-2026) ═══
-   David: «trata de que este correo no vaya a spam ni a promociones; queremos
-   que llegue a los abogados». Gmail manda a Promociones lo que tiene forma de
-   publicidad: membrete, cajas, botones, imágenes, muchos enlaces, precios en
-   tabla. Esta envoltura escribe como escribe una persona: fondo blanco, un
-   solo bloque de texto, sin imágenes ni tablas, un enlace visible en el
-   cuerpo y el pie de baja. No garantiza la bandeja principal —eso lo decide
-   Gmail, y pesa sobre todo cómo responde la gente—, pero le quita a Gmail las
-   razones de forma para mandarla a Promociones. */
-export function envolverCarta({ cuerpo, urlBaja, preencabezado }: {
+/* ═══ LA NOCHE (11-nov-2026) ═══
+   David, tras la prueba de bandeja: «Todos caen en promociones sin el HTML
+   profesional… que se vea un negro bonito como el del canal por dentro y el
+   logo por fuera resplandeciente, negro totalmente el fondo del correo.
+   Justificado el texto, y si hablamos de buen fin, pues hay que poner la imagen
+   del buen fin». La carta sin diseño (fondo blanco, sin imágenes ni botón)
+   cayó igual en Promociones en su Gmail: perder la imagen no compraba nada.
+
+   Paleta del canal de YouTube: fondo #0f0e0d, crema, oro en degradado. El
+   correo entero va sobre negro puro; arriba, fuera de la tarjeta, el wordmark
+   con su halo (`public/correo/iurexia-resplandor.png`); dentro, la tarjeta en
+   el negro del canal con filete de oro, la portada si la hay, el texto
+   justificado en crema y un botón de oro. Las imágenes las hace
+   `scripts/correo-noche/generar.py`.
+
+   Documento HTML completo (no fragmento) porque lleva <head>: `color-scheme`
+   para que Apple Mail y Outlook no lo inviertan en modo oscuro, el ajuste de
+   márgenes para el teléfono y, si se da, el marcado de Gmail para la pestaña
+   Promociones (la ficha con el código y la fecha de vencimiento). */
+export const NOCHE = {
+    fondo: '#000000',
+    tarjeta: '#0f0e0d',
+    borde: '#2a261f',
+    texto: '#e8e2d5',
+    blanco: '#fdfbf7',
+    apagado: '#9d9484',
+    oro: '#c9a962',
+    oroClaro: '#e2c98a',
+} as const;
+
+export const LOGO_RESPLANDOR = `${SITIO}/correo/iurexia-resplandor.png`;
+
+/** La imagen de cabecera de la tarjeta: 1200 px de ancho, pintada a 600. */
+export type Portada = { src: string; alt: string; url: string };
+
+/** Resalte dentro del texto corrido: crema casi blanca y negrita. */
+export function fuerteNoche(texto: string): string {
+    return `<strong style="color:${NOCHE.blanco};font-weight:bold;">${esc(texto)}</strong>`;
+}
+
+/** Botón de oro, centrado. En tabla porque Outlook ignora el padding de los enlaces. */
+export function botonNoche(texto: string, url: string): string {
+    return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:30px auto 6px auto;"><tr><td align="center" bgcolor="${NOCHE.oro}" style="background-color:${NOCHE.oro};background-image:linear-gradient(180deg,${NOCHE.oroClaro},#b48f4c);"><a href="${esc(url)}" style="display:inline-block;padding:16px 40px;font-family:${SANS};font-size:15px;font-weight:bold;letter-spacing:0.6px;color:${NOCHE.tarjeta};text-decoration:none;text-align:center;">${esc(texto)}</a></td></tr></table>`;
+}
+
+/** Letra chica (condiciones, fuentes): gris cálido, legible sobre la tarjeta. */
+export function notaNoche(texto: string): string {
+    return `<p style="margin:12px 0 0;font-family:${SANS};font-size:11px;line-height:1.65;color:${NOCHE.apagado};text-align:justify;">${texto}</p>`;
+}
+
+export function envolverNoche({ cuerpo, urlBaja, preencabezado, portada, titulo, marcado }: {
     cuerpo: string;
     urlBaja: string;
     preencabezado?: string;
+    portada?: Portada;
+    titulo?: string;
+    /** JSON-LD para la pestaña Promociones de Gmail (ya serializado). */
+    marcado?: string;
 }): string {
     const pre = preencabezado
-        ? `<div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">${esc(preencabezado)}</div>\n`
+        ? `<div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">${esc(preencabezado)}&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>\n`
         : '';
-    return `${pre}<div style="max-width:600px;margin:0 auto;padding:20px 18px;background-color:#ffffff;font-family:${SERIF};font-size:16px;line-height:1.65;color:${PALETA.texto};">
+    const filaPortada = portada
+        ? `    <tr><td style="padding:0;line-height:0;font-size:0;"><a href="${esc(portada.url)}" style="text-decoration:none;"><img src="${esc(portada.src)}" width="600" alt="${esc(portada.alt)}" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;color:${NOCHE.oroClaro};font-family:${SERIF};font-size:18px;line-height:1.4;" /></a></td></tr>\n`
+        : '';
+    // `<` escapado: el JSON va dentro de <script> y no debe poder cerrarlo.
+    const ld = marcado ? `<script type="application/ld+json">${marcado.replace(/</g, '\\u003c')}</script>\n` : '';
+
+    return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="supported-color-schemes" content="dark">
+<title>${esc(titulo ?? 'Iurexia')}</title>
+${ld}<style>
+:root { color-scheme: dark; supported-color-schemes: dark; }
+body { margin: 0 !important; padding: 0 !important; background-color: ${NOCHE.fondo} !important; }
+@media only screen and (max-width: 620px) {
+  .noche-cuerpo { padding: 30px 22px 28px 22px !important; }
+  .noche-pie { padding: 18px 22px 24px 22px !important; }
+}
+</style>
+</head>
+<body style="margin:0;padding:0;background-color:${NOCHE.fondo};">
+${pre}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${NOCHE.fondo}" style="background-color:${NOCHE.fondo};">
+<tr><td align="center" style="padding:14px 10px 0 10px;">
+  <a href="${SITIO}" style="text-decoration:none;"><img src="${LOGO_RESPLANDOR}" width="600" alt="Iurexia" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;color:${NOCHE.oroClaro};font-family:${SERIF};font-size:30px;line-height:1.3;" /></a>
+</td></tr>
+<tr><td align="center" style="padding:0 10px 36px 10px;">
+  <!--[if mso]><table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${NOCHE.tarjeta}" style="width:100%;max-width:600px;background-color:${NOCHE.tarjeta};border:1px solid ${NOCHE.borde};border-top:2px solid ${NOCHE.oro};">
+${filaPortada}    <tr><td class="noche-cuerpo" style="padding:38px 48px 34px 48px;font-family:${SERIF};font-size:16px;line-height:1.75;color:${NOCHE.texto};text-align:justify;">
 ${cuerpo}
-<p style="margin:30px 0 0;font-family:${SANS};font-size:11px;line-height:1.6;color:#8a8a8a;">Iurexia · iurexia.com · Le escribimos porque tiene una cuenta en Iurexia. <a href="${esc(urlBaja)}" style="color:#8a8a8a;text-decoration:underline;">Darse de baja</a></p>
-</div>`;
+    </td></tr>
+    <tr><td class="noche-pie" style="padding:20px 48px 26px 48px;border-top:1px solid ${NOCHE.borde};font-family:${SANS};font-size:11px;line-height:1.7;color:${NOCHE.apagado};text-align:center;">
+      Iurexia Legal Tech &middot; <a href="${SITIO}" style="color:${NOCHE.apagado};text-decoration:underline;">iurexia.com</a><br>
+      Le escribimos porque tiene una cuenta en Iurexia. <a href="${esc(urlBaja)}" style="color:${NOCHE.apagado};text-decoration:underline;">Darse de baja</a>
+    </td></tr>
+  </table>
+  <!--[if mso]></td></tr></table><![endif]-->
+</td></tr>
+</table>
+</body>
+</html>`;
 }
 
-/** Un enlace como lo pone una persona: la dirección misma, subrayada. */
-export function enlaceCarta(url: string): string {
-    const visible = url.replace(/^https?:\/\//, '');
-    return `<a href="${esc(url)}" style="color:#1a4fa0;text-decoration:underline;">${esc(visible)}</a>`;
+/**
+ * Marcado de Gmail para la pestaña Promociones: el logotipo del remitente, la
+ * oferta con su código y su vencimiento, y la portada como vista previa. Gmail
+ * decide si lo muestra; si no, no estorba.
+ */
+export function marcadoPromocion({ descripcion, codigo, desde, hasta, imagen, url, titular }: {
+    descripcion: string;
+    codigo?: string;
+    desde: string;
+    hasta: string;
+    imagen: string;
+    url: string;
+    titular: string;
+}): string {
+    return JSON.stringify([
+        { '@context': 'http://schema.org/', '@type': 'Organization', logo: `${SITIO}/correo/iurexia-avatar-256.png` },
+        {
+            '@context': 'http://schema.org/', '@type': 'DiscountOffer', description: descripcion,
+            ...(codigo ? { discountCode: codigo } : {}), availabilityStarts: desde, availabilityEnds: hasta,
+        },
+        { '@context': 'http://schema.org/', '@type': 'PromotionCard', image: imagen, url, headline: titular },
+    ]);
 }
