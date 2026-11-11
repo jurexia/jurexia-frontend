@@ -163,7 +163,7 @@ function filtrar(q: any, campania: NombreCampania) {
     // cobros de Stripe: cero coincidencias en el segmento.
     // BUEN FIN 2026 (9-nov-2026): el mismo filtro, por la misma razón — el
     // código BUENFIN30 sólo vale en la primera compra.
-    if (campania === 'descuento_pro' || campania === 'buen_fin' || campania === 'buen_fin_ultimo') {
+    if (campania === 'descuento_pro' || esBuenFin(campania)) {
         return q.eq('subscription_type', 'gratuito')
                 .eq('is_active', true)
                 .not('last_query_at', 'is', null)
@@ -281,8 +281,26 @@ async function segmentoCasosUso(): Promise<Destinatario[]> {
     });
 }
 
+/** Las campañas del Buen Fin y su continuación (`posicion`, desde el 18-nov):
+ *  mismos destinatarios —gratuitos que consultaron y nunca pagaron—, primero
+ *  quien usó Iurexia más recientemente. */
 function esBuenFin(campania: NombreCampania): boolean {
-    return campania === 'buen_fin' || campania === 'buen_fin_ultimo';
+    return campania === 'buen_fin' || campania === 'buen_fin_ultimo' || campania === 'posicion';
+}
+
+/** Quién ya recibió algún correo del Buen Fin: `posicion` no se le repite. */
+async function recibieronBuenFin(): Promise<Set<string>> {
+    const vistos = new Set<string>();
+    const TAMANO = 1000;
+    for (let desde = 0; ; desde += TAMANO) {
+        const { data, error } = await admin().from('correo_envios').select('email')
+            .in('campania', ['buen_fin', 'buen_fin_ultimo']).eq('estado', 'enviado')
+            .order('id', { ascending: true }).range(desde, desde + TAMANO - 1);
+        if (error) throw new Error(`recibieron Buen Fin: ${error.message}`);
+        for (const r of (data ?? []) as { email: string }[]) vistos.add(r.email.toLowerCase());
+        if (!data || data.length < TAMANO || desde > 50_000) break;
+    }
+    return vistos;
 }
 
 export async function segmento(campania: NombreCampania): Promise<Destinatario[]> {
@@ -322,8 +340,9 @@ export async function segmento(campania: NombreCampania): Promise<Destinatario[]
     // quien la usó ayer está más cerca de comprar que quien la usó en julio.
     if (esBuenFin(campania)) {
         type ConUso = Destinatario & { last_query_at?: string | null };
+        const yaRecibieron = campania === 'posicion' ? await recibieronBuenFin() : new Set<string>();
         return (limpias as ConUso[])
-            .filter((u) => !esPrueba(u.email))
+            .filter((u) => !esPrueba(u.email) && !yaRecibieron.has(u.email.toLowerCase()))
             .sort((x, y) => String(y.last_query_at ?? '').localeCompare(String(x.last_query_at ?? '')));
     }
 

@@ -33,6 +33,7 @@ import {
 } from './referidos';
 import type { Correo, Destinatario } from './enviar';
 import { BUEN_FIN, cuenta, pesos } from '@/lib/buen-fin';
+import { CHATGPT, NOTA_PRECIOS_CHATGPT, STANFORD } from '@/lib/comparativa';
 
 const CHAT = `${SITIO}/chat`;
 
@@ -247,7 +248,10 @@ export function correoSuscripcion(d: Destinatario): Correo {
             ]) +
             `<p style="margin:14px 0 0;font-size:13px;color:#404040;">Haga la cuenta: con Pro, cada ` +
             `consulta le sale en ${pesos(cuenta('pro').porConsultaMensual)}; con Pro anual, en ` +
-            `${pesos(cuenta('pro').porConsultaAnual)}.</p>`,
+            `${pesos(cuenta('pro').porConsultaAnual)}. Para comparar: ChatGPT Plus cuesta ` +
+            `${pesos(CHATGPT.plus)} al mes, y ChatGPT Pro, desde ${pesos(CHATGPT.proDesde)} ` +
+            `(${CHATGPT.fuente}, ${CHATGPT.fecha}). Un año de Iurexia Pro cuesta menos que un ` +
+            `solo mes de ChatGPT Pro.</p>`,
         ) +
         parrafo(
             'Su plan se activa en el momento del pago y puede cancelarlo cuando quiera desde su cuenta.',
@@ -871,42 +875,105 @@ export function correoCasosUso(d: Destinatario): Correo {
 
 
 // ─────────────────────────────────────────────────────────────────────────
-// BUEN FIN 2026 — 13 al 17 de noviembre (aprobado por David el 9-nov-2026).
+// POSICIONAMIENTO + BUEN FIN 2026 (11-nov-2026, David).
 //
-// «Que el comprador se sienta inteligente por adquirir el producto». No se
-// le dice que es una oportunidad única: se le enseña la cuenta, con cifras
-// que puede comprobar (todas salen de PLANS vía `src/lib/buen-fin.ts`), se
-// le recomienda lo que más le conviene —el anual— y las condiciones van sin
-// letra chiquita. Va a quien ya usó Iurexia en su cuenta gratuita y nunca
-// pagó: el mismo filtro de `descuento_pro`, que deja fuera a los antiguos
-// clientes porque el código sólo vale en la primera compra.
+// «Que todos los usuarios gratuitos que hayan consultado sepan que esto los va
+// a posicionar por delante de colegas que no usan inteligencia artificial, o
+// que usan inteligencias genéricas como ChatGPT… por un precio bajo, con la
+// comparación de ChatGPT Pro». Lo que se aplica, y de dónde sale:
+//   · comparación social y pertenencia (Festinger 1954; Reed, Forehand,
+//     Puntoni y Warlop 2012): hay tres tipos de abogados frente a la IA, y el
+//     lector ya está en el tercero;
+//   · sentimiento de compra inteligente (Schindler, Journal of Consumer
+//     Psychology, 1998): el orgullo de sentirse responsable del buen precio
+//     —hizo la cuenta, llegó a tiempo, «su» código—;
+//   · ancla de precio (Tversky y Kahneman 1974): ChatGPT Pro va primero;
+//   · el pago en pequeño (Gourville 1998): por consulta y por día;
+//   · autoridad con evidencia y prueba social (Cialdini): Stanford, Minnesota,
+//     Thomson Reuters; casi 300 profesionales que ya pagan;
+//   · escasez REAL (vence el 17-nov) y salida sin riesgo (cancela cuando
+//     quiera; su cuenta gratuita sigue).
+// Nada inventado: cifras de PLANS, precios de ChatGPT de la App Store de
+// México con fecha (`src/lib/comparativa.ts`), estudios con su fuente.
+//
+// Va a quien ya usó Iurexia en su cuenta gratuita y nunca pagó (filtro de
+// `descuento_pro`). Del 13 al 17, con el 30 %; desde el 18, `posicion` lleva el
+// mismo mensaje al precio normal a quien el Buen Fin no alcanzó.
 // ─────────────────────────────────────────────────────────────────────────
 const BUEN_FIN_URL = `${SITIO}/buen-fin`;
 
-function cuentaBuenFin(): string {
+const FIRMA_SOPORTE = `<p style="margin:20px 0 0;color:#1a1a1a;">Atentamente,<br><strong style="color:#1a1a1a;">Soporte de Iurexia</strong></p>`;
+
+const NOTA = (texto: string) =>
+    `<p style="margin:12px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.65;color:#8b7355;">${texto}</p>`;
+
+/** Los tres grupos: el posicionamiento que llevan todos. */
+function tresGrupos(): string {
+    return parrafo(
+        'Frente a la inteligencia artificial hay tres tipos de abogados: los que todavía no la usan, ' +
+        'los que le preguntan a herramientas genéricas como ChatGPT y los que trabajan con una ' +
+        `plataforma hecha para el derecho mexicano. ${fuerte('Usted ya está en el tercer grupo')}: ` +
+        'probó Iurexia con sus propios asuntos.',
+    ) +
+    parrafo(
+        'Y la diferencia se nota. Un estudio de la Universidad de Stanford midió que los modelos ' +
+        `generales de inteligencia artificial respondían mal ${STANFORD.rango} de las veces en ` +
+        'preguntas jurídicas verificables. Iurexia contesta con la legislación de su estado y la ' +
+        'jurisprudencia del Semanario Judicial, con la fuente de cada cita a un clic, y con un plan ' +
+        'redacta sus escritos completos sobre esa base. Eso es lo que lo pone por delante: ' +
+        `${fuerte('más rápido que quien no usa inteligencia artificial, y más seguro que quien la usa sin fuentes')}.`,
+    );
+}
+
+/** La cuenta, con ChatGPT como ancla. Con o sin el 30 % del Buen Fin. */
+function comparacion(buenFin: boolean): string {
     const pro = cuenta('pro');
+    const chatgpt = `ChatGPT Plus: ${pesos(CHATGPT.plus)} al mes. ChatGPT Pro: desde ${pesos(CHATGPT.proDesde)} al mes.`;
+    const filas = buenFin
+        ? [
+            chatgpt,
+            `Iurexia Pro: ${pesos(pro.mensual)} al mes; en Buen Fin, su primer mes queda en ${pesos(pro.primerMes)}.`,
+            `Un año de Iurexia Pro en Buen Fin: ${pesos(pro.anualBuenFin)}. Menos que un solo mes de ChatGPT Pro.`,
+        ]
+        : [
+            chatgpt,
+            `Iurexia Pro: ${pesos(pro.mensual)} al mes.`,
+            `Un año de Iurexia Pro: ${pesos(pro.anual)}. Menos que un solo mes de ChatGPT Pro.`,
+        ];
+    const pie = buenFin
+        ? `Con el anual del Buen Fin, cada consulta le sale en ${pesos(pro.porConsulta)}: menos de ` +
+          `${Math.ceil(pro.anualBuenFin / 365)} pesos al día.`
+        : `Con Pro anual, cada consulta le sale en ${pesos(pro.porConsultaAnual)}: poco más de ` +
+          `${Math.floor(pro.anual / 365)} pesos al día.`;
     return caja(
-        rotulo('Un año de Iurexia Pro') +
-        listado([
-            `Pagando mes a mes: ${pesos(pro.anioMesAMes)} MXN.`,
-            `Plan anual en Buen Fin: ${pesos(pro.anualBuenFin)} MXN.`,
-            `Diferencia a su favor: ${pesos(pro.ahorro)} MXN, ${pro.ahorroPct} % menos.`,
-        ]) +
-        `<p style="margin:14px 0 0;font-size:13px;color:#404040;">Cada una de sus ` +
-        `${(pro.consultas * 12).toLocaleString('es-MX')} consultas del año le sale en ${pesos(pro.porConsulta)}.</p>`,
+        rotulo('Haga la cuenta') +
+        listado(filas) +
+        `<p style="margin:14px 0 0;font-size:13px;color:#404040;">${pie}</p>`,
+    );
+}
+
+function salidaSinRiesgo(): string {
+    return parrafo(
+        'Casi 300 profesionales del derecho ya pagan su plan de Iurexia. Si un día deja de servirle, lo ' +
+        'cancela desde su perfil sin hablar con nadie, y su cuenta gratuita, con sus carpetas y su ' +
+        'historial, sigue siendo suya.',
+        '22px 0 22px 0',
     );
 }
 
 function sinLetraChiquita(): string {
-    return `<p style="margin:16px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.65;color:#8b7355;">` +
-        `Sin letra chiquita: 30 % sobre el primer pago de los planes Básico, Pro y Platinum (el primer mes en ` +
-        `los mensuales, el primer año en los anuales). Después, el plan se renueva a su precio normal hasta que ` +
-        `usted lo cancele, lo que puede hacer en cualquier momento desde su perfil. Para cuentas sin un plan de ` +
+    return NOTA(
+        'Sin letra chiquita: 30 % sobre el primer pago de los planes Básico, Pro y Platinum (el primer mes en ' +
+        'los mensuales, el primer año en los anuales). Después, el plan se renueva a su precio normal hasta que ' +
+        'usted lo cancele, lo que puede hacer en cualquier momento desde su perfil. Para cuentas sin un plan de ' +
         `pago previo. Vigente hasta el ${BUEN_FIN.finEnLetra}, hora de la Ciudad de México. Aplican los ` +
-        `Términos y Condiciones de Iurexia.</p>`;
+        'Términos y Condiciones de Iurexia.',
+    );
 }
 
-const FIRMA_SOPORTE = `<p style="margin:20px 0 0;color:#1a1a1a;">Atentamente,<br><strong style="color:#1a1a1a;">Soporte de Iurexia</strong></p>`;
+function fuentes(): string {
+    return NOTA(`Fuentes: Universidad de Stanford, ${STANFORD.nota}. ${NOTA_PRECIOS_CHATGPT}`);
+}
 
 export function correoBuenFin(d: Destinatario): Correo {
     const nombre = capitalizar(nombrePila(d.full_name, d.email));
@@ -914,41 +981,35 @@ export function correoBuenFin(d: Destinatario): Correo {
 
     const cuerpo =
         parrafo(saludo(d, nombre), '0 0 22px 0') +
+        tresGrupos() +
         parrafo(
-            `Este Buen Fin, Iurexia tiene ${fuerte('30 % de descuento en el primer pago de cualquier plan')}. ` +
-            'No le vamos a decir que es una oportunidad única: le escribimos con una cuenta, porque sabemos ' +
-            'que usted decide con números.',
+            `Este Buen Fin, aprovechar esa ventaja todo el mes, sin el tope de cinco consultas, cuesta ` +
+            `${fuerte('30 % menos')}. No le vamos a decir que es una oportunidad única: le enseñamos la ` +
+            'cuenta, porque sabemos que usted decide con números.',
         ) +
+        comparacion(true) +
         parrafo(
-            'Y porque usted ya lleva ventaja: probó Iurexia con sus propios asuntos y sabe lo que es ' +
-            'trabajar con la fuente a la vista, mientras muchos colegas siguen preguntando a herramientas ' +
-            'que contestan de memoria.',
-        ) +
-        cuentaBuenFin() +
-        parrafo(
-            `Si prefiere ir mes a mes, el 30 % también aplica: su primer mes de Pro queda en ` +
-            `${fuerte(`${pesos(pro.primerMes)} MXN`)}. Y hay descuento en Básico y en Platinum.`,
+            `El precio vence el ${BUEN_FIN.finEnLetra}. Su código ${fuerte(BUEN_FIN.codigo)} ya va aplicado: ` +
+            'usted sólo elige su plan, mensual o anual, en Básico, Pro o Platinum.',
             '20px 0 22px 0',
         ) +
-        boton('Ver la cuenta completa', BUEN_FIN_URL) +
-        parrafo(
-            'Lo que compra es lo que ya usó, sin el tope de cinco consultas. Y el descuento ya va aplicado ' +
-            'al pagar: no hay que teclear ningún código.',
-            '22px 0 22px 0',
-        ) +
+        boton('Elegir mi plan con 30 %', BUEN_FIN_URL) +
+        salidaSinRiesgo() +
         evidenciaIA() +
         FIRMA_SOPORTE +
-        sinLetraChiquita();
+        sinLetraChiquita() +
+        fuentes();
 
     return {
-        asunto: `${trato(d)} ${nombre}, usted ya lleva ventaja: haga la cuenta del Buen Fin`,
+        asunto: `${trato(d)} ${nombre}, un año de Iurexia cuesta menos que un mes de ChatGPT Pro`,
         html: envolver({
             cuerpo,
             urlBaja: urlBaja(d.email),
             logo: true,
-            preencabezado: `Un año de Pro por ${pesos(pro.anualBuenFin)} en lugar de ${pesos(pro.anioMesAMes)} mes a mes. Hasta el martes 17.`,
+            preencabezado: `Hecha para el derecho mexicano, con fuentes verificables. Este Buen Fin, 30 % en su ` +
+                `primer pago: el año de Pro, ${pesos(pro.anualBuenFin)}.`,
         }),
-        texto: aTexto(cuerpo) + `\n\nVer la cuenta completa: ${BUEN_FIN_URL}\nDarse de baja: ${urlBaja(d.email)}`,
+        texto: aTexto(cuerpo) + `\n\nElegir mi plan con 30 %: ${BUEN_FIN_URL}\nDarse de baja: ${urlBaja(d.email)}`,
     };
 }
 
@@ -959,23 +1020,25 @@ export function correoBuenFinUltimo(d: Destinatario): Correo {
     const cuerpo =
         parrafo(saludo(d, nombre), '0 0 22px 0') +
         parrafo(
-            `Hoy, martes 17 de noviembre, a las 23:59 termina el Buen Fin en Iurexia: ` +
+            'Hoy, martes 17 de noviembre, a las 23:59 termina el Buen Fin en Iurexia: ' +
             `${fuerte('30 % en el primer pago de cualquier plan')}. Mañana, los planes vuelven a su precio normal.`,
         ) +
         parrafo(
-            'Usted ya lleva ventaja sobre muchos colegas: trabaja con la fuente a la vista. Hoy es el ' +
-            'último día para tenerla 30 % más barata.',
+            'Usted ya va por delante de muchos colegas: trabaja con una plataforma hecha para el derecho ' +
+            'mexicano, con la fuente de cada cita a la vista. Hoy es el último día para quedarse con esa ' +
+            'ventaja 30 % más barata.',
         ) +
-        cuentaBuenFin() +
+        comparacion(true) +
         parrafo('', '18px 0 0 0') +
-        boton('Hacer la cuenta y elegir mi plan', BUEN_FIN_URL) +
+        boton('Elegir mi plan con 30 %', BUEN_FIN_URL) +
         parrafo(
             'Y si ya lo pensó y no es para usted, no pasa nada: su cuenta gratuita sigue igual, con sus cinco ' +
             'consultas cada mes. Preferimos un cliente convencido a uno apurado.',
             '22px 0 0 0',
         ) +
         FIRMA_SOPORTE +
-        sinLetraChiquita();
+        sinLetraChiquita() +
+        fuentes();
 
     return {
         asunto: `${trato(d)} ${nombre}, hoy a las 23:59 termina el 30 % de Iurexia`,
@@ -983,9 +1046,41 @@ export function correoBuenFinUltimo(d: Destinatario): Correo {
             cuerpo,
             urlBaja: urlBaja(d.email),
             logo: true,
-            preencabezado: `La cuenta no cambia: un año de Pro por ${pesos(pro.anualBuenFin)} en lugar de ${pesos(pro.anioMesAMes)}.`,
+            preencabezado: `Un año de Iurexia Pro por ${pesos(pro.anualBuenFin)}: menos que un solo mes de ChatGPT Pro.`,
         }),
-        texto: aTexto(cuerpo) + `\n\nHacer la cuenta: ${BUEN_FIN_URL}\nDarse de baja: ${urlBaja(d.email)}`,
+        texto: aTexto(cuerpo) + `\n\nElegir mi plan con 30 %: ${BUEN_FIN_URL}\nDarse de baja: ${urlBaja(d.email)}`,
+    };
+}
+
+/** Desde el 18-nov: el mismo posicionamiento, al precio normal, a quien el Buen Fin no alcanzó. */
+export function correoPosicion(d: Destinatario): Correo {
+    const nombre = capitalizar(nombrePila(d.full_name, d.email));
+    const pro = cuenta('pro');
+
+    const cuerpo =
+        parrafo(saludo(d, nombre), '0 0 22px 0') +
+        tresGrupos() +
+        parrafo(
+            'Aprovechar esa ventaja todo el mes, sin el tope de cinco consultas, cuesta menos de lo que ' +
+            'imagina. Le enseñamos la cuenta, porque sabemos que usted decide con números.',
+        ) +
+        comparacion(false) +
+        parrafo('', '18px 0 0 0') +
+        boton('Elegir mi plan', PRECIOS) +
+        salidaSinRiesgo() +
+        evidenciaIA() +
+        FIRMA_SOPORTE +
+        fuentes();
+
+    return {
+        asunto: `${trato(d)} ${nombre}, un año de Iurexia cuesta menos que un mes de ChatGPT Pro`,
+        html: envolver({
+            cuerpo,
+            urlBaja: urlBaja(d.email),
+            logo: true,
+            preencabezado: `Hecha para el derecho mexicano, con fuentes verificables. Pro, ${pesos(pro.mensual)} al mes.`,
+        }),
+        texto: aTexto(cuerpo) + `\n\nElegir mi plan: ${PRECIOS}\nDarse de baja: ${urlBaja(d.email)}`,
     };
 }
 
@@ -1002,6 +1097,7 @@ export const CAMPANIAS = {
     casos_uso: { construir: correoCasosUso, etiqueta: 'Casos de uso con animaciones — todos los registrados' },
     buen_fin: { construir: correoBuenFin, etiqueta: 'Buen Fin 2026 — 30 % en el primer pago (13 al 16-nov)' },
     buen_fin_ultimo: { construir: correoBuenFinUltimo, etiqueta: 'Buen Fin 2026 — último día (17-nov)' },
+    posicion: { construir: correoPosicion, etiqueta: 'Posicionamiento frente a ChatGPT — gratuitos que consultaron (desde el 18-nov)' },
 } as const;
 
 export type NombreCampania = keyof typeof CAMPANIAS;

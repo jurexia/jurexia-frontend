@@ -21,6 +21,7 @@ import {
 import { redirectToCheckout } from '@/lib/stripe-client';
 import { BUEN_FIN, buenFinVigente, cuenta, pesos } from '@/lib/buen-fin';
 import { fechaEnLetra, proximaRenovacion } from '@/lib/periodo-consultas';
+import { CHATGPT } from '@/lib/comparativa';
 
 /* LO QUE ABRE LA CUENTA GRATUITA (8-oct-2026). David: «empuja a que en la
    versión de prueba creen una cuenta gratis para desbloquear la plataforma de
@@ -194,13 +195,15 @@ function PanelLimite({
                     <p className="mt-1.5 text-[14px] leading-relaxed text-charcoal-800">
                         Un año de Pro mes a mes: <span className="line-through">{pesos(pro.anioMesAMes)}</span>.
                         El anual con 30 %: <strong className="text-charcoal-900">{pesos(pro.anualBuenFin)}</strong>.
-                        Te quedas con {pesos(pro.ahorro)} y cada consulta te sale en {pesos(pro.porConsulta)}.
+                        Te quedas con {pesos(pro.ahorro)} y cada consulta te sale en {pesos(pro.porConsulta)}:
+                        un año entero por menos que un solo mes de ChatGPT Pro (desde {pesos(CHATGPT.proDesde)}).
                     </p>
                 ) : (
                     <p className="mt-1.5 text-[14px] leading-relaxed text-charcoal-800">
                         Con Pro tienes {pro.consultas} consultas al mes por {pesos(pro.mensual)}:{' '}
                         <strong className="text-charcoal-900">{pesos(pro.porConsultaMensual)} cada una</strong>.
-                        Con Pro anual, {pesos(pro.porConsultaAnual)}.
+                        Con Pro anual, {pesos(pro.porConsultaAnual)}: un año entero ({pesos(pro.anual)}) por menos que
+                        un solo mes de ChatGPT Pro (desde {pesos(CHATGPT.proDesde)}).
                     </p>
                 )}
             </div>

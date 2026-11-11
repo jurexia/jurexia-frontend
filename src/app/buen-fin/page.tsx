@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/useAuth';
 import { redirectToCheckout } from '@/lib/stripe-client';
 import { BUEN_FIN, buenFinVigente, cuenta, pesos, type PlanBuenFin } from '@/lib/buen-fin';
+import { CHATGPT } from '@/lib/comparativa';
 
 const PLANES: PlanBuenFin[] = ['basico', 'pro', 'platinum'];
 
@@ -71,8 +72,11 @@ export default function BuenFinPage() {
                         Haga la cuenta.
                     </h1>
                     <p className="mt-4 text-lg leading-relaxed text-piedra-700">
-                        30 % de descuento en su primer pago de Iurexia, en cualquier plan. No le vamos a decir que
-                        es una oportunidad única: le enseñamos los números y usted decide.
+                        Frente a la inteligencia artificial hay tres tipos de abogados: los que no la usan, los que le
+                        preguntan a herramientas genéricas y los que trabajan con una plataforma hecha para el derecho
+                        mexicano, con la fuente de cada cita. Este Buen Fin, estar en el tercer grupo cuesta 30 % menos
+                        en su primer pago. No le vamos a decir que es una oportunidad única: le enseñamos los números y
+                        usted decide.
                     </p>
                 </div>
 
@@ -97,6 +101,12 @@ export default function BuenFinPage() {
                             Es {pro.ahorroPct} % menos que pagar mes a mes, y cada una de sus {(pro.consultas * 12).toLocaleString('es-MX')} consultas
                             del año le sale en <strong className="text-charcoal-900">{pesos(pro.porConsulta)}</strong>.
                         </p>
+                        <div className="mt-5 rounded-xl bg-cream-100 px-4 py-3 text-sm leading-relaxed text-charcoal-800">
+                            <strong className="text-charcoal-900">Para comparar:</strong> ChatGPT Plus cuesta {pesos(CHATGPT.plus)} al mes y
+                            ChatGPT Pro, desde {pesos(CHATGPT.proDesde)} al mes. Un año entero de Iurexia Pro en Buen Fin cuesta menos que
+                            un solo mes de ChatGPT Pro.
+                            <span className="mt-1 block text-xs text-piedra-600">Precios de ChatGPT: {CHATGPT.fuente}, {CHATGPT.fecha}.</span>
+                        </div>
                     </div>
 
                     <div className="rounded-2xl border border-cream-300 bg-cream-100 p-7 sm:p-9 text-sm leading-relaxed text-charcoal-800">

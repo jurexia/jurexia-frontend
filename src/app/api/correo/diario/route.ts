@@ -85,8 +85,16 @@ const PRIORIDAD: NombreCampania[] = ['suscripcion', 'vitrina', 'referidos', 'ent
  * versión «último día» en su lugar. El fin de semana del Buen Fin el cron
  * también corre (ver vercel.json), pero sólo con la campaña del Buen Fin.
  */
+/** Desde el 18-nov-2026 (00:00 de México), el posicionamiento al precio normal
+ *  para quien el Buen Fin no alcanzó, después del aviso del límite. */
+const POSICION_DESDE = new Date('2026-11-18T06:00:00Z');
+
 function prioridadDeHoy(ahora = new Date()): NombreCampania[] {
-    if (!buenFinVigente(ahora)) return PRIORIDAD;
+    if (!buenFinVigente(ahora)) {
+        if (ahora < POSICION_DESDE) return PRIORIDAD;
+        const [primera, ...resto] = PRIORIDAD;
+        return [primera, 'posicion', ...resto];
+    }
     const resto = PRIORIDAD.filter((c) => c !== 'suscripcion');
     const primera: NombreCampania = esUltimoDiaBuenFin(ahora) ? 'buen_fin_ultimo' : 'buen_fin';
     return finDeSemanaCDMX(ahora) ? [primera] : [primera, ...resto];
