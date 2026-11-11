@@ -231,6 +231,22 @@ async function segmentoRegistroPendiente(): Promise<Destinatario[]> {
 /** El único administrador que SÍ recibe el correo de casos de uso: David, para verlo como lo ve el usuario. */
 export const INCLUIDOS_CASOS_USO = ['jdm.juridico@gmail.com'];
 
+/**
+ * Direcciones privadas de Apple («Ocultar mi correo»), de quien entra con
+ * «Iniciar sesión con Apple». Apple sólo les reenvía el correo de remitentes
+ * registrados en su portal de desarrollador («Sign in with Apple for Email
+ * Communication»). Mientras iurexia.com no lo esté, Resend devuelve
+ * «Unauthorized Sender to Apple Private Relay» y cada envío cuenta como rebote.
+ * Medido el 11-nov-2026: 151 cuentas, 8 de pago, 88 en el segmento del Buen Fin.
+ *
+ * Cuando iurexia.com quede registrado: `CORREO_RELAY_APPLE=1` en Vercel y
+ * volver a desplegar, y vuelven a las campañas.
+ */
+export function esRelayAppleSinPermiso(email: string): boolean {
+    return process.env.CORREO_RELAY_APPLE !== '1'
+        && email.toLowerCase().endsWith('@privaterelay.appleid.com');
+}
+
 /** Testers y cuentas de prueba: el dominio de la casa, los de ejemplo y la demo de las grabaciones. */
 export function esPrueba(email: string): boolean {
     const e = email.toLowerCase();
@@ -263,7 +279,7 @@ async function segmentoCasosUso(): Promise<Destinatario[]> {
         const e = (u.email || '').toLowerCase().trim();
         if (!e) return false;
         if (INCLUIDOS_CASOS_USO.includes(e)) return true;
-        return !esPrueba(e) && !ADMINS.includes(e);
+        return !esPrueba(e) && !ADMINS.includes(e) && !esRelayAppleSinPermiso(e);
     });
     // Un correo a un dominio sin buzón rebota, y los rebotes hunden la
     // reputación del remitente para todo lo demás (contraseñas incluidas).
@@ -332,7 +348,8 @@ export async function segmento(campania: NombreCampania): Promise<Destinatario[]
     }
 
     const limpias = filas.filter(
-        (u: Destinatario) => u.email && !ADMINS.includes(u.email.toLowerCase()),
+        (u: Destinatario) => u.email && !ADMINS.includes(u.email.toLowerCase())
+            && !esRelayAppleSinPermiso(u.email),
     );
 
     // Buen Fin: sin cuentas de prueba, y primero quien usó Iurexia más
