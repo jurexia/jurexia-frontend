@@ -102,7 +102,7 @@ export default function BuenFinPage() {
                     <div className="rounded-2xl border border-cream-300 bg-cream-100 p-7 sm:p-9 text-sm leading-relaxed text-charcoal-800">
                         <div className="text-[11px] uppercase tracking-[0.16em] text-accent-brown">Por qué la cuenta sale</div>
                         <ul className="mt-5 space-y-4">
-                            <li><strong className="text-charcoal-900">No compra a ciegas.</strong> Con la cuenta gratuita usted prueba Iurexia en sus propios asuntos; el plan quita el tope de cinco consultas.</li>
+                            <li><strong className="text-charcoal-900">Va un paso adelante.</strong> Muchos colegas preguntan a herramientas generales que contestan de memoria. Con Iurexia usted trabaja con la fuente a la vista, y lo prueba gratis en sus propios asuntos antes de pagar.</li>
                             <li><strong className="text-charcoal-900">El precio está publicado.</strong> Las grandes plataformas internacionales de IA jurídica cotizan por su área de ventas. Aquí ve el precio completo antes de pagar.</li>
                             <li><strong className="text-charcoal-900">Cada cita trae su fuente.</strong> Lo que Iurexia le responde se verifica en el documento oficial, con un clic.</li>
                             <li><strong className="text-charcoal-900">Casi 300 profesionales del derecho ya pagan su plan.</strong> Usted entra con 30 % menos en el primer pago.</li>

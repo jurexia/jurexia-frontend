@@ -85,6 +85,9 @@ export function cuenta(plan: PlanBuenFin) {
         ahorro,
         ahorroPct: Math.round((ahorro / anioMesAMes) * 100),
         porConsulta: Math.round((anualBuenFin / (c.consultas * 12)) * 100) / 100,
+        /** Fuera del Buen Fin: lo mismo que dice /precios ($1.06 y $0.89 en Pro). */
+        porConsultaMensual: Math.round((mensual / c.consultas) * 100) / 100,
+        porConsultaAnual: Math.round((anual / (c.consultas * 12)) * 100) / 100,
         priceIdMensual: PLANS[c.mensual].priceId,
         priceIdAnual: PLANS[c.anual].priceId,
     };

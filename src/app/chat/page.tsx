@@ -2283,7 +2283,8 @@ export default function ChatPage() {
 
                                 {modoBasico && (
                                     <div className="mt-5 text-left">
-                                        <PanelBasico bloqueado={bloqueado} sinCuenta={sinCuenta} />
+                                        <PanelBasico bloqueado={bloqueado} sinCuenta={sinCuenta}
+                                            inicioPeriodo={profile?.subscription_start} correo={user?.email} />
                                     </div>
                                 )}
 
@@ -2406,7 +2407,8 @@ export default function ChatPage() {
                 {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">Error: {error}</div>}
                             {modoBasico && (
                                 <div className="pt-2">
-                                    <PanelBasico bloqueado={bloqueado} sinCuenta={sinCuenta} compacto />
+                                    <PanelBasico bloqueado={bloqueado} sinCuenta={sinCuenta} compacto
+                                        inicioPeriodo={profile?.subscription_start} correo={user?.email} />
                                 </div>
                             )}
                             {avisoDocGratis && !modoBasico && !analisisEnVuelo && (

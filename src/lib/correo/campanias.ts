@@ -224,14 +224,18 @@ export function correoSuscripcion(d: Destinatario): Correo {
     // `reset-per-user-monthly-queries` las reinicia en el aniversario del alta.
     const cuerpo =
         parrafo(saludo(d, nombre), '0 0 22px 0') +
+        // 11-nov-2026, la línea de David: que quien compra se sienta un paso
+        // adelante de los demás. Con un dato medido: de 3,134 cuentas abiertas
+        // antes del 11-oct, sólo el 29 % llegó alguna vez a cinco preguntas.
         parrafo(
             `${agoto ? 'Usted agotó' : 'Usted está por agotar'} las cinco consultas de su plan gratuito, ` +
-            'y eso lo coloca en un grupo reducido: el de quienes le dieron a la plataforma un uso ' +
-            'profesional sostenido. Le agradecemos de veras esa confianza.',
+            'y eso lo coloca en un grupo reducido: la mayoría de quienes abren su cuenta en Iurexia ' +
+            'nunca llega a ese punto. Le agradecemos de veras esa confianza.',
         ) +
         parrafo(
             'Por lo mismo, este correo va directo al punto. No hace falta explicarle qué hace Iurexia: ' +
-            'usted ya lo comprobó con sus propios asuntos.',
+            'usted ya lo comprobó con sus propios asuntos, y sabe lo que es trabajar con la fuente a la ' +
+            'vista mientras muchos colegas siguen preguntando a herramientas que contestan de memoria.',
         ) +
         caja(
             rotulo('Para seguir trabajando hoy mismo') +
@@ -240,7 +244,10 @@ export function correoSuscripcion(d: Destinatario): Correo {
                 'Plan Básico, $79 MXN al mes: 70 consultas mensuales.',
                 'Plan Pro, $149 MXN al mes: 140 consultas y 30 flujos de trabajo al mes, ' +
                     'para redactar escritos completos paso a paso, con análisis de documentos.',
-            ]),
+            ]) +
+            `<p style="margin:14px 0 0;font-size:13px;color:#404040;">Haga la cuenta: con Pro, cada ` +
+            `consulta le sale en ${pesos(cuenta('pro').porConsultaMensual)}; con Pro anual, en ` +
+            `${pesos(cuenta('pro').porConsultaAnual)}.</p>`,
         ) +
         parrafo(
             'Su plan se activa en el momento del pago y puede cancelarlo cuando quiera desde su cuenta.',
@@ -912,6 +919,11 @@ export function correoBuenFin(d: Destinatario): Correo {
             'No le vamos a decir que es una oportunidad única: le escribimos con una cuenta, porque sabemos ' +
             'que usted decide con números.',
         ) +
+        parrafo(
+            'Y porque usted ya lleva ventaja: probó Iurexia con sus propios asuntos y sabe lo que es ' +
+            'trabajar con la fuente a la vista, mientras muchos colegas siguen preguntando a herramientas ' +
+            'que contestan de memoria.',
+        ) +
         cuentaBuenFin() +
         parrafo(
             `Si prefiere ir mes a mes, el 30 % también aplica: su primer mes de Pro queda en ` +
@@ -920,8 +932,8 @@ export function correoBuenFin(d: Destinatario): Correo {
         ) +
         boton('Ver la cuenta completa', BUEN_FIN_URL) +
         parrafo(
-            'Usted ya conoce Iurexia: la usó con sus propios asuntos. Lo que compra es eso mismo, sin el tope ' +
-            'de cinco consultas. Y el descuento ya va aplicado al pagar: no hay que teclear ningún código.',
+            'Lo que compra es lo que ya usó, sin el tope de cinco consultas. Y el descuento ya va aplicado ' +
+            'al pagar: no hay que teclear ningún código.',
             '22px 0 22px 0',
         ) +
         evidenciaIA() +
@@ -929,7 +941,7 @@ export function correoBuenFin(d: Destinatario): Correo {
         sinLetraChiquita();
 
     return {
-        asunto: `${trato(d)} ${nombre}, haga la cuenta: 30 % en Iurexia este Buen Fin`,
+        asunto: `${trato(d)} ${nombre}, usted ya lleva ventaja: haga la cuenta del Buen Fin`,
         html: envolver({
             cuerpo,
             urlBaja: urlBaja(d.email),
@@ -949,6 +961,10 @@ export function correoBuenFinUltimo(d: Destinatario): Correo {
         parrafo(
             `Hoy, martes 17 de noviembre, a las 23:59 termina el Buen Fin en Iurexia: ` +
             `${fuerte('30 % en el primer pago de cualquier plan')}. Mañana, los planes vuelven a su precio normal.`,
+        ) +
+        parrafo(
+            'Usted ya lleva ventaja sobre muchos colegas: trabaja con la fuente a la vista. Hoy es el ' +
+            'último día para tenerla 30 % más barata.',
         ) +
         cuentaBuenFin() +
         parrafo('', '18px 0 0 0') +
