@@ -126,10 +126,14 @@ function prioridadSinFreno(ahora: Date): NombreCampania[] {
  *   · y cada bloque repartido de 8:00 a 18:00, no todo a la misma hora.
  * El cupo diario de Resend sigue mandando por encima de esto.
  */
+// 14-nov-2026: el 13 salieron 400 y quedaban 2,491 por recibirlo; con 250 el
+// fin de semana, ~390 se quedaban sin el correo al cerrar el Buen Fin. Se sube
+// el fin de semana (subida suave sobre los 400 del viernes, 0 quejas) para que
+// alcance a todos antes del martes.
 const RAMPA_BUEN_FIN: Record<string, number> = {
     '2026-11-13': 400,
-    '2026-11-14': 250,
-    '2026-11-15': 250,
+    '2026-11-14': 500,
+    '2026-11-15': 550,
     '2026-11-16': 800,
     '2026-11-17': 800,
 };
