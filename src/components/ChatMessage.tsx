@@ -104,6 +104,25 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     // memoria: durante el stream eso es una vez por trozo. Las del sello, sólo
     // cuando el sello se pinta (terminada la respuesta).
     const htmlRazonamiento = useMemo(() => (thinkingContent ? formatMarkdown(thinkingContent) : ''), [thinkingContent]);
+    // ── EL RAZONAMIENTO, ABIERTO MIENTRAS PIENSA (18-nov-2026) ──────────────
+    // David: «haz que se abra solo el razonamiento». Con Claude el resumen de
+    // lo que piensa llega a los pocos segundos y la respuesta, 15–40 s después:
+    // cerrado, el abogado sólo veía una ruedita. Mientras hay razonamiento y aún
+    // no hay respuesta, el panel se abre solo y sigue el último párrafo; al
+    // empezar la respuesta se cierra para dejarle el sitio. Si el abogado lo
+    // abre o lo cierra con la mano, manda lo que eligió.
+    const pensando = isStreaming && !!thinkingContent && !processedContent.trim();
+    const [razonAbierto, setRazonAbierto] = useState(false);
+    const razonTocada = useRef(false);
+    const cajaRazon = useRef<HTMLDivElement>(null);
+    const razonPegadaAbajo = useRef(true);
+    useEffect(() => {
+        if (!razonTocada.current) setRazonAbierto(pensando);
+    }, [pensando]);
+    useEffect(() => {
+        const caja = cajaRazon.current;
+        if (caja && razonAbierto && isStreaming && razonPegadaAbajo.current) caja.scrollTop = caja.scrollHeight;
+    }, [htmlRazonamiento, razonAbierto, isStreaming]);
     const conSello = !isStreaming && !basico;
     const tesisDePrueba = basico ? (message.content.match(/^\*\*\[\d+\]/gm)?.length ?? 0) : 0;
     const lecturaDelSello = useMemo(() => (conSello ? {
@@ -961,8 +980,15 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                         )}
                         {/* Thinking/Reasoning section (collapsible) */}
                         {thinkingContent && (
-                            <details className="mx-5 sm:mx-6 mt-3 mb-1 rounded-lg border border-cream-400/60 bg-cream-50/50 overflow-hidden">
-                                <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-charcoal-500 hover:bg-cream-100/50 transition-colors select-none flex items-center gap-1.5">
+                            <details
+                                className="mx-5 sm:mx-6 mt-3 mb-1 rounded-lg border border-cream-400/60 bg-cream-50/50 overflow-hidden"
+                                open={razonAbierto}
+                                onToggle={(e) => setRazonAbierto(e.currentTarget.open)}
+                            >
+                                <summary
+                                    className="cursor-pointer px-3 py-2 text-xs font-medium text-charcoal-500 hover:bg-cream-100/50 transition-colors select-none flex items-center gap-1.5"
+                                    onClick={() => { razonTocada.current = true; }}
+                                >
                                     {/* Giraba también en las respuestas terminadas del
                                         historial, y una ruedita que gira siempre deja de
                                         significar «cargando». */}
@@ -971,6 +997,11 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                     <span className="text-charcoal-400/50 ml-auto text-[10px]">{Math.round(thinkingContent.length / 4)} tokens</span>
                                 </summary>
                                 <div
+                                    ref={cajaRazon}
+                                    onScroll={(e) => {
+                                        const c = e.currentTarget;
+                                        razonPegadaAbajo.current = c.scrollHeight - c.scrollTop - c.clientHeight < 48;
+                                    }}
                                     className="px-3 py-2 text-xs text-charcoal-600 leading-relaxed border-t border-cream-200/40 max-h-64 overflow-y-auto prose-thinking bg-white"
                                     dangerouslySetInnerHTML={{ __html: htmlRazonamiento }}
                                 />
