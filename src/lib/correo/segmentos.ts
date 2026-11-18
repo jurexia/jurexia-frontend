@@ -301,7 +301,7 @@ async function segmentoCasosUso(): Promise<Destinatario[]> {
  *  mismos destinatarios —gratuitos que consultaron y nunca pagaron—, primero
  *  quien usó Iurexia más recientemente. */
 function esBuenFin(campania: NombreCampania): boolean {
-    return campania === 'buen_fin' || campania === 'buen_fin_ultimo' || campania === 'posicion';
+    return campania === 'buen_fin' || campania === 'buen_fin_ultimo' || campania === 'buen_fin_horas' || campania === 'posicion';
 }
 
 /** Quién ya recibió algún correo del Buen Fin: `posicion` no se le repite. */
@@ -310,7 +310,7 @@ async function recibieronBuenFin(): Promise<Set<string>> {
     const TAMANO = 1000;
     for (let desde = 0; ; desde += TAMANO) {
         const { data, error } = await admin().from('correo_envios').select('email')
-            .in('campania', ['buen_fin', 'buen_fin_ultimo']).eq('estado', 'enviado')
+            .in('campania', ['buen_fin', 'buen_fin_ultimo', 'buen_fin_horas']).eq('estado', 'enviado')
             .order('id', { ascending: true }).range(desde, desde + TAMANO - 1);
         if (error) throw new Error(`recibieron Buen Fin: ${error.message}`);
         for (const r of (data ?? []) as { email: string }[]) vistos.add(r.email.toLowerCase());

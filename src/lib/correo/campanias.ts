@@ -1080,6 +1080,70 @@ export function correoBuenFinUltimo(d: Destinatario): Correo {
     };
 }
 
+/**
+ * LAS ÚLTIMAS HORAS (17-nov-2026, noche). David: «faltan muchos, con psicología de
+ * venta y avisar que quedan pocas horas». Va a quien no recibió ningún correo del
+ * Buen Fin, en una sola tanda que sale de inmediato (no repartida en 10 horas, que
+ * llegaría después del cierre).
+ *
+ * Palancas, todas ciertas: el plazo real (23:59), lo que se pierde mañana (el precio
+ * vuelve a $1,490), el ancla de ChatGPT Pro, la prueba social medida (más de 300
+ * que pagan hoy), el compromiso previo (ya usó la plataforma), la facilidad (código
+ * aplicado, un minuto) y una salida sin presión.
+ */
+export function correoBuenFinHoras(d: Destinatario): Correo {
+    const nombre = capitalizar(nombrePila(d.full_name, d.email));
+    const pro = cuenta('pro');
+    const asunto = `${trato(d)} ${nombre}, quedan pocas horas: el Buen Fin de Iurexia cierra a las 23:59`;
+
+    const cuerpo =
+        parrafo(saludo(d, nombre), '0 0 18px 0') +
+        parrafo(
+            `Le escribimos a esta hora a propósito: ${fuerteNoche('quedan pocas horas del Buen Fin en Iurexia.')} ` +
+            'Hoy, martes 17, a las 23:59, el 30 % de descuento en su primer pago deja de existir.',
+        ) +
+        parrafo(
+            `Mañana, un año de Iurexia Pro vuelve a costar ${enPesos(pro.anual)}. Esta noche cuesta ` +
+            `${fuerteNoche(enPesos(pro.anualBuenFin))}: ${fuerteNoche('menos que un solo mes de ChatGPT Pro')} ` +
+            `(desde ${enPesos(CHATGPT.proDesde)} en la ${CHATGPT.fuente}).`,
+        ) +
+        parrafo(
+            'Usted ya conoce la plataforma: la usó y sabe lo que hace. Hoy más de 300 profesionales del derecho ' +
+            'preparan sus asuntos con ella: escritos con la ley de su estado, tesis verificadas contra el ' +
+            'Semanario Judicial y la fuente de cada cita a la vista.',
+        ) +
+        parrafo(
+            `Su código ${fuerteNoche(BUEN_FIN.codigo)} ya va aplicado. Le toma un minuto:`,
+            '0 0 0 0',
+        ) +
+        botonNoche('Apartar mi precio antes de las 23:59', BUEN_FIN_URL) +
+        parrafo('', '24px 0 0 0') +
+        parrafo(
+            `Si prefiere ir mes a mes, su primer mes de Pro queda en ${enPesos(pro.primerMes)}. Y si no es para ` +
+            'usted, no pasa nada: su cuenta gratuita sigue igual. Preferimos un cliente convencido a uno apurado.',
+        ) +
+        FIRMA_NOCHE +
+        sinLetraChiquita() +
+        fuentes();
+
+    return {
+        asunto,
+        html: envolverNoche({
+            cuerpo,
+            urlBaja: urlBaja(d.email),
+            titulo: asunto,
+            preencabezado: `Hoy hasta las 23:59: un año de Pro por ${enPesos(pro.anualBuenFin)}. Mañana vuelve a ${enPesos(pro.anual)}.`,
+            portada: {
+                src: PORTADA_BUEN_FIN_ULTIMO,
+                url: BUEN_FIN_URL,
+                alt: `Último día del Buen Fin en Iurexia: 30 % en su primer pago, hoy hasta las 23:59. Un año de Pro por $${pro.anualBuenFin.toLocaleString('es-MX')}.`,
+            },
+            marcado: marcadoBuenFin(PORTADA_BUEN_FIN_ULTIMO),
+        }),
+        texto: textoPlano(cuerpo, `Su página del Buen Fin: ${BUEN_FIN_URL}`, d),
+    };
+}
+
 /** Desde el 18-nov: la misma carta al precio normal, para quien el Buen Fin no alcanzó. */
 export function correoPosicion(d: Destinatario): Correo {
     const nombre = capitalizar(nombrePila(d.full_name, d.email));
@@ -1133,6 +1197,7 @@ export const CAMPANIAS = {
     casos_uso: { construir: correoCasosUso, etiqueta: 'Casos de uso con animaciones — todos los registrados' },
     buen_fin: { construir: correoBuenFin, etiqueta: 'Buen Fin 2026 — 30 % en el primer pago (13 al 16-nov)' },
     buen_fin_ultimo: { construir: correoBuenFinUltimo, etiqueta: 'Buen Fin 2026 — último día (17-nov)' },
+    buen_fin_horas: { construir: correoBuenFinHoras, etiqueta: 'Buen Fin 2026 — últimas horas (17-nov, noche)' },
     posicion: { construir: correoPosicion, etiqueta: 'Posicionamiento frente a ChatGPT — gratuitos que consultaron (desde el 18-nov)' },
 } as const;
 
