@@ -36,6 +36,7 @@ import {
 import type { Correo, Destinatario } from './enviar';
 import { BUEN_FIN, cuenta, pesos } from '@/lib/buen-fin';
 import { CHATGPT, NOTA_PRECIOS_CHATGPT, STANFORD } from '@/lib/comparativa';
+import { getEstadoLabel } from '@/lib/estados';
 
 const CHAT = `${SITIO}/chat`;
 
@@ -1184,6 +1185,79 @@ export function correoPosicion(d: Destinatario): Correo {
     };
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// CARTA DE USO (19-nov-2026, David: «el correo de promoción a los gratuitos
+// que usaron Iurexia y no se han suscrito… que no caiga en spam ni
+// promociones; tenemos muy baja respuesta»).
+//
+// El Buen Fin llegó a 2,892 y vendió 15 (0.5 %), con 0 respuestas. Esta carta
+// cambia la forma y no el remitente:
+//   · habla de SU uso: cuántas consultas hizo, con la ley de qué estado, si
+//     llegó al límite y si alguna vez pidió un escrito (lo que más cambia con
+//     un plan);
+//   · sin imagen, sin botón, sin precios ni código: un solo enlace escrito,
+//     como lo escribiría una persona. Es lo que menos parece boletín;
+//   · corta, y termina con una pregunta que se contesta en una línea. Cada
+//     respuesta le enseña a Gmail que este remitente conversa, no anuncia.
+// Los datos salen de `segmento_carta_uso()` (Supabase), no del navegador.
+// ─────────────────────────────────────────────────────────────────────────
+export interface DestinatarioUso extends Destinatario {
+    queries_limit?: number | null;
+    consultas?: number | null;
+    pidio_escrito?: boolean | null;
+}
+
+function cartaBlanca({ cuerpo, urlBaja: baja, preencabezado }: { cuerpo: string; urlBaja: string; preencabezado: string }): string {
+    const pre = `<div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">${esc(preencabezado)}</div>`;
+    return `${pre}<div style="background:#ffffff;margin:0;padding:24px 16px;">
+<div style="max-width:560px;margin:0 auto;font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.7;color:#1a1a1a;text-align:justify;">
+${cuerpo}
+<p style="margin:36px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.6;color:#8a8a8a;text-align:left;">Recibe este correo porque tiene una cuenta en Iurexia. <a href="${esc(baja)}" style="color:#8a8a8a;text-decoration:underline;">No quiero recibir más correos</a></p>
+</div></div>`;
+}
+
+const cartaP = (html: string) => `<p style="margin:0 0 18px 0;">${html}</p>`;
+
+export function correoCartaUso(d: DestinatarioUso): Correo {
+    const nombre = capitalizar(nombrePila(d.full_name, d.email));
+    const n = Math.max(1, d.consultas ?? 1);
+    const estado = d.estado ? getEstadoLabel(d.estado) : '';
+    const limite = d.queries_limit ?? 5;
+    const topo = (d.queries_used ?? 0) >= limite;
+
+    const asunto = n >= 2
+        ? `${trato(d)} ${nombre}, sobre sus ${n} consultas en Iurexia`
+        : `${trato(d)} ${nombre}, sobre su consulta en Iurexia`;
+
+    const uso = n >= 2 ? `ha hecho ${n} consultas en su cuenta gratuita` : 'hizo una consulta en su cuenta gratuita';
+    const conEstado = estado && estado !== 'Todos los estados' ? `, con la legislación de ${esc(estado)}` : '';
+    const conTope = topo ? `, y que este mes ya llegó a su límite de ${limite}` : '';
+
+    const valor = d.pidio_escrito
+        ? 'En alguna nos pidió un escrito. Es justo lo que más cambia con un plan: Iurexia lo redacta ' +
+          'completo, fundado en la ley de su estado y en la jurisprudencia del Semanario Judicial, con la ' +
+          'fuente de cada cita para que usted la verifique.'
+        : 'Con un plan, además de tener muchas más consultas al mes, Iurexia le redacta sus escritos ' +
+          'completos sobre esa misma base: la ley de su estado y la jurisprudencia del Semanario Judicial, ' +
+          'con la fuente de cada cita para que usted la verifique.';
+
+    const enlace = `<a href="${PRECIOS}" style="color:#1a1a1a;text-decoration:underline;">www.iurexia.com/precios</a>`;
+
+    const cuerpo =
+        cartaP(saludo(d, nombre)) +
+        cartaP(`Le escribimos de Soporte de Iurexia. Vimos que ${uso}${conEstado}${conTope}. Gracias por probarla con sus propios asuntos.`) +
+        cartaP(valor) +
+        cartaP(`Un dato para decidir: un año completo de Iurexia Pro cuesta menos que un solo mes de ChatGPT Pro. Los planes y lo que incluye cada uno están aquí: ${enlace}`) +
+        cartaP('Y una pregunta, porque su respuesta nos sirve de verdad: ¿qué le faltó a Iurexia para usarla todos los días? Responda este correo con una línea; lo leemos y le contestamos.') +
+        `<p style="margin:26px 0 0 0;text-align:left;">Atentamente,<br>Soporte de Iurexia</p>`;
+
+    return {
+        asunto,
+        html: cartaBlanca({ cuerpo, urlBaja: urlBaja(d.email), preencabezado: 'Una pregunta breve sobre cómo usa Iurexia.' }),
+        texto: aTexto(cuerpo.replace(/<\/p>/g, '</p>\n')).replace('www.iurexia.com/precios', PRECIOS) + `\n\nNo quiero recibir más correos: ${urlBaja(d.email)}`,
+    };
+}
+
 export const CAMPANIAS = {
     entrada: { construir: correoEntrada, etiqueta: 'Entrada — nunca inició sesión' },
     activacion: { construir: correoActivacion, etiqueta: 'Activación — nunca consultó' },
@@ -1198,6 +1272,7 @@ export const CAMPANIAS = {
     buen_fin: { construir: correoBuenFin, etiqueta: 'Buen Fin 2026 — 30 % en el primer pago (13 al 16-nov)' },
     buen_fin_ultimo: { construir: correoBuenFinUltimo, etiqueta: 'Buen Fin 2026 — último día (17-nov)' },
     buen_fin_horas: { construir: correoBuenFinHoras, etiqueta: 'Buen Fin 2026 — últimas horas (17-nov, noche)' },
+    carta_uso: { construir: correoCartaUso as (d: Destinatario) => Correo, etiqueta: 'Carta de uso — gratuitos que consultaron y no pagan (desde el 20-nov)' },
     posicion: { construir: correoPosicion, etiqueta: 'Posicionamiento frente a ChatGPT — gratuitos que consultaron (desde el 18-nov)' },
 } as const;
 

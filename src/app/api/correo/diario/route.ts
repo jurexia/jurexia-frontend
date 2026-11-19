@@ -96,7 +96,20 @@ const POSICION_DESDE = new Date('2026-11-18T06:00:00Z');
  * posicionamiento dejan de salir al día siguiente, sin tocar código. El resto
  * de las campañas sigue igual.
  */
-const CARTAS: NombreCampania[] = ['buen_fin', 'buen_fin_ultimo', 'posicion'];
+const CARTAS: NombreCampania[] = ['buen_fin', 'buen_fin_ultimo', 'posicion', 'carta_uso'];
+
+/** CARTA DE USO (19-nov-2026): empieza el viernes 20 a las 00:00 de México, tres
+ *  días después de la última carta del Buen Fin (la pausa entre campañas). */
+const CARTA_USO_DESDE = new Date('2026-11-20T06:00:00Z');
+/** Sube poco a poco, por la misma razón que la rampa del Buen Fin: los primeros
+ *  días van los más interesados, cuyas respuestas mejoran la entrega del resto.
+ *  Días hábiles: el cron no corre en fin de semana fuera del Buen Fin. */
+const RAMPA_CARTA_USO: Record<string, number> = {
+    '2026-11-20': 150,
+    '2026-11-23': 250,
+    '2026-11-24': 400,
+};
+const TOPE_CARTA_USO = 500;
 
 function prioridadDeHoy(ahora = new Date()): NombreCampania[] {
     const lista = prioridadSinFreno(ahora);
@@ -107,7 +120,9 @@ function prioridadSinFreno(ahora: Date): NombreCampania[] {
     if (!buenFinVigente(ahora)) {
         if (ahora < POSICION_DESDE) return PRIORIDAD;
         const [primera, ...resto] = PRIORIDAD;
-        return [primera, 'posicion', ...resto];
+        // Desde el 20-nov la carta de uso sustituye a `posicion`, que no
+        // repetía a quien recibió el Buen Fin y se quedó sin gente (2 el 18-nov).
+        return [primera, ahora >= CARTA_USO_DESDE ? 'carta_uso' : 'posicion', ...resto];
     }
     const resto = PRIORIDAD.filter((c) => c !== 'suscripcion');
     const primera: NombreCampania = esUltimoDiaBuenFin(ahora) ? 'buen_fin_ultimo' : 'buen_fin';
@@ -143,6 +158,7 @@ const VENTANA_BLOQUE_MS = 10 * 3600_000;
 function topeDelBloque(campania: NombreCampania, ahora = new Date()): number | null {
     if (campania === 'buen_fin' || campania === 'buen_fin_ultimo') return RAMPA_BUEN_FIN[fechaCDMX(ahora)] ?? 400;
     if (campania === 'posicion') return TOPE_POSICION;
+    if (campania === 'carta_uso') return RAMPA_CARTA_USO[fechaCDMX(ahora)] ?? TOPE_CARTA_USO;
     return null;
 }
 

@@ -319,7 +319,36 @@ async function recibieronBuenFin(): Promise<Set<string>> {
     return vistos;
 }
 
+/**
+ * CARTA DE USO (19-nov-2026): gratuitos que consultaron y nunca pagaron, con
+ * su uso contado en la base (`segmento_carta_uso`, sólo clave de servicio).
+ * Primero los más cerca de comprar —llegaron al límite o hicieron 5 consultas
+ * o más—, y dentro de cada grupo quien usó Iurexia más recientemente: son los
+ * que más abren y responden, y su respuesta mejora la entrega de los demás.
+ */
+async function segmentoCartaUso(): Promise<Destinatario[]> {
+    type Fila = Destinatario & { last_query_at: string | null; queries_limit: number | null; consultas: number; pidio_escrito: boolean };
+    const filas: Fila[] = [];
+    for (let desde = 0; ; desde += 1000) {
+        const { data, error } = await admin().rpc('segmento_carta_uso')
+            .order('id', { ascending: true }).range(desde, desde + 999);
+        if (error) throw new Error(`segmento carta_uso: ${error.message}`);
+        filas.push(...((data ?? []) as Fila[]));
+        if (!data || data.length < 1000 || desde > 50_000) break;
+    }
+    const candidatas = filas.filter((u) => {
+        const e = (u.email || '').toLowerCase().trim();
+        return e && !ADMINS.includes(e) && !esPrueba(e) && !esRelayAppleSinPermiso(e);
+    });
+    const conCorreo = await dominiosConCorreo(candidatas.map((u) => u.email));
+    const caliente = (u: Fila) => (u.consultas >= 5 || (u.queries_used ?? 0) >= (u.queries_limit ?? 5)) ? 0 : 1;
+    return candidatas
+        .filter((u) => conCorreo.has((u.email.split('@')[1] || '').toLowerCase()))
+        .sort((a, b) => (caliente(a) - caliente(b)) || String(b.last_query_at ?? '').localeCompare(String(a.last_query_at ?? '')));
+}
+
 export async function segmento(campania: NombreCampania): Promise<Destinatario[]> {
+    if (campania === 'carta_uso') return segmentoCartaUso();
     if (campania === 'registro_pendiente') return segmentoRegistroPendiente();
     if (campania === 'casos_uso') return segmentoCasosUso();
 
