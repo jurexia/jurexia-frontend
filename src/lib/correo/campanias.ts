@@ -23,6 +23,7 @@
 
 import {
     animacion, boton, botonNoche, caja, enlaceTexto, envolver, envolverNoche, esc, fuerte, fuerteNoche, listado,
+    listaNoche,
     marcadoPromocion, nombrePila, notaNoche,
     parrafo, rotulo, SITIO,
     videoChat, vistaDocumento,
@@ -1258,6 +1259,143 @@ export function correoCartaUso(d: DestinatarioUso): Correo {
     };
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// THEMIS (19-nov-2026, David, sobre un correo de Tirant lo Blanch: «me gusta
+// cómo colocaron una imagen profesional luego del título… con una imagen
+// mejor, tipo dibujo como nuestra página, donde salga Themis como la tarjeta
+// del plan Platinum, que diga “La inteligencia artificial para el trabajo
+// jurídico más precisa para el sistema jurídico en México”, y la psicología de
+// venta desglosada en puntos»).
+//
+// David, después: «no es Buen Fin, es la última oferta del año con precio
+// fundador más un 20 % en planes anuales, previo al ajuste de precios».
+//
+// Mismo público que `carta_uso` (gratuitos que consultaron y no pagan). Forma:
+// la «noche» con un titular en mayúsculas ENCIMA de la portada; la portada es
+// el grabado de Themis de /precios (`public/web/arte/themis.webp`) con la
+// frase, hecha con `scripts/correo-noche/themis-portada.html`.
+//
+// Los seis puntos, cada uno con su palanca (no se nombran en el correo):
+//   autoridad (fuente verificable) · ganancia concreta (escritos completos) ·
+//   ancla de precio (ChatGPT Pro) · prueba social (mayor éxito del último
+//   trimestre; sin cifra, por indicación de David) ·
+//   lo que ya es suyo (sus consultas se quedan) · sin riesgo (cancela solo).
+// ─────────────────────────────────────────────────────────────────────────
+const PORTADA_THEMIS = `${SITIO}/correo/iurexia-themis.jpg`;
+
+/** El código de la campaña (Stripe: promo_1UdgaW3uD85CqvjM5puJYRBw, cupón
+ *  ANUAL20-NOV2026). 20 % una vez, sólo productos anuales (Básico, Pro y
+ *  Platinum), sólo primera compra. David pidió tres días; como la pausa entre
+ *  campañas deja a ~1,900 para el sábado (recibieron el Buen Fin el martes
+ *  17 por la noche), vence el martes 24 a las 23:59 de México para que nadie
+ *  tenga menos de dos días y medio. Si cambia, cambia en Stripe Y aquí. */
+export const ANUAL20 = {
+    codigo: 'ANUAL20',
+    desde: '2026-11-20T00:00:00-06:00',
+    hasta: '2026-11-24T23:59:59-06:00',
+    finEnLetra: 'martes 24 de noviembre a las 23:59',
+} as const;
+
+function cajaCodigo(): string {
+    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 4px 0;border:1px solid ${'#c9a962'};"><tr><td align="center" style="padding:22px 18px 20px 18px;text-align:center;">` +
+        `<div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:3px;color:#c9a962;">SU CÓDIGO</div>` +
+        `<div style="font-family:Georgia,'Times New Roman',serif;font-size:32px;font-weight:bold;letter-spacing:4px;color:#fdfbf7;margin:6px 0 8px 0;">${ANUAL20.codigo}</div>` +
+        `<div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#e8e2d5;">20 % sobre el precio de socio fundador en el primer año de cualquier plan anual: Básico, Pro o Platinum.</div>` +
+        `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.6;color:#fdfbf7;margin-top:8px;"><strong>Vence el ${ANUAL20.finEnLetra}</strong>, hora del centro de México.</div>` +
+        `</td></tr></table>`;
+}
+
+export function correoThemis(d: DestinatarioUso): Correo {
+    const nombre = capitalizar(nombrePila(d.full_name, d.email));
+    const n = Math.max(1, d.consultas ?? 1);
+    const estado = d.estado ? getEstadoLabel(d.estado) : '';
+    const conEstado = estado && estado !== 'Todos los estados' ? ` con la legislación de ${estado}` : '';
+    const asunto = `${trato(d)} ${nombre}, última oferta del año: precio fundador + 20 % en su plan anual`;
+
+    const uso = n >= 2 ? `Ya hizo ${n} consultas en Iurexia${conEstado}` : `Ya hizo su primera consulta en Iurexia${conEstado}`;
+
+    const cuerpo =
+        parrafo(saludo(d, nombre), '0 0 18px 0') +
+        parrafo(
+            `${esc(uso)}: sabe cómo responde. Antes del ajuste de precios, le hacemos la ` +
+            `${fuerteNoche('última oferta del año')}: el precio de socio fundador y, sobre él, ` +
+            `${fuerteNoche('20 % de descuento')} en el primer año de cualquier plan anual.`,
+        ) +
+        parrafo('Lo que cambia con un plan es cuánto puede hacer con Iurexia. Esto es lo que gana:') +
+        listaNoche([
+            {
+                titular: 'Respuestas que puede verificar.',
+                texto: 'Cada cita lleva su ley o su tesis a un clic: la legislación de su estado y la ' +
+                    'jurisprudencia del Semanario Judicial, no texto inventado.',
+            },
+            {
+                titular: 'Sus escritos, redactados completos.',
+                texto: 'Demandas, contestaciones, amparos y promociones fundados en esa misma base, listos ' +
+                    'para que usted los revise y firme.',
+            },
+            {
+                titular: 'Menos que un mes de ChatGPT Pro.',
+                texto: 'Un año completo de Iurexia Pro cuesta menos que un solo mes de ChatGPT Pro, que no ' +
+                    'conoce la ley de su estado.',
+            },
+            {
+                titular: 'Con mayor éxito en el último trimestre.',
+                texto: 'Cada vez más abogados y despachos de México trabajan todos los días con un plan de Iurexia.',
+            },
+            {
+                titular: 'Lo que ya hizo, se queda.',
+                texto: 'Sus consultas siguen en su cuenta; con el plan sólo deja de toparse con el límite.',
+            },
+            {
+                titular: 'Sin plazo forzoso.',
+                texto: 'Si un día deja de servirle, lo cancela desde su perfil, sin hablar con nadie.',
+            },
+        ]) +
+        cajaCodigo() +
+        botonNoche('Elegir mi plan anual', PRECIOS) +
+        parrafo(
+            'En la página de planes elija la opción anual; al pagar, toque «Agregar código promocional» y ' +
+            `escriba ${fuerteNoche(ANUAL20.codigo)}. Verá el precio con el descuento antes de confirmar.`,
+            '22px 0 0 0',
+        ) +
+        preguntaFinal() +
+        FIRMA_NOCHE +
+        notaNoche(
+            'Condiciones: 20 % sobre el precio de socio fundador del primer año de los planes anuales Básico, ' +
+            'Pro y Platinum. Después, el plan se renueva a precio de socio fundador hasta que usted lo ' +
+            'cancele. Para cuentas sin un plan de pago ' +
+            `previo. Vigente hasta el ${ANUAL20.finEnLetra}, hora de la Ciudad de México. Aplican los Términos ` +
+            'y Condiciones de Iurexia.',
+        ) +
+        notaNoche(NOTA_PRECIOS_CHATGPT);
+
+    return {
+        asunto,
+        html: envolverNoche({
+            cuerpo,
+            urlBaja: urlBaja(d.email),
+            titulo: asunto,
+            encabezado: 'Última oferta del año: precio fundador + 20 % en planes anuales',
+            preencabezado: `Antes del ajuste de precios: código ${ANUAL20.codigo}, 20 % sobre el precio fundador en cualquier plan anual. Vence el ${ANUAL20.finEnLetra}.`,
+            marcado: marcadoPromocion({
+                descripcion: 'Precio fundador + 20 % en el primer año de los planes anuales',
+                codigo: ANUAL20.codigo,
+                desde: ANUAL20.desde,
+                hasta: ANUAL20.hasta,
+                imagen: PORTADA_THEMIS,
+                url: PRECIOS,
+                titular: 'Última oferta del año: precio fundador + 20 % en planes anuales',
+            }),
+            portada: {
+                src: PORTADA_THEMIS,
+                url: PRECIOS,
+                alt: 'Iurexia: la inteligencia artificial para el trabajo jurídico más precisa para el sistema jurídico en México.',
+            },
+        }),
+        texto: textoPlano(cuerpo.replace(/<\/(tr|p|div)>/g, '</$1>\n').replace(/&#9670;/g, '• '), `Elija su plan anual: ${PRECIOS}`, d),
+    };
+}
+
 export const CAMPANIAS = {
     entrada: { construir: correoEntrada, etiqueta: 'Entrada — nunca inició sesión' },
     activacion: { construir: correoActivacion, etiqueta: 'Activación — nunca consultó' },
@@ -1273,6 +1411,7 @@ export const CAMPANIAS = {
     buen_fin_ultimo: { construir: correoBuenFinUltimo, etiqueta: 'Buen Fin 2026 — último día (17-nov)' },
     buen_fin_horas: { construir: correoBuenFinHoras, etiqueta: 'Buen Fin 2026 — últimas horas (17-nov, noche)' },
     carta_uso: { construir: correoCartaUso as (d: Destinatario) => Correo, etiqueta: 'Carta de uso — gratuitos que consultaron y no pagan (desde el 20-nov)' },
+    themis: { construir: correoThemis as (d: Destinatario) => Correo, etiqueta: 'Themis — gratuitos que consultaron y no pagan · ANUAL20 (20-nov al 24-nov)' },
     posicion: { construir: correoPosicion, etiqueta: 'Posicionamiento frente a ChatGPT — gratuitos que consultaron (desde el 18-nov)' },
 } as const;
 

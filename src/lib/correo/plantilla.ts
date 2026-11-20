@@ -291,12 +291,28 @@ export function notaNoche(texto: string): string {
     return `<p style="margin:12px 0 0;font-family:${SANS};font-size:11px;line-height:1.65;color:${NOCHE.apagado};text-align:justify;">${texto}</p>`;
 }
 
-export function envolverNoche({ cuerpo, urlBaja, preencabezado, portada, titulo, marcado }: {
+/** Lista de argumentos sobre la tarjeta negra: rombo de oro, el titular en
+ *  crema fuerte y la explicación en el texto corrido. */
+export function listaNoche(items: { titular: string; texto: string }[]): string {
+    const filas = items
+        .map(
+            (i) =>
+                `<tr><td width="22" valign="top" style="padding:13px 0 0 0;font-family:${SANS};font-size:11px;line-height:1;color:${NOCHE.oro};">&#9670;</td>` +
+                `<td style="padding:8px 0 10px 0;font-family:${SERIF};font-size:16px;line-height:1.65;color:${NOCHE.texto};text-align:left;">` +
+                `<strong style="color:${NOCHE.blanco};">${esc(i.titular)}</strong> ${esc(i.texto)}</td></tr>`,
+        )
+        .join('');
+    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 6px 0;">${filas}</table>`;
+}
+
+export function envolverNoche({ cuerpo, urlBaja, preencabezado, portada, titulo, marcado, encabezado }: {
     cuerpo: string;
     urlBaja: string;
     preencabezado?: string;
     portada?: Portada;
     titulo?: string;
+    /** Titular grande en mayúsculas, ENCIMA de la portada (19-nov-2026). */
+    encabezado?: string;
     /** JSON-LD para la pestaña Promociones de Gmail (ya serializado). */
     marcado?: string;
 }): string {
@@ -305,6 +321,9 @@ export function envolverNoche({ cuerpo, urlBaja, preencabezado, portada, titulo,
         : '';
     const filaPortada = portada
         ? `    <tr><td style="padding:0;line-height:0;font-size:0;"><a href="${esc(portada.url)}" style="text-decoration:none;"><img src="${esc(portada.src)}" width="600" alt="${esc(portada.alt)}" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;color:${NOCHE.oroClaro};font-family:${SERIF};font-size:18px;line-height:1.4;" /></a></td></tr>\n`
+        : '';
+    const filaEncabezado = encabezado
+        ? `    <tr><td class="noche-encabezado" align="center" style="padding:34px 40px 28px 40px;font-family:${SERIF};font-size:27px;line-height:1.28;font-weight:bold;letter-spacing:0.4px;text-transform:uppercase;color:${NOCHE.blanco};text-align:center;">${esc(encabezado)}</td></tr>\n`
         : '';
     // `<` escapado: el JSON va dentro de <script> y no debe poder cerrarlo.
     const ld = marcado ? `<script type="application/ld+json">${marcado.replace(/</g, '\\u003c')}</script>\n` : '';
@@ -323,6 +342,7 @@ body { margin: 0 !important; padding: 0 !important; background-color: ${NOCHE.fo
 @media only screen and (max-width: 620px) {
   .noche-cuerpo { padding: 30px 22px 28px 22px !important; }
   .noche-pie { padding: 18px 22px 24px 22px !important; }
+  .noche-encabezado { padding: 26px 18px 22px 18px !important; font-size: 22px !important; }
 }
 </style>
 </head>
@@ -334,7 +354,7 @@ ${pre}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bo
 <tr><td align="center" style="padding:0 10px 36px 10px;">
   <!--[if mso]><table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${NOCHE.tarjeta}" style="width:100%;max-width:600px;background-color:${NOCHE.tarjeta};border:1px solid ${NOCHE.borde};border-top:2px solid ${NOCHE.oro};">
-${filaPortada}    <tr><td class="noche-cuerpo" style="padding:38px 48px 34px 48px;font-family:${SERIF};font-size:16px;line-height:1.75;color:${NOCHE.texto};text-align:justify;">
+${filaEncabezado}${filaPortada}    <tr><td class="noche-cuerpo" style="padding:38px 48px 34px 48px;font-family:${SERIF};font-size:16px;line-height:1.75;color:${NOCHE.texto};text-align:justify;">
 ${cuerpo}
     </td></tr>
     <tr><td class="noche-pie" style="padding:20px 48px 26px 48px;border-top:1px solid ${NOCHE.borde};font-family:${SANS};font-size:11px;line-height:1.7;color:${NOCHE.apagado};text-align:center;">
