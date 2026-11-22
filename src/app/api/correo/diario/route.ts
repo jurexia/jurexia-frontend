@@ -118,7 +118,7 @@ const TOPE_CARTA_USO = 500;
  *  la noche), domingo ~200. Corre mientras el código vale; después ese puesto
  *  queda vacío (la carta de uso queda guardada, fuera de la rotación). */
 const THEMIS_DESDE = new Date('2026-11-20T06:00:00Z');
-const THEMIS_HASTA = new Date('2026-11-25T05:59:59Z');
+const THEMIS_HASTA = new Date('2026-11-28T05:59:59Z'); // alargado del martes 24 al viernes 27 (22-nov)
 const TOPE_THEMIS = 3500;
 
 function prioridadDeHoy(ahora = new Date()): NombreCampania[] {
@@ -133,7 +133,7 @@ function prioridadSinFreno(ahora: Date): NombreCampania[] {
         // Desde el 20-nov la carta de uso sustituye a `posicion`, que no
         // repetía a quien recibió el Buen Fin y se quedó sin gente (2 el 18-nov).
         if (ahora < CARTA_USO_DESDE) return [primera, 'posicion', ...resto];
-        // Del 20 al 24-nov va Themis con ANUAL20 en lugar de la carta de uso.
+        // Del 20 al 27-nov va Themis con ANUAL20 en lugar de la carta de uso.
         if (ahora >= THEMIS_DESDE && ahora <= THEMIS_HASTA) return [primera, 'themis', ...resto];
         return [primera, ...resto];
     }

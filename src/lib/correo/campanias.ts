@@ -1283,17 +1283,20 @@ export function correoCartaUso(d: DestinatarioUso): Correo {
 // ─────────────────────────────────────────────────────────────────────────
 const PORTADA_THEMIS = `${SITIO}/correo/iurexia-themis.jpg`;
 
-/** El código de la campaña (Stripe: promo_1UdgaW3uD85CqvjM5puJYRBw, cupón
- *  ANUAL20-NOV2026). 20 % una vez, sólo productos anuales (Básico, Pro y
+/** El código de la campaña (Stripe: promo_1UefBR3uD85CqvjMbuluUhgw, cupón ANUAL20-NOV2026-V27; el primero,
+ *  ANUAL20-NOV2026 con promo_1UdgaW3uD85CqvjM5puJYRBw, vencía el martes 24 y
+ *  Stripe no deja mover la fecha). 20 % una vez, sólo productos anuales (Básico, Pro y
  *  Platinum), sólo primera compra. David pidió tres días; como la pausa entre
  *  campañas deja a ~1,900 para el sábado (recibieron el Buen Fin el martes
  *  17 por la noche), vence el martes 24 a las 23:59 de México para que nadie
- *  tenga menos de dos días y medio. Si cambia, cambia en Stripe Y aquí. */
+ *  tenga menos de dos días y medio. El 22-nov David lo alargó al viernes 27
+ *  a las 23:59 (1,408 envíos el viernes, 0 canjes). Si cambia, cambia en
+ *  Stripe Y aquí. */
 export const ANUAL20 = {
     codigo: 'ANUAL20',
     desde: '2026-11-20T00:00:00-06:00',
-    hasta: '2026-11-24T23:59:59-06:00',
-    finEnLetra: 'martes 24 de noviembre a las 23:59',
+    hasta: '2026-11-27T23:59:59-06:00',
+    finEnLetra: 'viernes 27 de noviembre a las 23:59',
 } as const;
 
 function cajaCodigo(): string {
@@ -1411,7 +1414,7 @@ export const CAMPANIAS = {
     buen_fin_ultimo: { construir: correoBuenFinUltimo, etiqueta: 'Buen Fin 2026 — último día (17-nov)' },
     buen_fin_horas: { construir: correoBuenFinHoras, etiqueta: 'Buen Fin 2026 — últimas horas (17-nov, noche)' },
     carta_uso: { construir: correoCartaUso as (d: Destinatario) => Correo, etiqueta: 'Carta de uso — gratuitos que consultaron y no pagan (desde el 20-nov)' },
-    themis: { construir: correoThemis as (d: Destinatario) => Correo, etiqueta: 'Themis — gratuitos que consultaron y no pagan · ANUAL20 (20-nov al 24-nov)' },
+    themis: { construir: correoThemis as (d: Destinatario) => Correo, etiqueta: 'Themis — gratuitos que consultaron y no pagan · ANUAL20 (20-nov al 27-nov)' },
     posicion: { construir: correoPosicion, etiqueta: 'Posicionamiento frente a ChatGPT — gratuitos que consultaron (desde el 18-nov)' },
 } as const;
 
