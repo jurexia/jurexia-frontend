@@ -127,6 +127,10 @@ function sinMarcadoresDeUsuario(texto: string): string {
         .trim();
 }
 
+/* Cuando el documento vuelve a la caja, todo lo que se escriba viaja como instrucción
+   de ese documento (22-nov-2026: un abogado no sabía cómo seguir en el chat). */
+const QUITAR_DOCUMENTO = 'Si prefiere seguir en el chat sin él, quítelo con la ✕ junto a «DOC LISTO».';
+
 /* Cuando la red retuvo el análisis más que la espera (ver `@/lib/analisis-documento`):
    se enseña en el hilo, pero no se guarda; lo guardado lo pone la recuperación. */
 const ANALISIS_SIGUE_EN_EL_SERVIDOR = '⏳ **Su análisis sigue en el servidor.**\n\n'
@@ -1337,7 +1341,7 @@ export default function ChatPage() {
                 setAdjuntoDevuelto({ file, prompt, nonce: Date.now() });
                 textoRespuesta = '🔌 **La respuesta no llegó a su pantalla.**\n\n'
                     + 'La conexión se cerró antes de recibir el análisis. Su documento sigue adjunto en la caja: '
-                    + 'pulse enviar para intentarlo otra vez. Si se repite, recargue la página.';
+                    + 'pulse enviar para intentarlo otra vez. Si se repite, recargue la página. ' + QUITAR_DOCUMENTO;
                 pintarRespuesta(textoRespuesta);
             }
         } catch (err: any) {
@@ -1357,7 +1361,8 @@ export default function ChatPage() {
                     + 'Dejó de llegar información durante más de un minuto. Si su red pasa por un proxy o un '
                     + 'antivirus que revisa las páginas (común en oficinas y tribunales), es probable que esté '
                     + 'reteniendo la respuesta: pruebe desde otra red, por ejemplo los datos de su teléfono. '
-                    + 'Su documento sigue adjunto en la caja: pulse enviar para intentarlo otra vez.';
+                    + 'Su documento sigue adjunto en la caja: pulse enviar para intentarlo otra vez. '
+                    + QUITAR_DOCUMENTO;
             } else if (err?.status === 402) {
                 /* SIN CONSULTAS: el aviso del plan, no un error. La cuenta de
                    pantalla podía ir atrasada respecto de la base. */
@@ -1401,7 +1406,7 @@ export default function ChatPage() {
                     + (pantallaVieja ? AVISO_PANTALLA_VIEJA + '\n\n' : '')
                     + 'No es su archivo: la petición no llegó a completarse. '
                     + 'Su documento sigue adjunto en la caja: pulse enviar para intentarlo otra vez. '
-                    + 'Si está con datos móviles, pruebe con wifi o con mejor señal.\n\n'
+                    + 'Si está con datos móviles, pruebe con wifi o con mejor señal. ' + QUITAR_DOCUMENTO + '\n\n'
                     + 'Si se repite, escríbanos a soporte@iurexia.com y lo revisamos.';
             } else if (errMsg.includes('Formato no soportado')) {
                 userMessage = `📋 **Formato no soportado.**\n\nSolo se aceptan archivos PDF, DOCX y DOC. Convierte tu documento a uno de estos formatos e intenta de nuevo.`;

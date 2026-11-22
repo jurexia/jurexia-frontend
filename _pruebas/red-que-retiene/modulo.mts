@@ -157,5 +157,51 @@ console.log('\n7 · el envío no salió y no hay vigilancia: un reintento, como 
     ok(llamadas === 2 && r.fin?.via === 'flujo' && vistos.tokens === 'Hecho.', `${llamadas} envíos, vía ${r.fin?.via}`);
 }
 
+/** Un fetch cuya SUBIDA tarda `subida` ms (las cabeceras no llegan antes) y luego contesta. */
+function fetchConSubida(subida: number, trozos: [number, string][]) {
+    const despues = fetchDe(trozos).f;
+    let abortada = false;
+    const f = ((u: string, init: RequestInit) => new Promise<Response>((res, rej) => {
+        const senal = init.signal as AbortSignal;
+        const reloj = setTimeout(() => res(despues(u, init)), subida);
+        senal.addEventListener('abort', () => {
+            abortada = true; clearTimeout(reloj); rej(new DOMException('aborted', 'AbortError'));
+        }, { once: true });
+    })) as unknown as typeof fetch;
+    return { f, abortada: () => abortada };
+}
+
+console.log('\n8 · la subida tarda más que el silencio y el servidor aún no tiene copia: NO se corta (22-nov)');
+{
+    const c = copias(() => null);
+    const { e, vistos } = eventos();
+    const subida = fetchConSubida(1_500, [[10, sse({ token: 'Analizado.' })], [5, sse({ done: true })]]);
+    const r = await correr({ ...base, peticionId: 'p', copias: c, fetchImpl: subida.f, eventos: e });
+    ok(!subida.abortada() && r.fin?.via === 'flujo' && vistos.tokens === 'Analizado.',
+        `sin abortar la subida, vía ${r.fin?.via ?? r.err?.name}, «${vistos.tokens}»`);
+    ok(vistos.avisos.some((a) => a.startsWith('Su documento sigue subiendo')), 'y se avisó que sigue subiendo');
+    ok(c.consultas() >= 3, `se miró la copia por si la red retenía (${c.consultas()} consultas)`);
+}
+
+console.log('\n9 · subida lenta y la red retiene: la copia aparece y manda, como antes');
+{
+    let n = 0;
+    const c = copias(() => (++n < 4 ? null : n < 8 ? { estado: 'en_curso' } : { estado: 'terminada', respuesta: 'De la copia.' }));
+    const { e } = eventos();
+    const r = await correr({ ...base, peticionId: 'p', copias: c, eventos: e,
+        fetchImpl: fetchConSubida(60_000, [[10, sse({ token: 'nunca' })]]).f });
+    ok(r.fin?.via === 'copia' && (r.fin as any).copia.respuesta === 'De la copia.', `vía ${r.fin?.via ?? r.err?.name}`);
+}
+
+console.log('\n10 · pasado el tope de la subida, sin copia, se corta como antes');
+{
+    const c = copias(() => null);
+    const { e } = eventos();
+    const subida = fetchConSubida(60_000, [[10, sse({ token: 'nunca' })]]);
+    const r = await correr({ ...base, tiempos: { ...TIEMPOS, topeSubida: 1_000 }, peticionId: 'p', copias: c,
+        fetchImpl: subida.f, eventos: e });
+    ok(r.err?.name === 'AbortError' && subida.abortada(), `AbortError tras el tope (${r.err?.name})`);
+}
+
 console.log(FALLOS.length ? `\nFALLOS: ${FALLOS.join(' · ')}` : '\nLos caminos de analizarDocumento se portan como deben.');
 process.exit(FALLOS.length ? 1 : 0);

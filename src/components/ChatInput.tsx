@@ -678,14 +678,29 @@ ${draftRequest.descripcion}`;
                         {/* Attach/Submit Row */}
                         <div className="flex items-center gap-2 flex-shrink-0">
                             {/* Attached Document Indicator (Condensed) */}
+                            {/* LA ✕ SE VE Y SE ATINA (22-nov-2026). Tras un envío que no
+                                salió, el documento vuelve a la caja y TODO lo que se
+                                escriba viaja como instrucción de ese documento. Un
+                                abogado no encontraba cómo quitarlo para seguir en el
+                                chat: la ✕ medía 12 px. Ahora el chip dice qué archivo
+                                es y la ✕ tiene su hueco y su nombre. */}
                             {attachedDocument && (
-                                <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 border border-blue-200 rounded-md animate-in fade-in zoom-in duration-300">
-                                    <FileText className="w-3.5 h-3.5 text-blue-600" />
+                                <div
+                                    title={attachedDocument.fileName}
+                                    className="flex items-center gap-1 pl-2 pr-0.5 py-0.5 bg-blue-50 border border-blue-200 rounded-md animate-in fade-in zoom-in duration-300"
+                                >
+                                    <FileText className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
                                     <span className="text-[10px] text-blue-800 font-bold uppercase tracking-tight max-w-[60px] truncate">
                                         DOC LISTO
                                     </span>
-                                    <button onClick={() => setAttachedDocument(null)} className="hover:text-red-500 transition-colors">
-                                        <X className="w-3 h-3" />
+                                    <button
+                                        type="button"
+                                        onClick={() => setAttachedDocument(null)}
+                                        aria-label={`Quitar el documento ${attachedDocument.fileName}`}
+                                        title="Quitar el documento y seguir escribiendo en el chat"
+                                        className="p-1.5 rounded text-blue-700 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                    >
+                                        <X className="w-4 h-4" />
                                     </button>
                                 </div>
                             )}

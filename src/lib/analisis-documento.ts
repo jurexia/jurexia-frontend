@@ -89,6 +89,9 @@ export interface Tiempos {
     consultasSinFila: number;
     /** La espera antes de reenviar un envío que no salió. */
     reintentoEnvio: number;
+    /** Mientras no lleguen las cabeceras el archivo puede seguir SUBIENDO:
+     *  hasta aquí (desde el envío) no tener copia no corta nada. */
+    topeSubida: number;
 }
 
 export const TIEMPOS: Tiempos = {
@@ -98,6 +101,7 @@ export const TIEMPOS: Tiempos = {
     cadaCopia: 4_000,
     consultasSinFila: 3,
     reintentoEnvio: 2_500,
+    topeSubida: 30 * 60_000,
 };
 
 /* La red «retuvo» si lo primero llegó tarde y todo de golpe: el servidor
@@ -114,6 +118,8 @@ export const AVISO_RED_RETIENE = 'Su red está reteniendo la respuesta. El anál
     + 'lo traemos en cuanto termine.';
 export const AVISO_SIGUE = 'El servidor sigue trabajando en su análisis: lo traemos en cuanto termine.';
 export const AVISO_CORTADO = 'Se cortó la conexión; recuperamos el análisis del servidor…';
+export const AVISO_SUBIENDO = 'Su documento sigue subiendo al servidor: con un escaneado grande y una red lenta '
+    + 'puede tardar varios minutos. No cierre esta ventana.';
 
 /** «Failed to fetch» y sus parientes: la petición no salió o se cortó. Mismo
  *  criterio que el reintento del envío (25-oct-2026), más «network error»
@@ -205,6 +211,18 @@ export async function analizarDocumento(o: {
     let espera: EsperaDeCopia | null = null;
     let vigilancia: { promesa: Promise<EsperaDeCopia>; corte: AbortController } | null = null;
 
+    /* LA SUBIDA NO ES SILENCIO (22-nov-2026). El reloj del silencio se arma
+       antes del envío, así que también contaba lo que tarda en SUBIR el
+       archivo. Un Platinum con Firefox en Windows 8.1 subía escaneados de
+       40-60 MB: la subida pasaba de 75 s, se buscaba la copia del servidor, no
+       había —el servidor aún no recibía nada— y a la tercera consulta sin fila
+       la pantalla ABORTABA SU PROPIA SUBIDA («Se perdió el contacto con el
+       servidor»). En Render sólo quedaba el OPTIONS: unos 30 en tres horas,
+       uno cada ~90 s, y ningún POST. Mientras no lleguen las cabeceras, no
+       tener copia no corta nada: se sigue esperando hasta `topeSubida`. Si la
+       red retiene la respuesta (Umbrella), la copia aparece y manda como antes. */
+    const subiendo = () => !respuestaRecibida && Date.now() - inicio < t.topeSubida;
+
     /* Una sola vigilancia a la vez. Si el flujo revive (la red suelta lo
        retenido), se deja de vigilar: el flujo manda. */
     const vigilar = (): Promise<EsperaDeCopia> => {
@@ -213,10 +231,14 @@ export async function analizarDocumento(o: {
             const corte = new AbortController();
             const promesa = esperarCopia(peticionId, copias, t, inicio + t.topeCopia, corte.signal)
                 .then((r) => {
-                    if (r.tipo !== 'cancelada' && vigilancia?.corte === corte) {
-                        espera = r;
-                        controller.abort();      // corta la lectura que esté esperando
+                    if (r.tipo === 'cancelada' || vigilancia?.corte !== corte) return r;
+                    if (r.tipo === 'sin_copia' && subiendo()) {
+                        // Aún no llega al servidor: se vuelve a mirar en el próximo silencio.
+                        vigilancia = null;
+                        return r;
                     }
+                    espera = r;
+                    controller.abort();      // corta la lectura que esté esperando
                     return r;
                 });
             vigilancia = { promesa, corte };
@@ -228,6 +250,15 @@ export async function analizarDocumento(o: {
         vigilancia = null;
     };
     const alSilencio = () => {
+        if (subiendo()) {
+            /* Sin cabeceras todavía: el archivo puede seguir subiendo y nada se
+               corta. Si ya hay vigilancia viva, el servidor tiene la copia: lo
+               que calla es la red. */
+            o.eventos.aviso(vigilancia ? AVISO_RED_RETIENE : AVISO_SUBIENDO);
+            if (copias) void vigilar();
+            rearmar();
+            return;
+        }
         if (!copias) { controller.abort(); return; }          // como antes: no hay copia que esperar
         o.eventos.aviso(primerByte ? AVISO_SIGUE : AVISO_RED_RETIENE);
         void vigilar();
