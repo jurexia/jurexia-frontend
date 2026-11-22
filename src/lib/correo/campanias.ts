@@ -1283,15 +1283,18 @@ export function correoCartaUso(d: DestinatarioUso): Correo {
 // ─────────────────────────────────────────────────────────────────────────
 const PORTADA_THEMIS = `${SITIO}/correo/iurexia-themis.jpg`;
 
-/** El código de la campaña (Stripe: promo_1UefBR3uD85CqvjMbuluUhgw, cupón ANUAL20-NOV2026-V27; el primero,
+/** El código de la campaña (Stripe: promo_1UefI03uD85CqvjMYuMKMfok, cupón
+ *  ANUAL20-NOV2026-V27M, mensuales y anuales desde el 22-nov; antes
+ *  promo_1UefBR3uD85CqvjMbuluUhgw / ANUAL20-NOV2026-V27, sólo anuales; el primero,
  *  ANUAL20-NOV2026 con promo_1UdgaW3uD85CqvjM5puJYRBw, vencía el martes 24 y
- *  Stripe no deja mover la fecha). 20 % una vez, sólo productos anuales (Básico, Pro y
+ *  Stripe no deja mover la fecha). 20 % una vez, al principio sólo anuales (Básico, Pro y
  *  Platinum), sólo primera compra. David pidió tres días; como la pausa entre
  *  campañas deja a ~1,900 para el sábado (recibieron el Buen Fin el martes
  *  17 por la noche), vence el martes 24 a las 23:59 de México para que nadie
  *  tenga menos de dos días y medio. El 22-nov David lo alargó al viernes 27
  *  a las 23:59 (1,408 envíos el viernes, 0 canjes). Si cambia, cambia en
- *  Stripe Y aquí. */
+ *  Stripe Y aquí. El mismo 22-nov lo abrió también a los planes mensuales
+ *  (20 % en el primer mes); el nombre del código se queda porque ya salió. */
 export const ANUAL20 = {
     codigo: 'ANUAL20',
     desde: '2026-11-20T00:00:00-06:00',
@@ -1303,7 +1306,7 @@ function cajaCodigo(): string {
     return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 4px 0;border:1px solid ${'#c9a962'};"><tr><td align="center" style="padding:22px 18px 20px 18px;text-align:center;">` +
         `<div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:3px;color:#c9a962;">SU CÓDIGO</div>` +
         `<div style="font-family:Georgia,'Times New Roman',serif;font-size:32px;font-weight:bold;letter-spacing:4px;color:#fdfbf7;margin:6px 0 8px 0;">${ANUAL20.codigo}</div>` +
-        `<div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#e8e2d5;">20 % sobre el precio de socio fundador en el primer año de cualquier plan anual: Básico, Pro o Platinum.</div>` +
+        `<div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#e8e2d5;">20 % sobre el precio de socio fundador en su primer pago: el primer mes de un plan mensual o el primer año de uno anual. Básico, Pro o Platinum.</div>` +
         `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.6;color:#fdfbf7;margin-top:8px;"><strong>Vence el ${ANUAL20.finEnLetra}</strong>, hora del centro de México.</div>` +
         `</td></tr></table>`;
 }
@@ -1313,7 +1316,7 @@ export function correoThemis(d: DestinatarioUso): Correo {
     const n = Math.max(1, d.consultas ?? 1);
     const estado = d.estado ? getEstadoLabel(d.estado) : '';
     const conEstado = estado && estado !== 'Todos los estados' ? ` con la legislación de ${estado}` : '';
-    const asunto = `${trato(d)} ${nombre}, última oferta del año: precio fundador + 20 % en su plan anual`;
+    const asunto = `${trato(d)} ${nombre}, última oferta del año: precio fundador + 20 % en su plan`;
 
     const uso = n >= 2 ? `Ya hizo ${n} consultas en Iurexia${conEstado}` : `Ya hizo su primera consulta en Iurexia${conEstado}`;
 
@@ -1322,7 +1325,8 @@ export function correoThemis(d: DestinatarioUso): Correo {
         parrafo(
             `${esc(uso)}: sabe cómo responde. Antes del ajuste de precios, le hacemos la ` +
             `${fuerteNoche('última oferta del año')}: el precio de socio fundador y, sobre él, ` +
-            `${fuerteNoche('20 % de descuento')} en el primer año de cualquier plan anual.`,
+            `${fuerteNoche('20 % de descuento')} en su primer pago, mensual o anual. Pro mensual, por ejemplo, ` +
+            `queda en ${fuerteNoche('$119.20 el primer mes')} en lugar de $149.`,
         ) +
         parrafo('Lo que cambia con un plan es cuánto puede hacer con Iurexia. Esto es lo que gana:') +
         listaNoche([
@@ -1355,17 +1359,18 @@ export function correoThemis(d: DestinatarioUso): Correo {
             },
         ]) +
         cajaCodigo() +
-        botonNoche('Elegir mi plan anual', PRECIOS) +
+        botonNoche('Elegir mi plan', PRECIOS) +
         parrafo(
-            'En la página de planes elija la opción anual; al pagar, toque «Agregar código promocional» y ' +
+            'En la página de planes elija su plan, mensual o anual; al pagar, toque «Agregar código promocional» y ' +
             `escriba ${fuerteNoche(ANUAL20.codigo)}. Verá el precio con el descuento antes de confirmar.`,
             '22px 0 0 0',
         ) +
         preguntaFinal() +
         FIRMA_NOCHE +
         notaNoche(
-            'Condiciones: 20 % sobre el precio de socio fundador del primer año de los planes anuales Básico, ' +
-            'Pro y Platinum. Después, el plan se renueva a precio de socio fundador hasta que usted lo ' +
+            'Condiciones: 20 % sobre el precio de socio fundador del primer pago (el primer mes en los planes ' +
+            'mensuales, el primer año en los anuales) de los planes Básico, Pro y Platinum. Después, el plan ' +
+            'se renueva a precio de socio fundador hasta que usted lo ' +
             'cancele. Para cuentas sin un plan de pago ' +
             `previo. Vigente hasta el ${ANUAL20.finEnLetra}, hora de la Ciudad de México. Aplican los Términos ` +
             'y Condiciones de Iurexia.',
@@ -1378,16 +1383,16 @@ export function correoThemis(d: DestinatarioUso): Correo {
             cuerpo,
             urlBaja: urlBaja(d.email),
             titulo: asunto,
-            encabezado: 'Última oferta del año: precio fundador + 20 % en planes anuales',
-            preencabezado: `Antes del ajuste de precios: código ${ANUAL20.codigo}, 20 % sobre el precio fundador en cualquier plan anual. Vence el ${ANUAL20.finEnLetra}.`,
+            encabezado: 'Última oferta del año: precio fundador + 20 % en su primer pago',
+            preencabezado: `Antes del ajuste de precios: código ${ANUAL20.codigo}, 20 % sobre el precio fundador en su primer pago, mensual o anual. Vence el ${ANUAL20.finEnLetra}.`,
             marcado: marcadoPromocion({
-                descripcion: 'Precio fundador + 20 % en el primer año de los planes anuales',
+                descripcion: 'Precio fundador + 20 % en el primer pago, mensual o anual',
                 codigo: ANUAL20.codigo,
                 desde: ANUAL20.desde,
                 hasta: ANUAL20.hasta,
                 imagen: PORTADA_THEMIS,
                 url: PRECIOS,
-                titular: 'Última oferta del año: precio fundador + 20 % en planes anuales',
+                titular: 'Última oferta del año: precio fundador + 20 % en su primer pago',
             }),
             portada: {
                 src: PORTADA_THEMIS,
@@ -1395,7 +1400,7 @@ export function correoThemis(d: DestinatarioUso): Correo {
                 alt: 'Iurexia: la inteligencia artificial para el trabajo jurídico más precisa para el sistema jurídico en México.',
             },
         }),
-        texto: textoPlano(cuerpo.replace(/<\/(tr|p|div)>/g, '</$1>\n').replace(/&#9670;/g, '• '), `Elija su plan anual: ${PRECIOS}`, d),
+        texto: textoPlano(cuerpo.replace(/<\/(tr|p|div)>/g, '</$1>\n').replace(/&#9670;/g, '• '), `Elija su plan: ${PRECIOS}`, d),
     };
 }
 
