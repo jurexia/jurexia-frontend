@@ -347,8 +347,26 @@ async function segmentoCartaUso(): Promise<Destinatario[]> {
         .sort((a, b) => (caliente(a) - caliente(b)) || String(b.last_query_at ?? '').localeCompare(String(a.last_query_at ?? '')));
 }
 
+/** Recordatorio de Themis: el mismo público de la carta de uso, pero sólo
+ *  quien recibió Themis en su versión «sólo anual» (antes de las 18:20 UTC
+ *  del 22-nov, cuando ANUAL20 se abrió a los mensuales). */
+const THEMIS_ANUAL_HASTA = '2026-11-22T18:20:00Z';
+async function segmentoThemisRecordatorio(): Promise<Destinatario[]> {
+    const recibieron = new Set<string>();
+    for (let desde = 0; ; desde += 1000) {
+        const { data, error } = await admin().from('correo_envios').select('email')
+            .eq('campania', 'themis').eq('estado', 'enviado').lt('enviado_at', THEMIS_ANUAL_HASTA)
+            .order('id', { ascending: true }).range(desde, desde + 999);
+        if (error) throw new Error(`segmento themis_recordatorio: ${error.message}`);
+        for (const r of data ?? []) recibieron.add(String(r.email).toLowerCase().trim());
+        if (!data || data.length < 1000 || desde > 50_000) break;
+    }
+    return (await segmentoCartaUso()).filter((u) => recibieron.has((u.email || '').toLowerCase().trim()));
+}
+
 export async function segmento(campania: NombreCampania): Promise<Destinatario[]> {
     if (campania === 'carta_uso' || campania === 'themis') return segmentoCartaUso();
+    if (campania === 'themis_recordatorio') return segmentoThemisRecordatorio();
     if (campania === 'registro_pendiente') return segmentoRegistroPendiente();
     if (campania === 'casos_uso') return segmentoCasosUso();
 

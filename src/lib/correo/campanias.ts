@@ -1404,6 +1404,38 @@ export function correoThemis(d: DestinatarioUso): Correo {
     };
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// RECORDATORIO DE THEMIS (22-nov-2026, David: «prepara el recordatorio, me
+// preocupa que estamos en 0 de ingresos»). Los 1,408 que recibieron Themis el
+// viernes 20 leyeron «sólo planes anuales»; el mismo 22-nov ANUAL20 se abrió a
+// los mensuales (20 % en el primer mes). Carta blanca y corta, como la carta
+// de uso: una sola noticia (ya vale en mensual), el precio concreto, cómo
+// usarlo y la fecha. Va sólo a quien recibió la versión anual y sigue sin pagar.
+// ─────────────────────────────────────────────────────────────────────────
+export function correoThemisRecordatorio(d: DestinatarioUso): Correo {
+    const nombre = capitalizar(nombrePila(d.full_name, d.email));
+    const n = Math.max(1, d.consultas ?? 1);
+    const asunto = `${trato(d)} ${nombre}, su código ${ANUAL20.codigo} ahora también vale en el plan mensual`;
+    const uso = n >= 2 ? `Ya hizo ${n} consultas en su cuenta gratuita` : 'Ya hizo su primera consulta en su cuenta gratuita';
+    const enlace = `<a href="${PRECIOS}" style="color:#1a1a1a;text-decoration:underline;">www.iurexia.com/precios</a>`;
+
+    const cuerpo =
+        cartaP(saludo(d, nombre)) +
+        cartaP(`Le escribimos de Soporte de Iurexia con una noticia sobre el código <strong>${ANUAL20.codigo}</strong> que le enviamos el viernes: <strong>ahora también vale en los planes mensuales</strong>, no sólo en los anuales.`) +
+        cartaP(`Con él, su primer mes de Iurexia Pro queda en <strong>$119.20 en lugar de $149</strong>: 140 consultas al mes, sus escritos redactados completos y cada cita con su ley o su tesis a un clic para que la verifique. ${esc(uso)}; con el plan deja de toparse con el límite.`) +
+        cartaP('Únase a los cerca de 5,000 usuarios que ya mejoran su práctica legal con Iurexia.') +
+        cartaP(`Para usarlo, entre a ${enlace}, elija su plan y, al pagar, toque «Agregar código promocional» y escriba <strong>${ANUAL20.codigo}</strong>. Verá el precio con el descuento antes de confirmar, y puede cancelar cuando quiera desde su perfil.`) +
+        cartaP(`El código vence el <strong>${ANUAL20.finEnLetra}</strong>, hora del centro de México. Si tiene cualquier duda, responda este correo y le contestamos.`) +
+        `<p style="margin:26px 0 0 0;text-align:left;">Atentamente,<br>Soporte de Iurexia</p>` +
+        `<p style="margin:22px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.6;color:#8a8a8a;text-align:left;">20 % sobre el precio de socio fundador del primer pago (el primer mes en los planes mensuales, el primer año en los anuales) de Básico, Pro y Platinum, para cuentas sin un plan de pago previo. Después, el plan se renueva a precio de socio fundador hasta que usted lo cancele.</p>`;
+
+    return {
+        asunto,
+        html: cartaBlanca({ cuerpo, urlBaja: urlBaja(d.email), preencabezado: `Pro a $119.20 el primer mes. Vence el ${ANUAL20.finEnLetra}.` }),
+        texto: aTexto(cuerpo.replace(/<\/p>/g, '</p>\n')).replace('www.iurexia.com/precios', PRECIOS) + `\n\nNo quiero recibir más correos: ${urlBaja(d.email)}`,
+    };
+}
+
 export const CAMPANIAS = {
     entrada: { construir: correoEntrada, etiqueta: 'Entrada — nunca inició sesión' },
     activacion: { construir: correoActivacion, etiqueta: 'Activación — nunca consultó' },
@@ -1420,6 +1452,7 @@ export const CAMPANIAS = {
     buen_fin_horas: { construir: correoBuenFinHoras, etiqueta: 'Buen Fin 2026 — últimas horas (17-nov, noche)' },
     carta_uso: { construir: correoCartaUso as (d: Destinatario) => Correo, etiqueta: 'Carta de uso — gratuitos que consultaron y no pagan (desde el 20-nov)' },
     themis: { construir: correoThemis as (d: Destinatario) => Correo, etiqueta: 'Themis — gratuitos que consultaron y no pagan · ANUAL20 (20-nov al 27-nov)' },
+    themis_recordatorio: { construir: correoThemisRecordatorio as (d: Destinatario) => Correo, etiqueta: 'Recordatorio Themis — ANUAL20 ya vale en mensual (a quien recibió la versión anual)' },
     posicion: { construir: correoPosicion, etiqueta: 'Posicionamiento frente a ChatGPT — gratuitos que consultaron (desde el 18-nov)' },
 } as const;
 

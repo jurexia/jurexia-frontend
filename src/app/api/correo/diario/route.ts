@@ -134,7 +134,7 @@ function prioridadSinFreno(ahora: Date): NombreCampania[] {
         // repetía a quien recibió el Buen Fin y se quedó sin gente (2 el 18-nov).
         if (ahora < CARTA_USO_DESDE) return [primera, 'posicion', ...resto];
         // Del 20 al 27-nov va Themis con ANUAL20 en lugar de la carta de uso.
-        if (ahora >= THEMIS_DESDE && ahora <= THEMIS_HASTA) return [primera, 'themis', ...resto];
+        if (ahora >= THEMIS_DESDE && ahora <= THEMIS_HASTA) return [primera, 'themis', 'themis_recordatorio', ...resto];
         return [primera, ...resto];
     }
     const resto = PRIORIDAD.filter((c) => c !== 'suscripcion');
@@ -173,6 +173,7 @@ function topeDelBloque(campania: NombreCampania, ahora = new Date()): number | n
     if (campania === 'posicion') return TOPE_POSICION;
     if (campania === 'carta_uso') return RAMPA_CARTA_USO[fechaCDMX(ahora)] ?? TOPE_CARTA_USO;
     if (campania === 'themis') return TOPE_THEMIS;
+    if (campania === 'themis_recordatorio') return TOPE_THEMIS;
     return null;
 }
 

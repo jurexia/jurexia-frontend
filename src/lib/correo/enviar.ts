@@ -171,8 +171,14 @@ export interface Resultado {
  */
 export const DIAS_ENTRE_CAMPANIAS = Number(process.env.CORREO_DIAS_ENTRE_CAMPANIAS ?? 3);
 
-/** Quiénes recibieron cualquier correo de campaña en los últimos `dias`. */
-export async function leerRecientes(dias: number): Promise<Set<string>> {
+/** Un recordatorio de la MISMA oferta no es una campaña nueva: para él, la
+ *  campaña que recuerda no cuenta en la pausa entre campañas (las demás sí).
+ *  22-nov-2026: el recordatorio de Themis podía salir hasta el lunes. */
+export const CONTINUACION_DE: Record<string, string> = { themis_recordatorio: 'themis' };
+
+/** Quiénes recibieron cualquier correo de campaña en los últimos `dias`
+ *  (sin contar las campañas de `noCuentan`). */
+export async function leerRecientes(dias: number, noCuentan: string[] = []): Promise<Set<string>> {
     const recientes = new Set<string>();
     if (!(dias > 0)) return recientes;
     const desdeFecha = new Date(Date.now() - dias * 86400_000).toISOString();
@@ -183,6 +189,7 @@ export async function leerRecientes(dias: number): Promise<Set<string>> {
             .select('email')
             .eq('estado', 'enviado')
             .gte('enviado_at', desdeFecha)
+            .not('campania', 'in', `(${['__ninguna__', ...noCuentan].join(',')})`)
             // Orden estable OBLIGATORIO al paginar: sin él, PostgREST puede
             // devolver páginas que se solapan. Medido el 17-sep-2026: la misma
             // lectura dio 1,070 y 1,714 «ya enviados» con una hora de diferencia,
@@ -325,7 +332,7 @@ export async function enviarCampania(opciones: {
 
     const bajas = await leerBajas();
     const yaEnviados = await leerYaEnviados(campania);
-    const recientes = await leerRecientes(DIAS_ENTRE_CAMPANIAS);
+    const recientes = await leerRecientes(DIAS_ENTRE_CAMPANIAS, CONTINUACION_DE[campania] ? [CONTINUACION_DE[campania]] : []);
     const remitente = REMITENTE_CAMPANIAS;
     // Las campañas invitan a responder («responda este correo y le
     // contestamos nosotros»). Salían sin dirección de respuesta, así que la
