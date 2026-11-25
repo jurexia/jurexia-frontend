@@ -35,7 +35,7 @@ import {
     codigoReferido, enlaceInvitacion, CONSULTAS_DE_BIENVENIDA, ESCALERA,
 } from './referidos';
 import type { Correo, Destinatario } from './enviar';
-import { BUEN_FIN, cuenta, pesos } from '@/lib/buen-fin';
+import { BUEN_FIN, cuenta, fechaCDMX, pesos } from '@/lib/buen-fin';
 import { CHATGPT, NOTA_PRECIOS_CHATGPT, STANFORD } from '@/lib/comparativa';
 import { getEstadoLabel } from '@/lib/estados';
 
@@ -1436,6 +1436,133 @@ export function correoThemisRecordatorio(d: DestinatarioUso): Correo {
     };
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// TRES TIPOS DE ABOGADOS (25-nov-2026). David: «la campaña de psicología
+// (hacer sentir inteligente a quien use la IA legal sobre otros que no) para
+// empujar a los usuarios que probaron Iurexia pero no contrataron».
+//
+// Por qué una pieza propia: Themis y su recordatorio (~4,250 correos, 20 al
+// 25-nov) llevaron el descuento por delante y dieron 0 canjes de ANUAL20; en
+// esos mismos días hubo compras, todas a precio completo. Aquí el orden se
+// invierte: primero QUIÉN ES el lector, después el precio.
+//
+// Palancas, todas ciertas y sin nombrarse en el correo:
+//   · identidad (Bryan et al., PNAS 2011: «ser votante» mueve más que «votar»):
+//     los tres grupos y «usted ya está en el tercero»;
+//   · comparación social favorable (Festinger 1954): por delante de quien no
+//     usa IA y de quien la usa sin fuentes, con el dato de Stanford;
+//   · coherencia con lo ya hecho (Cialdini): sus consultas, con la ley de su
+//     estado, contadas en la base;
+//   · compra inteligente (Schindler 1998) y ancla (Tversky y Kahneman 1974):
+//     un año de Pro contra un mes de ChatGPT Pro;
+//   · escasez REAL: ANUAL20 vence el viernes 27 a las 23:59;
+//   · salida sin riesgo: se cancela desde el perfil.
+// Sin cifras de clientes (indicación de David para Themis).
+// ─────────────────────────────────────────────────────────────────────────
+export function correoTresTipos(d: DestinatarioUso, ahora = new Date()): Correo {
+    const nombre = capitalizar(nombrePila(d.full_name, d.email));
+    const pro = cuenta('pro');
+    const primerMes = Math.round(pro.mensual * 80) / 100;
+    const n = Math.max(1, d.consultas ?? 1);
+    const estado = d.estado ? getEstadoLabel(d.estado) : '';
+    const conEstado = estado && estado !== 'Todos los estados' ? ` con la legislación de ${estado}` : '';
+    const ultimoDia = fechaCDMX(ahora) === ANUAL20.hasta.slice(0, 10);
+    const vence = ultimoDia ? 'hoy, viernes, a las 23:59' : `el ${ANUAL20.finEnLetra}`;
+
+    const asunto = ultimoDia
+        ? `${trato(d)} ${nombre}, usted ya está en el tercer grupo de abogados (su código vence hoy)`
+        : `${trato(d)} ${nombre}, hay tres tipos de abogados frente a la IA; usted ya está en el tercero`;
+    const uso = n >= 2
+        ? `Usted hizo ${n} consultas en Iurexia${conEstado}`
+        : `Usted ya hizo su primera consulta en Iurexia${conEstado}`;
+
+    const cuerpo =
+        parrafo(saludo(d, nombre), '0 0 18px 0') +
+        parrafo('Frente a la inteligencia artificial, los abogados de México se están separando en tres grupos:') +
+        listaNoche([
+            {
+                titular: 'Los que todavía no la usan.',
+                texto: 'Buscan la tesis a mano y redactan desde cero. Les funciona, pero cada asunto les cuesta horas.',
+            },
+            {
+                titular: 'Los que le preguntan a un chat genérico.',
+                texto: 'Van más rápido, pero firman con la duda: un estudio de la Universidad de Stanford midió que ' +
+                    `los modelos generales respondían mal ${STANFORD.rango} de las preguntas jurídicas verificables.`,
+            },
+            {
+                titular: 'Los que trabajan con una plataforma hecha para el derecho mexicano.',
+                texto: 'Responden con la ley de su estado y la jurisprudencia del Semanario Judicial, con la fuente ' +
+                    'de cada cita a un clic. Llegan a la audiencia con la tesis exacta y le contestan al cliente el mismo día.',
+            },
+        ]) +
+        parrafo(
+            `${fuerteNoche('Usted ya está en el tercer grupo.')} ${esc(uso)}: vio cómo responde una inteligencia ` +
+            'artificial jurídica cuando la pregunta es suya y el asunto es real. Es justo lo que muchos de sus ' +
+            'colegas todavía no han hecho.',
+            '18px 0 18px 0',
+        ) +
+        parrafo(
+            'Lo que separa a quien la probó de quien trabaja así todos los días es el plan. Con Iurexia Pro deja de ' +
+            `toparse con el límite: ${pro.consultas} consultas al mes y sus escritos (demandas, contestaciones, ` +
+            'amparos) redactados completos sobre esa misma base, listos para que usted los revise y firme.',
+        ) +
+        parrafo(
+            `Y es una decisión que se defiende sola: un año completo de Iurexia Pro, ${enPesos(pro.anual)}, cuesta ` +
+            `${fuerteNoche('menos que un solo mes de ChatGPT Pro')} (desde ${enPesos(CHATGPT.proDesde)} en la ` +
+            `${CHATGPT.fuente}), que no conoce la ley de su estado. Mes a mes, son ${enPesos(pro.mensual)}.`,
+        ) +
+        cajaCodigo() +
+        botonNoche('Elegir mi plan', PRECIOS) +
+        parrafo(
+            'En la página de planes elija el suyo; al pagar, toque «Agregar código promocional» y escriba ' +
+            `${fuerteNoche(ANUAL20.codigo)}. Con él, Pro queda en ${fuerteNoche(`${enPesos(primerMes)} el primer mes`)}. ` +
+            `Verá el precio con el descuento antes de confirmar. El código vence ${vence}.`,
+            '22px 0 0 0',
+        ) +
+        parrafo(
+            'Si un día deja de servirle, lo cancela desde su perfil, sin hablar con nadie, y sus consultas se ' +
+            'quedan en su cuenta.',
+        ) +
+        preguntaFinal() +
+        FIRMA_NOCHE +
+        notaNoche(
+            'Condiciones: 20 % sobre el precio de socio fundador del primer pago (el primer mes en los planes ' +
+            'mensuales, el primer año en los anuales) de los planes Básico, Pro y Platinum. Después, el plan ' +
+            'se renueva a precio de socio fundador hasta que usted lo cancele. Para cuentas sin un plan de pago ' +
+            `previo. Vigente hasta el ${ANUAL20.finEnLetra}, hora de la Ciudad de México. Aplican los Términos ` +
+            'y Condiciones de Iurexia.',
+        ) +
+        fuentes();
+
+    return {
+        asunto,
+        html: envolverNoche({
+            cuerpo,
+            urlBaja: urlBaja(d.email),
+            titulo: asunto,
+            encabezado: 'Tres tipos de abogados frente a la inteligencia artificial',
+            preencabezado: ultimoDia
+                ? `Lo que lo pone por delante de sus colegas. Su código ${ANUAL20.codigo} vence hoy a las 23:59.`
+                : `Lo que lo pone por delante de sus colegas, y el precio para quedarse ahí: ${ANUAL20.codigo}, hasta el viernes 27.`,
+            marcado: marcadoPromocion({
+                descripcion: 'Precio fundador + 20 % en el primer pago, mensual o anual',
+                codigo: ANUAL20.codigo,
+                desde: ANUAL20.desde,
+                hasta: ANUAL20.hasta,
+                imagen: PORTADA_POSICION,
+                url: PRECIOS,
+                titular: 'Tres tipos de abogados frente a la inteligencia artificial',
+            }),
+            portada: {
+                src: PORTADA_POSICION,
+                url: PRECIOS,
+                alt: `Haga la cuenta: un año de Iurexia Pro, $${pro.anual.toLocaleString('es-MX')}; un mes de ChatGPT Pro, desde $${CHATGPT.proDesde.toLocaleString('es-MX')}.`,
+            },
+        }),
+        texto: textoPlano(cuerpo.replace(/<\/(tr|p|div)>/g, '</$1>\n').replace(/&#9670;/g, '• '), `Elija su plan: ${PRECIOS}`, d),
+    };
+}
+
 export const CAMPANIAS = {
     entrada: { construir: correoEntrada, etiqueta: 'Entrada — nunca inició sesión' },
     activacion: { construir: correoActivacion, etiqueta: 'Activación — nunca consultó' },
@@ -1453,6 +1580,7 @@ export const CAMPANIAS = {
     carta_uso: { construir: correoCartaUso as (d: Destinatario) => Correo, etiqueta: 'Carta de uso — gratuitos que consultaron y no pagan (desde el 20-nov)' },
     themis: { construir: correoThemis as (d: Destinatario) => Correo, etiqueta: 'Themis — gratuitos que consultaron y no pagan · ANUAL20 (20-nov al 27-nov)' },
     themis_recordatorio: { construir: correoThemisRecordatorio as (d: Destinatario) => Correo, etiqueta: 'Recordatorio Themis — ANUAL20 ya vale en mensual (a quien recibió la versión anual)' },
+    tres_tipos: { construir: ((d: Destinatario) => correoTresTipos(d as DestinatarioUso)), etiqueta: 'Tres tipos de abogados — gratuitos que consultaron y no pagan · ANUAL20 (26 y 27-nov)' },
     posicion: { construir: correoPosicion, etiqueta: 'Posicionamiento frente a ChatGPT — gratuitos que consultaron (desde el 18-nov)' },
 } as const;
 

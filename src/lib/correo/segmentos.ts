@@ -365,7 +365,7 @@ async function segmentoThemisRecordatorio(): Promise<Destinatario[]> {
 }
 
 export async function segmento(campania: NombreCampania): Promise<Destinatario[]> {
-    if (campania === 'carta_uso' || campania === 'themis') return segmentoCartaUso();
+    if (campania === 'carta_uso' || campania === 'themis' || campania === 'tres_tipos') return segmentoCartaUso();
     if (campania === 'themis_recordatorio') return segmentoThemisRecordatorio();
     if (campania === 'registro_pendiente') return segmentoRegistroPendiente();
     if (campania === 'casos_uso') return segmentoCasosUso();

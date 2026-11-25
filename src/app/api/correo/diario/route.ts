@@ -96,7 +96,7 @@ const POSICION_DESDE = new Date('2026-11-18T06:00:00Z');
  * posicionamiento dejan de salir al día siguiente, sin tocar código. El resto
  * de las campañas sigue igual.
  */
-const CARTAS: NombreCampania[] = ['buen_fin', 'buen_fin_ultimo', 'posicion', 'carta_uso', 'themis'];
+const CARTAS: NombreCampania[] = ['buen_fin', 'buen_fin_ultimo', 'posicion', 'carta_uso', 'themis', 'tres_tipos'];
 
 /** CARTA DE USO (19-nov-2026): empieza el viernes 20 a las 00:00 de México, tres
  *  días después de la última carta del Buen Fin (la pausa entre campañas). */
@@ -121,6 +121,12 @@ const THEMIS_DESDE = new Date('2026-11-20T06:00:00Z');
 const THEMIS_HASTA = new Date('2026-11-28T05:59:59Z'); // alargado del martes 24 al viernes 27 (22-nov)
 const TOPE_THEMIS = 3500;
 
+/** TRES TIPOS DE ABOGADOS (25-nov-2026): la pieza de identidad, jueves 26 y
+ *  viernes 27, mientras vale ANUAL20. Va antes que Themis; la pausa de tres
+ *  días entre campañas la reparte sola: el jueves quien no recibió nada desde
+ *  el lunes 23 (~1,500), el viernes quien recibió el recordatorio el martes. */
+const TRES_TIPOS_DESDE = new Date('2026-11-26T06:00:00Z');
+
 function prioridadDeHoy(ahora = new Date()): NombreCampania[] {
     const lista = prioridadSinFreno(ahora);
     return process.env.CORREO_PAUSA_POSICION === '1' ? lista.filter((c) => !CARTAS.includes(c)) : lista;
@@ -134,6 +140,7 @@ function prioridadSinFreno(ahora: Date): NombreCampania[] {
         // repetía a quien recibió el Buen Fin y se quedó sin gente (2 el 18-nov).
         if (ahora < CARTA_USO_DESDE) return [primera, 'posicion', ...resto];
         // Del 20 al 27-nov va Themis con ANUAL20 en lugar de la carta de uso.
+        if (ahora >= TRES_TIPOS_DESDE && ahora <= THEMIS_HASTA) return [primera, 'tres_tipos', 'themis', 'themis_recordatorio', ...resto];
         if (ahora >= THEMIS_DESDE && ahora <= THEMIS_HASTA) return [primera, 'themis', 'themis_recordatorio', ...resto];
         return [primera, ...resto];
     }
@@ -173,6 +180,7 @@ function topeDelBloque(campania: NombreCampania, ahora = new Date()): number | n
     if (campania === 'posicion') return TOPE_POSICION;
     if (campania === 'carta_uso') return RAMPA_CARTA_USO[fechaCDMX(ahora)] ?? TOPE_CARTA_USO;
     if (campania === 'themis') return TOPE_THEMIS;
+    if (campania === 'tres_tipos') return TOPE_THEMIS;
     if (campania === 'themis_recordatorio') return TOPE_THEMIS;
     return null;
 }
