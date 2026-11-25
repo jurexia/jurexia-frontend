@@ -18,6 +18,7 @@ const playfair = Playfair_Display({
     display: 'swap', variable: '--font-serif',
 })
 import { AuthProvider } from '@/components/AuthProvider'
+import { PARCHE_TRADUCTOR } from '@/lib/parche-traductor'
 import { AvisoCookies } from '@/components/AvisoCookies'
 import { AvisoRelojDesfasado } from '@/components/AvisoRelojDesfasado'
 import { WakeUpProvider } from '@/components/WakeUpProvider'
@@ -83,6 +84,9 @@ export default function RootLayout({
     return (
         <html lang="es" className={`${inter.variable} ${playfair.variable}`}>
             <head>
+                {/* Antes que nada: el traductor del navegador no puede tumbar
+                    React (ver src/lib/parche-traductor.ts, 24-nov-2026). */}
+                <script dangerouslySetInnerHTML={{ __html: PARCHE_TRADUCTOR }} />
                 <link rel="icon" href="/favicon.ico" />
                 {/* Content categorization for web filters */}
                 <meta name="classification" content="Legal, Education, Business, Professional Services" />
