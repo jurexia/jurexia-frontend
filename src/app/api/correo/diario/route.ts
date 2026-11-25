@@ -126,6 +126,13 @@ const TOPE_THEMIS = 3500;
  *  días entre campañas la reparte sola: el jueves quien no recibió nada desde
  *  el lunes 23 (~1,500), el viernes quien recibió el recordatorio el martes. */
 const TRES_TIPOS_DESDE = new Date('2026-11-26T06:00:00Z');
+/** Gradual (David, 25-nov: «para que no se vayan a spam o promociones»): el
+ *  miércoles 25 salió un primer bloque a mano por /api/correo/tres-tipos; el
+ *  jueves sube a 1,200 y el viernes, último día del código, va el resto. */
+const RAMPA_TRES_TIPOS: Record<string, number> = {
+    '2026-11-26': 1200,
+    '2026-11-27': 3500,
+};
 
 function prioridadDeHoy(ahora = new Date()): NombreCampania[] {
     const lista = prioridadSinFreno(ahora);
@@ -180,7 +187,7 @@ function topeDelBloque(campania: NombreCampania, ahora = new Date()): number | n
     if (campania === 'posicion') return TOPE_POSICION;
     if (campania === 'carta_uso') return RAMPA_CARTA_USO[fechaCDMX(ahora)] ?? TOPE_CARTA_USO;
     if (campania === 'themis') return TOPE_THEMIS;
-    if (campania === 'tres_tipos') return TOPE_THEMIS;
+    if (campania === 'tres_tipos') return RAMPA_TRES_TIPOS[fechaCDMX(ahora)] ?? 1200;
     if (campania === 'themis_recordatorio') return TOPE_THEMIS;
     return null;
 }
